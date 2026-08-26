@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Registry } from './registry';
 import { runTick } from './clock';
-import { createRng, seedFrom } from './rng';
+import { createRng, seedFrom, mixSeed } from './rng';
 import { serialise, deserialise } from './save';
 import { modules } from '$lib/modules';
 import type { GameState, MetaState, ModuleStates } from './state';
@@ -20,7 +20,7 @@ import { z } from 'zod';
 const registry = new Registry(modules);
 
 function meta(seed = seedFrom('test')): MetaState {
-  return { seed, rngCursor: 0, season: 1, matchday: 1, tick: 0, createdAt: 0, lastPlayedAt: 0 };
+  return { seed, season: 1, matchday: 1, tick: 0, createdAt: 0, lastPlayedAt: 0 };
 }
 
 function freshGame(seedText = 'test'): GameState {
@@ -33,7 +33,20 @@ function freshGame(seedText = 'test'): GameState {
 
 describe('registry', () => {
   it('boots every declared module', () => {
-    expect(registry.all.map((m) => m.id).sort()).toEqual(['core', 'finance', 'squad', 'stadium']);
+    // Asserts the invariant rather than a hardcoded list, so adding a feature
+    // does not require editing this test — which is the whole point of the
+    // architecture and would be undermined by a test that fights it.
+    const booted = registry.all.map((m) => m.id);
+    expect(booted.length).toBe(modules.length);
+    for (const m of modules) expect(booted).toContain(m.id);
+    expect(new Set(booted).size).toBe(booted.length);
+  });
+
+  it('gives every module a title and a summary, so nothing is nameless in the UI', () => {
+    for (const m of registry.all) {
+      expect(m.title, `${m.id} title`).toBeTruthy();
+      expect(m.summary, `${m.id} summary`).toBeTruthy();
+    }
   });
 
   it('rejects a duplicate module id', () => {
@@ -235,5 +248,79 @@ describe('documentation', () => {
         expect(docs.has(rel), `${id} → ${rel}`).toBe(true);
       }
     }
+  });
+});
+
+describe('a failing tick', () => {
+  it('reports which module threw, so the caller can roll back', () => {
+    const broken = modules.map((m) =>
+      m.id === 'stadium'
+        ? { ...m, hooks: { matchday: { phase: 'economy' as const, run() { throw new Error('boom'); } } } }
+        : m
+    );
+    const r = new Registry(broken);
+    const game = freshGame();
+    const seed = createRng(1);
+    for (const m of r.all) (game.modules as any)[m.id] ??= m.state.create(seed);
+
+    const result = runTick(r, game, 'matchday');
+
+    // The engine does not roll back — it has no snapshot. It reports, and the
+    // state layer (advance() in game.svelte.ts) rolls back to the snapshot it
+    // took before the tick. Without `failed`, a half-applied tick committed
+    // silently: a fee debited with no player delivered.
+    expect(result.failed).toEqual(['stadium']);
+    expect(result.events.some((e) => e.severity === 'bad')).toBe(true);
+  });
+
+  it('reports an empty failed list on a clean tick', () => {
+    const game = freshGame();
+    expect(runTick(registry, game, 'matchday').failed).toEqual([]);
+  });
+});
+
+describe('rng stream separation', () => {
+  it('gives two modules on the same tick genuinely different sequences', () => {
+    // The previous scheme XOR-ed seed, module hash and tick into a PRNG whose
+    // state advanced by a fixed additive step, so "independent" streams were one
+    // stream at different offsets. This checks the property that mattered:
+    // no module's sequence appears inside another's.
+    const seed = seedFrom('separation');
+    const ids = ['core', 'finance', 'squad', 'stadium', 'league', 'transfer', 'merch', 'industry'];
+    const streams = ids.map((id) => {
+      const rng = createRng(mixSeed(seed, `${id}#matchday#0`));
+      return Array.from({ length: 12 }, () => rng.next());
+    });
+
+    for (let i = 0; i < streams.length; i++) {
+      for (let j = 0; j < streams.length; j++) {
+        if (i === j) continue;
+        const head = streams[i]!.slice(0, 4).join(',');
+        expect(streams[j]!.join(','), `${ids[i]} found inside ${ids[j]}`).not.toContain(head);
+      }
+    }
+  });
+
+  it('does not replay the world-generation stream on tick 0', () => {
+    // At tick 0 the old derivation collapsed to exactly the seed that built the
+    // module, so the first matchday's injuries were a function of how the squad
+    // had been rolled.
+    const seed = seedFrom('tick-zero');
+    const worldGen = createRng(seed).fork('squad');
+    const tickZero = createRng(mixSeed(seed, 'squad#matchday#0'));
+    const a = Array.from({ length: 6 }, () => worldGen.next());
+    const b = Array.from({ length: 6 }, () => tickZero.next());
+    expect(b).not.toEqual(a);
+  });
+
+  it('fork is stable against draws taken on the parent first', () => {
+    // fork() used to seed from the parent's LIVE state, so adding one die roll
+    // upstream reseeded every fork below it.
+    const parent1 = createRng(99);
+    const forkA = parent1.fork('injuries').next();
+    const parent2 = createRng(99);
+    parent2.next();
+    const forkB = parent2.fork('injuries').next();
+    expect(forkB).toBe(forkA);
   });
 });

@@ -147,7 +147,112 @@ export const designIntent = defineIntent([
     source: 'architecture (found during the port)'
   },
 
+  // ---------------------------------------------------------------- league --
+  {
+    id: 'league.relegationPlaces',
+    constant: 'relegationPlaces',
+    value: '2 (the prototype used 3)',
+    rationale:
+      'Promotion and relegation counts must match once clubs persist between seasons, otherwise divisions drift in size. Content now enforces the invariant with a Zod refine.',
+    failureMode:
+      'This is a real balance change, not a port: staying up is easier than the prototype made it. The prototype hid the mismatch by rebuilding all four divisions from scratch every summer. Set both to 3 to restore its harshness — but they must stay equal.',
+    module: 'league',
+    source: 'subagent port — NEEDS A DESIGN DECISION'
+  },
+  {
+    id: 'league.homeAdvantage',
+    constant: 'homeAdvantage',
+    value: '3, applied league-wide',
+    rationale:
+      'The value is ported. Applying it to every fixture rather than only the player’s is the change: the prototype gave +3 only via calcTeamStrength(true), so two AI clubs met on neutral ground.',
+    failureMode:
+      'With home advantage applied only to the player, their record is systematically flattering relative to the table around them, and the league table quietly means something different for them than for everyone else.',
+    module: 'league',
+    source: 'subagent port'
+  },
+
+  // -------------------------------------------------------------- transfer --
+  {
+    id: 'transfer.maxCounterRounds',
+    constant: 'maxCounterRounds',
+    value: '4 (no prototype equivalent)',
+    rationale:
+      'A cap is required, the number is a guess. Without one the counter loop is a dominant strategy: near market value the buyer accepts ~70% and walks ~10%, so countering before ever accepting is strictly better in expectation and the accept button is mathematically dead.',
+    failureMode:
+      'Remove the cap and the negotiation stops being a decision — there is one correct action and the player is only pressing it repeatedly. Four rounds allows two haggles from a fresh bid while keeping accept live.',
+    module: 'transfer',
+    source: 'subagent port — NEEDS A DESIGN DECISION'
+  },
+  {
+    id: 'transfer.freeAgentValue',
+    constant: 'ListingSchema.fee',
+    value: 'price on the listing, not on the player',
+    rationale:
+      'The prototype set a free agent’s marketValue to 0 and stored the price separately. Signing one therefore added a permanently worthless, unsellable player to the squad.',
+    failureMode:
+      'A zero market value also divided by zero in the negotiation ratio, silently pinning every future offer for that player to the harshest accept band. Two bugs from one misplaced field — a price belongs to an offer, never to a person.',
+    module: 'transfer',
+    source: 'subagent port (bug fix)'
+  },
+  {
+    id: 'transfer.refreshEveryMatchdays',
+    constant: 'refreshEveryMatchdays',
+    value: '1',
+    rationale:
+      'The prototype refreshed the market only on new game, so a whole career saw the same six players. A weekly refresh was specified in the port brief.',
+    failureMode:
+      'Too frequent and the market feels like noise with nothing worth waiting for; too rare and scouting has nothing to act on. This is a feel decision that wants play-testing, not reasoning.',
+    module: 'transfer',
+    source: 'architecture brief — NEEDS PLAY-TESTING'
+  },
+
+  // ------------------------------------------------------------ onboarding --
+  {
+    id: 'onboarding.storageVsFlow',
+    constant: 'ManagerSchema.name',
+    value: 'max(28), no minimum',
+    rationale:
+      'A schema describes what may be PERSISTED; blockers() describes what may PROCEED. The flow starts with an empty name and must remain saveable mid-way.',
+    failureMode:
+      'A min(1) on the stored schema made freshly created onboarding state fail its own validation, so every save silently reset the module. Caught by the save round-trip test. Encoding flow rules in storage schemas breaks resumability.',
+    module: 'onboarding',
+    source: 'architecture (found by the save round-trip test)'
+  },
+  {
+    id: 'progression.unlockPacing',
+    constant: 'UNLOCK_EVERY',
+    value: 'one module every 3 matchdays, two at season end',
+    rationale:
+      'Paces discovery to roughly the rate a player can absorb a new system. A survived season opens two at once because by then they have the vocabulary for it.',
+    failureMode:
+      'All 31 modules at once is the most reliable way to lose someone in their first game. Too slow and the game feels thin for hours. Untested against real players — this is the number most likely to be wrong.',
+    module: 'progression',
+    source: 'architecture — NEEDS PLAY-TESTING'
+  },
+
   // ---------------------------------------------------------------- design --
+  {
+    id: 'design.twoTokensPerDomain',
+    constant: '--c-<name> and --c-<name>-ink',
+    value: 'every domain is a fill token and a text token, never one colour',
+    rationale:
+      'A colour asked to both glow as a field and stay legible as type is being asked two contradictory things, and one value cannot serve both.',
+    failureMode:
+      'A single token per domain forces fills and text to share a value, and the mid-tones then fail both. Audited: stocks and transfer clear 4.5:1 with neither black nor white, so label colour must be computed per fill rather than set globally.',
+    module: 'design',
+    source: 'fm-03-design (contrast audit)'
+  },
+  {
+    id: 'design.auditTheBoard',
+    constant: 'live #00CC6A, tertiary text, secondary text, underworld light',
+    value: 'four board values failed WCAG and were corrected in implementation',
+    rationale:
+      'Live signal was 1.90:1 on parchment despite being captioned as an accessibility fix — it survives as a fill at 7.18:1 with dark text but cannot be type, so --live-ink #007F42 was added at 4.54:1. Tertiary text cleared no floor in either mode. Secondary sat at 4.36:1, just under AA. Underworld had no legible ink value at all.',
+    failureMode:
+      'A design board is a proposal, not a spec. Shipping its values unmeasured produces a palette that is coherent on the board and unreadable on the device — and an accessibility caption on a failing value is worse than none, because it stops anyone checking.',
+    module: 'design',
+    source: 'fm-03-design (contrast audit)'
+  },
   {
     id: 'design.modeScopedValues',
     constant: '--c-live',

@@ -1,6 +1,7 @@
 import { get, set, del, keys } from 'idb-keyval';
 import type { Registry } from './registry';
 import type { GameState } from './state';
+import type { Rng } from './rng';
 
 /**
  * Saves live in IndexedDB, not localStorage.
@@ -45,7 +46,7 @@ export interface LoadReport {
  * case requires a global migration function, which is the thing that becomes
  * unmaintainable in a game that ships for years.
  */
-export function deserialise(registry: Registry, file: SaveFile, freshRng: () => any): LoadReport {
+export function deserialise(registry: Registry, file: SaveFile, freshRng: () => Rng): LoadReport {
   const notes: string[] = [];
   const modules: Record<string, unknown> = {};
 

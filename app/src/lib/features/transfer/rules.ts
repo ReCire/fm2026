@@ -1,4 +1,4 @@
-import type { Rng } from '$lib/engine/rng';
+import { createRng, mixSeed, type Rng } from '$lib/engine/rng';
 import type { Position } from '../squad/positions';
 import { POSITIONS } from '../squad/positions';
 import type { Player, SquadState } from '../squad/state';
@@ -468,6 +468,35 @@ export function counterQuotes(offer: Offer): { multiplier: number; label: string
     ...o,
     demanded: roundToStep(offer.currentBid * o.multiplier)
   }));
+}
+
+/**
+ * The RNG a player-initiated negotiation rolls from.
+ *
+ * Tick hooks are handed a stream by the engine, but a counter-offer happens
+ * when the player clicks a button, outside any tick. Deriving the stream from
+ * the game seed and advancing a cursor stored in state keeps that roll every
+ * bit as reproducible: same save + same clicks = same negotiation, and
+ * reloading cannot be used to re-roll a walk-away into an acceptance.
+ */
+export function negotiationRng(transfer: TransferState, seed: number): Rng {
+  /*
+   * A counter-offer is rolled on click, outside any tick, so it cannot use the
+   * engine's per-module tick stream. It derives a fresh stream from the game
+   * seed plus a persisted counter instead.
+   *
+   * The counter lives in saved state, which is what makes this save-scum
+   * resistant: reloading and re-negotiating advances the counter and produces a
+   * different stream rather than replaying the same lucky roll.
+   *
+   * Derived rather than fast-forwarded: the previous version asked createRng to
+   * step `cursor` times, which was O(cursor) — a long career would have spent
+   * hundreds of thousands of steps on the phone's main thread just to open a
+   * negotiation.
+   */
+  const rng = createRng(mixSeed(seed, `transfer.negotiation.${transfer.negotiationCursor}`));
+  transfer.negotiationCursor += 1;
+  return rng;
 }
 
 /** Counters left on this bid, for the screen. */

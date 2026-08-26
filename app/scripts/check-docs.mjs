@@ -63,18 +63,32 @@ function lineOf(text, index) {
 function attributesOf(text, from) {
   let depth = 0;
   let quote = null;
-  for (let i = from; i < text.length; i++) {
+  // A tag is never this long. Bailing out loudly beats scanning to the end of
+  // the file and matching a `doc=` that belongs to some unrelated component
+  // hundreds of lines later — a false NEGATIVE, which silently switches the
+  // gate off, is far worse than the false positive this parser replaced.
+  const LIMIT = Math.min(text.length, from + 2000);
+
+  for (let i = from; i < LIMIT; i++) {
     const ch = text[i];
+
     if (quote) {
+      // Escapes matter: an apostrophe in `() => alert('don\'t')` used to end
+      // the string early and run the scan off into the rest of the file.
+      if (ch === '\\') { i++; continue; }
       if (ch === quote) quote = null;
       continue;
     }
+
     if (ch === '"' || ch === "'" || ch === '`') { quote = ch; continue; }
     if (ch === '{') { depth++; continue; }
-    if (ch === '}') { depth--; continue; }
-    if (ch === '>' && depth === 0) return text.slice(from, i);
+    // Clamp: a stray `}` must not push depth negative and disarm the exit test.
+    if (ch === '}') { depth = Math.max(0, depth - 1); continue; }
+    if (ch === '>' && depth === 0) return { attrs: text.slice(from, i), ok: true };
   }
-  return text.slice(from); // unterminated tag; let the compiler complain
+
+  // Ran past the limit or hit EOF: report rather than guess.
+  return { attrs: text.slice(from, LIMIT), ok: false };
 }
 
 function precededByIgnore(text, index) {
@@ -114,7 +128,16 @@ for await (const file of walk(SRC)) {
   // Rule 2: our primitives need a doc id.
   for (const m of text.matchAll(PRIMITIVE_OPEN)) {
     stats.controls++;
-    const attrs = attributesOf(text, m.index + m[0].length);
+    const { attrs, ok } = attributesOf(text, m.index + m[0].length);
+    if (!ok) {
+      problems.push({
+        file: rel,
+        line: lineOf(text, m.index),
+        rule: 'unparseable-tag',
+        message: `Could not find the end of this <${m[1]}> tag within 2000 characters. Usually an unbalanced quote or brace above it. Fix the markup rather than trusting the gate here.`
+      });
+      continue;
+    }
     if (!HAS_DOC.test(attrs)) {
       problems.push({
         file: rel,

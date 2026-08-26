@@ -16,9 +16,17 @@
 export interface ModuleStates {}
 
 export interface MetaState {
-  /** Reproducibility: seed + cursor fully determine the RNG stream. */
+  /**
+   * Reproducibility: the seed plus the tick number fully determine every
+   * module's RNG stream, because each stream is derived from
+   * mixSeed(seed, `module#kind#tick`) rather than carried across ticks.
+   *
+   * There is deliberately no cursor field. There used to be one; it was never
+   * read, never written, and its accessor double-counted its own fast-forward —
+   * a dead guarantee that the next person to implement mid-tick saving would
+   * have trusted.
+   */
   seed: number;
-  rngCursor: number;
   season: number;
   matchday: number;
   /** Monotonic counter of committed ticks. Used by the history buffer. */

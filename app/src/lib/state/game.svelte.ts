@@ -5,7 +5,7 @@ import { installDocs } from '$lib/docs/registry';
 import type { GameState, MetaState, ModuleStates } from '$lib/engine/state';
 import type { TickKind } from '$lib/engine/module';
 import { modules } from '$lib/modules';
-import { pushSnapshot, clearHistory } from './history.svelte';
+import { pushSnapshot, popSnapshot, clearHistory } from './history.svelte';
 
 export const registry = new Registry(modules);
 
@@ -16,7 +16,6 @@ installDocs(registry.docs());
 function freshMeta(seed: number): MetaState {
   return {
     seed,
-    rngCursor: 0,
     season: 1,
     matchday: 1,
     tick: 0,
@@ -53,16 +52,71 @@ export const lastTick = $state<{ result: TickResult | null }>({ result: null });
 export function advance(kind: TickKind = 'matchday'): TickResult {
   // Snapshot BEFORE the tick, so "undo matchday" returns to the decision point.
   pushSnapshot(game);
+
   const result = runTick(registry, game, kind);
+
+  // A hook that threw leaves the tick half-applied: the engine mutates state in
+  // place, so a transfer fee can be debited without the player arriving. Rather
+  // than commit that, roll the whole tick back to the snapshot we just took —
+  // the cost of the guarantee is a snapshot we were taking anyway.
+  if (result.failed.length > 0) {
+    const before = popSnapshot();
+    if (before) restore(before);
+    result.events.push({
+      source: 'engine',
+      severity: 'bad',
+      title: 'Spieltag zurückgenommen',
+      detail: `Fehler in: ${result.failed.join(', ')}. Der Spielstand ist unverändert.`
+    });
+  }
+
   lastTick.result = result;
   return result;
 }
 
+/**
+ * Copy a state INTO the live game without replacing `game.modules`.
+ *
+ * Reassigning `game.modules` installs a new object, so the next read returns a
+ * NEW rune proxy — and any reference a component captured before the swap keeps
+ * pointing at a detached object that is still individually reactive. That stale
+ * screen re-renders happily, shows its own numbers, accepts edits, and none of
+ * it reaches the game or the save.
+ *
+ * Every screen today uses `$derived(game.modules.x)` and survives a swap, but
+ * `const x = game.modules.squad` and `const x = $derived(game.modules.squad)`
+ * are one keyword apart, read identically, and behave identically until the
+ * first undo. Mutating in place preserves identity so the distinction stops
+ * being load-bearing.
+ */
+function restore(next: GameState): void {
+  Object.assign(game.meta, next.meta);
+  const live = game.modules as unknown as Record<string, unknown>;
+  const incoming = next.modules as unknown as Record<string, unknown>;
+  for (const key of Object.keys(live)) if (!(key in incoming)) delete live[key];
+  for (const [key, value] of Object.entries(incoming)) live[key] = value;
+}
+
+/**
+ * Swap in a different game — a loaded save, or a new career.
+ *
+ * Clears history, because undoing across two different careers is meaningless.
+ * Undo must NOT go through here: it did once, and `clearHistory()` reduced a
+ * documented twelve-step buffer to exactly one step. Undo calls `undo()`.
+ */
 export function replaceGame(next: GameState): void {
-  game.meta = next.meta;
-  game.modules = next.modules;
+  restore(next);
   clearHistory();
   lastTick.result = null;
+}
+
+/** Step back one committed tick. Returns false when there is nothing to undo. */
+export function undo(): boolean {
+  const before = popSnapshot();
+  if (!before) return false;
+  restore(before);
+  lastTick.result = null;
+  return true;
 }
 
 export function newGame(seedText?: string): void {

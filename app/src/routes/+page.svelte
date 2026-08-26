@@ -1,7 +1,7 @@
 <script lang="ts">
   import { game, advance, lastTick, registry } from '$lib/state/game.svelte';
-  import { popSnapshot, canUndo } from '$lib/state/history.svelte';
-  import { replaceGame } from '$lib/state/game.svelte';
+  import { canUndo } from '$lib/state/history.svelte';
+  import { undo } from '$lib/state/game.svelte';
   import { Panel, Button, StatChip, fromEvent } from '$lib/ui';
   import { formatMoney, matchdayNet, breakdown } from '$lib/features/finance/rules';
   import { attendance, capacity } from '$lib/features/stadium/rules';
@@ -19,9 +19,8 @@
     for (const e of result.events) fromEvent(e);
   }
 
-  function undo() {
-    const prev = popSnapshot();
-    if (prev) replaceGame(prev);
+  function stepBack() {
+    if (!undo()) return;
   }
 </script>
 
@@ -38,7 +37,7 @@
 
   <div class="actions">
     <Button doc="game.advance" onclick={playMatchday} explain />
-    <Button doc="game.undo" variant="ghost" onclick={undo} disabled={!canUndo()} />
+    <Button doc="game.undo" variant="ghost" onclick={stepBack} disabled={!canUndo()} />
   </div>
 </Panel>
 

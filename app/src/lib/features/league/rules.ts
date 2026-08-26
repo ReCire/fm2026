@@ -200,9 +200,16 @@ export interface MatchResult {
 
 /**
  * The goal model, ported from `simulateFullSeason()`: each side rolls 0..2 and
- * the stronger side adds a fifth of a goal per point of edge. Deliberately
+ * the stronger side adds one goal per twenty points of edge. Deliberately
  * coarse — the dedicated matchday engine will replace it for the player's own
  * fixture; this is what keeps the other 71 clubs moving.
+ *
+ * ONE DELIBERATE CHANGE. The prototype gave home advantage only to the player:
+ * `calcTeamStrength(true)` added +3, while two AI clubs met on neutral ground.
+ * Every AI table was therefore built without a home effect while the player's
+ * own results carried one, which quietly made the player's record better than
+ * the table around it. Here every home side gets `homeAdvantage`, so the whole
+ * pyramid is simulated by the same rule.
  */
 export function simulateFixture(rng: Rng, homeStrength: number, awayStrength: number): MatchResult {
   const edge = homeStrength + C.homeAdvantage - awayStrength;
@@ -323,7 +330,15 @@ export interface SeasonOutcome {
   europe: boolean;
 }
 
-/** Where the season left the club, before anything is moved. */
+/**
+ * Where the season left the club, before anything is moved.
+ *
+ * DELIBERATE CHANGE. `concludeSeasonAndAdvance()` promoted on `myRank <= 2` but
+ * relegated on `myRank >= 16` — two up, three down out of eighteen. That only
+ * held together because the prototype threw the whole world away and rebuilt it
+ * every summer; with clubs that persist, the divisions would lose a team a year.
+ * Content now validates `promotionPlaces === relegationPlaces` and both are 2.
+ */
 export function seasonOutcome(league: LeagueState): SeasonOutcome {
   const level = league.playerLevel;
   const teams = league.levels[level] ?? [];

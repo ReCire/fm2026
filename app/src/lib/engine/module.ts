@@ -64,8 +64,36 @@ export interface ModuleDef<Id extends string = string, S = unknown> {
   docs?: Record<string, DocEntry>;
   /** Hard dependencies. Boot fails loudly if one is missing. */
   requires?: readonly string[];
-  /** Return false to leave the module out entirely (feature flag). */
+  /**
+   * Build-time feature flag. False leaves the module out of the registry
+   * entirely, as if the folder did not exist.
+   */
   enabled?: () => boolean;
+
+  /**
+   * Run-time gate: is this module available to the player *yet*?
+   *
+   * A locked module keeps its state (so a save is stable across an unlock) but
+   * is absent from navigation, unreachable by route, and its hooks do not run —
+   * industry must not quietly earn money before the player has unlocked it.
+   *
+   * The engine never learns what an unlock IS. A module declares its own gate,
+   * usually by asking the progression module, so the dependency points from the
+   * feature to progression and never the other way.
+   *
+   * Omitted means always available.
+   */
+  gate?: (state: GameState) => boolean;
+
+  /**
+   * What this department does when an executive runs it instead of the player.
+   *
+   * Hiring an executive is delegation: the module keeps making decisions, but
+   * without the player in the loop. Declaring it here rather than in a central
+   * "AI" module means the people who understand a system write its autopilot,
+   * and deleting the feature deletes its autopilot with it.
+   */
+  autopilot?: Hook;
 }
 
 /** Identity function that exists purely to pin the generics. */

@@ -58,6 +58,15 @@ export const TransferSchema = z.object({
   /** Counts up to `refreshEveryMatchdays`, then the market turns over. */
   sinceRefresh: z.number().int().min(0),
   /**
+   * Position in the negotiation RNG stream.
+   *
+   * A counter-offer is rolled when the player clicks, not during a tick, so it
+   * cannot use the tick's RNG. Persisting the cursor keeps the roll seeded and
+   * replayable anyway: the same save, the same clicks, the same answer — and
+   * reloading a save does not re-roll a negotiation into a better outcome.
+   */
+  negotiationCursor: z.number().int().min(0),
+  /**
    * Monotonic id source. The prototype minted ids with
    * `Math.random().toString(36)`, which is neither reproducible from a seed nor
    * collision-proof; a counter is both.
@@ -78,6 +87,7 @@ export function createTransfer(rng: Rng): TransferState {
     freeAgents: [],
     offers: [],
     sinceRefresh: 0,
+    negotiationCursor: 0,
     nextId: 1
   };
   refreshMarket(transfer, rng, { leagueLevel: transferContent.defaultLeagueLevel });
