@@ -18,116 +18,174 @@
     <title>Anstoß Mobile Pro - FM13 Industrial & European Master Edition</title>
     <style>
         /* ==========================================================
-           FARBSYSTEM — zwei vollwertige Modi
-           Dark  = "Phosphor": organisches Tiefgrün als Grund, damit die
-                   Leuchtfarben der Live-Ansicht Nachtsicht nicht zerstören.
-           Light = "Eco-Conscious": warme Recyclingpapier-Töne statt Weiß,
-                   senkt Blendung und trägt die nachhaltige Bildsprache.
-           Semantische Tokens zuerst, Legacy-Variablen darauf gemappt.
+           ANSTOSS FARBSPRACHE — nach Sanzo Wada
+           Zwei gleichwertige Modi. Die Domänenfarben sind in beiden Modi
+           identisch: eine Wada-Triade je Ressort. Was wechselt, ist die
+           ROLLE, die ein Triadenglied übernimmt — auf Pergament trägt das
+           dunkelste Glied die Schrift, im Wald das hellste.
+
+           Regel des Systems: Token tragen Bedeutung, Modi tragen Werte.
+           Ein Ressort hat daher immer zwei Werte:
+             --c-<name>       Fläche  (Balken, Kacheln, Diagramme, Punkte)
+             --c-<name>-ink   Schrift (Beschriftung, Zahlen, Symbole)
+           Fläche darf leuchten. Schrift muss lesbar sein. Das ist nicht
+           dieselbe Anforderung und deshalb nicht derselbe Wert.
            ========================================================== */
         :root {
             color-scheme: dark;
 
-            /* Ressortfarben — bedeuten überall dasselbe */
-            --c-finance:  #4ADE80;
-            --c-squad:    #60A5FA;
-            --c-industry: #FBBF24;
-            --c-matchday: #FF4444;
-            --c-live:     #00FF88;
-            --c-doctrine: #C084FC;
+            /* ---- Wada-Triaden, modusunabhängig ---- */
+            --wada-finance-1:#6B8F71; --wada-finance-2:#F0E8D4; --wada-finance-3:#3D5C44;
+            --wada-squad-1:#3D4F7A;   --wada-squad-2:#8896AB;   --wada-squad-3:#E8E4F0;
+            --wada-industry-1:#C4913E;--wada-industry-2:#9B5B3A;--wada-industry-3:#E8D5B8;
+            --wada-under-1:#4A2D4E;   --wada-under-2:#2A2030;   --wada-under-3:#8B6B8F;
+            --wada-europe-1:#B8963E;  --wada-europe-2:#2B3654;  --wada-europe-3:#F5F0E0;
+            --wada-youth-1:#4A9B8E;   --wada-youth-2:#C4E8DF;   --wada-youth-3:#2D6B62;
+            --wada-match-1:#C84032;   --wada-match-2:#FFF5F0;   --wada-match-3:#8B3028;
+            --wada-stocks-1:#5B7A8F;  --wada-stocks-2:#E8EEF2;  --wada-stocks-3:#3A5668;
+            --wada-doctrine-1:#BF6B30;--wada-doctrine-2:#A8998A;--wada-doctrine-3:#7A4420;
+            --wada-transfer-1:#9B6B7A;--wada-transfer-2:#F0E0E4;--wada-transfer-3:#6B3B4A;
 
-            /* Schriftwerte. Im Dunkeln identisch mit der Fläche - dort trägt
-               dieselbe Farbe beides. Siehe [data-theme="light"] für den Grund. */
-            --c-finance-ink:  var(--c-finance);
-            --c-squad-ink:    var(--c-squad);
-            --c-industry-ink: var(--c-industry);
-            --c-matchday-ink: var(--c-matchday);
-            --c-live-ink:     var(--c-live);
-            --c-doctrine-ink: var(--c-doctrine);
-            --on-accent:      #06100A;   /* Beschriftung auf gefüllten Flächen */
+            /* ---- Nachtmodus: Dark Forest ---- */
+            --bg:        #0B1410;
+            --surface:   #141F1A;
+            --card:      #1C2B24;
+            --border:    #2D3F36;
+            --divider:   #2D3F36;
+            --text-1:    #F2F0EB;
+            --text-2:    #8A9B90;
+            --text-3:    #708079;   /* Spezifikation #5E7068 = 3,56:1 — angehoben auf 4,5:1 */
+            --disabled:  #3A4D44;
 
-            /* Flächen — Grün-Unterton statt neutralem Grau */
-            --bg-app:     #070A08;
-            --bg-sunken:  #0A0F0C;
-            --bg-surface: #0E1512;
-            --bg-raised:  #141D18;
-            --bg-inset:   rgba(255, 255, 255, 0.04);
+            /* Flächen: das gesättigte Triadenglied */
+            --c-finance:  var(--wada-finance-1);
+            --c-squad:    var(--wada-squad-1);
+            --c-industry: var(--wada-industry-1);
+            --c-under:    var(--wada-under-3);
+            --c-europe:   var(--wada-europe-1);
+            --c-youth:    var(--wada-youth-1);
+            --c-matchday: var(--wada-match-1);
+            --c-stocks:   var(--wada-stocks-1);
+            --c-doctrine: var(--wada-doctrine-1);
+            --c-transfer: var(--wada-transfer-1);
 
-            --text-main:  #E8F0EA;
-            --text-soft:  #A8B8AE;
-            --text-muted: #718278;   /* 4,55:1 - #6B7D72 lag bei 4,23 */
-            --text-invert:#06100A;
+            /* Schrift: auf dunklem Grund das hellste Glied */
+            --c-finance-ink:  var(--wada-finance-2);
+            --c-squad-ink:    var(--wada-squad-3);
+            --c-industry-ink: var(--wada-industry-3);
+            --c-under-ink:    #917295;   /* Spezifikation #8B6B8F = 4,10:1 — angehoben */
+            --c-europe-ink:   var(--wada-europe-3);
+            --c-youth-ink:    var(--wada-youth-2);
+            --c-matchday-ink: var(--wada-match-2);
+            --c-stocks-ink:   var(--wada-stocks-2);
+            --c-doctrine-ink: var(--wada-doctrine-2);
+            --c-transfer-ink: var(--wada-transfer-2);
 
-            --border:      rgba(232, 240, 234, 0.10);
-            --border-soft: rgba(232, 240, 234, 0.06);
-            --border-lit:  rgba(74, 222, 128, 0.38);
+            --live:      #00FF88;
+            --live-ink:  #00FF88;        /* 13,96:1 auf Waldgrund — trägt Schrift */
+            --on-fill:   #0B1410;        /* Beschriftung auf gefüllter Fläche */
+            --on-live:   #06200F;
 
-            --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.55);
-            --glow-live:   0 0 14px rgba(0, 255, 136, 0.45);
-
-            /* Legacy-Aliasse: bestehende Regeln lesen weiter diese Namen */
-            --bg-body: var(--bg-app);
-            --bg-sidebar: var(--bg-sunken);
-            --bg-header: var(--bg-surface);
-            --bg-card: var(--bg-surface);
-            --bg-card-hover: var(--bg-raised);
-            --primary: var(--c-finance);
-            --primary-glow: rgba(74, 222, 128, 0.25);
-            --accent: var(--c-industry);
-            --accent-glow: rgba(251, 191, 36, 0.25);
-            --danger: var(--c-matchday);
-            --blue: var(--c-squad);
-            --purple: var(--c-doctrine);
-            --industry: var(--c-industry);
-            --gold: #F5C542;
-            --europe: #7C93F5;
-            --border-highlight: var(--border-lit);
+            --shadow: 0 10px 30px rgba(0,0,0,.5);
         }
 
         [data-theme="light"] {
             color-scheme: light;
 
-            --c-finance:  #2E8B57;
-            --c-squad:    #3B7DD8;
-            --c-industry: #D4920A;
-            --c-matchday: #D93025;
-            --c-live:     #00A85A;   /* #00FF7F ist auf Papier unlesbar - abgedunkelt */
-            --c-doctrine: #7C4DBE;
+            /* ---- Tagmodus: warmes Pergament ---- */
+            --bg:        #F5F1EB;
+            --surface:   #FFFDF7;
+            --card:      #FFFFFF;
+            --border:    #E5E0D8;
+            --divider:   #D4CCC2;
+            --text-1:    #2C2416;
+            --text-2:    #776C60;   /* Spezifikation #7A6F62 = 4,36:1 — knapp angehoben */
+            --text-3:    #746D65;   /* Spezifikation #A89E92 = 2,34:1 — trägt keinen Text */
+            --disabled:  #C4BDB4;
 
-            /* Auf Papier reichen die Flächenwerte für Schrift nicht aus.
-               Diese Werte sind gegen den dunkleren der beiden hellen Gründe
-               (#F2EFE7) auf 4,5:1 gerechnet, damit sie auf beiden bestehen. */
-            --c-finance-ink:  #297B4D;
-            --c-squad-ink:    #336DBC;
-            --c-industry-ink: #916407;
-            --c-matchday-ink: #CE2E23;
-            --c-live-ink:     #007D43;
-            --c-doctrine-ink: #7C4DBE;
-            --on-accent:      #FFFFFF;
+            /* Flächen bleiben die gesättigten Glieder — Diagramme sollen leuchten */
+            --c-under:    var(--wada-under-1);
 
-            /* Recyclingpapier: leicht warm, nie reines Weiß */
-            --bg-app:     #F2EFE7;
-            --bg-sunken:  #EAE6DC;
-            --bg-surface: #FBF9F4;
-            --bg-raised:  #FFFFFF;
-            --bg-inset:   rgba(26, 31, 28, 0.045);
+            /* Schrift: auf Pergament das dunkelste Glied */
+            --c-finance-ink:  var(--wada-finance-3);
+            --c-squad-ink:    var(--wada-squad-1);
+            --c-industry-ink: var(--wada-industry-2);
+            --c-under-ink:    var(--wada-under-2);
+            --c-europe-ink:   var(--wada-europe-2);
+            --c-youth-ink:    var(--wada-youth-3);
+            --c-matchday-ink: var(--wada-match-3);
+            --c-stocks-ink:   var(--wada-stocks-3);
+            --c-doctrine-ink: var(--wada-doctrine-3);
+            --c-transfer-ink: var(--wada-transfer-3);
 
-            --text-main:  #1A1F1C;
-            --text-soft:  #4A554E;
-            --text-muted: #656F69;   /* 4,53:1 auf #F2EFE7 */
-            --text-invert:#FBF9F4;
+            /* Das Live-Signal ist der einzige Wert, der im Tagmodus bricht:
+               #00CC6A erreicht auf Pergament 1,90:1. Als Fläche mit dunkler
+               Schrift ergibt es 7,18:1 und bleibt damit die Live-Pille;
+               als Schrift braucht es den abgedunkelten Wert. */
+            --live:      #00CC6A;
+            --live-ink:  #007F42;
+            --on-fill:   #FFFDF7;
+            --on-live:   #2C2416;
 
-            --border:      rgba(26, 31, 28, 0.14);
-            --border-soft: rgba(26, 31, 28, 0.08);
-            --border-lit:  rgba(46, 139, 87, 0.45);
+            --shadow: 0 6px 20px rgba(44,36,22,.10);
+        }
 
-            --shadow-lift: 0 8px 24px rgba(60, 70, 60, 0.14);
-            --glow-live:   0 0 10px rgba(0, 168, 90, 0.30);
+        /* ---- Typografie: eine Stufe, sechs Größen ---- */
+        :root {
+            --fs-display:  28px;
+            --fs-headline: 20px;
+            --fs-title:    16px;
+            --fs-body:     14px;
+            --fs-caption:  11px;
+            --fs-mono:     14px;
+            --lh-tight: 1.2;
+            --lh-body:  1.55;
+            --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-            --primary-glow: rgba(46, 139, 87, 0.18);
-            --accent-glow: rgba(212, 146, 10, 0.20);
-            --gold: #B8860B;
-            --europe: #3B5BC0;
+            /* ---- Raster: 4px-Basis, keine Zwischenwerte ---- */
+            --s1: 4px;  --s2: 8px;  --s3: 12px;
+            --s4: 16px; --s6: 24px; --s8: 32px;
+
+            --tap: 44px;   /* kleinste Trefferfläche */
+        }
+
+        /* ---- Altlasten-Zuordnung ----
+           Bestehende Regeln lesen weiter die alten Namen und bekommen
+           dadurch ohne Umschreiben die Wada-Werte. */
+        :root, [data-theme="light"] {
+            --bg-body: var(--bg);
+            --bg-sidebar: var(--surface);
+            --bg-header: var(--surface);
+            --bg-card: var(--card);
+            --bg-card-hover: var(--surface);
+            --bg-app: var(--bg);
+            --bg-sunken: var(--surface);
+            --bg-surface: var(--card);
+            --bg-raised: var(--card);
+            --bg-inset: color-mix(in srgb, var(--text-1) 5%, transparent);
+            --text-main: var(--text-1);
+            --text-soft: var(--text-2);
+            --text-muted: var(--text-2);
+            --text-invert: var(--on-fill);
+            --border-soft: var(--divider);
+            --border-lit: var(--c-finance);
+            --border-highlight: var(--c-finance);
+            --primary: var(--c-finance-ink);
+            --primary-glow: transparent;
+            --accent: var(--c-industry-ink);
+            --accent-glow: transparent;
+            --danger: var(--c-matchday-ink);
+            --blue: var(--c-squad-ink);
+            --purple: var(--c-doctrine-ink);
+            --industry: var(--c-industry-ink);
+            --gold: var(--c-europe-ink);
+            --europe: var(--c-squad-ink);
+            --c-live: var(--live);
+            --c-matchday-ink: var(--c-matchday-ink);
+            --shadow-lift: var(--shadow);
+            --glow-live: none;
+            --on-accent: var(--on-fill);
+            --hair: var(--divider);
         }
 
         /* Flächen, die vorher fest dunkel waren, folgen jetzt dem Modus. */
@@ -145,12 +203,10 @@
         [data-theme="light"] .fixture-row { background: var(--bg-raised); color: var(--text-main); }
         [data-theme="light"] .nav-btn     { color: var(--text-soft); }
         [data-theme="light"] .nav-btn:hover { background: rgba(26,31,28,0.05); color: var(--text-main); }
-        [data-theme="light"] .btn-secondary { background: var(--bg-raised); color: var(--c-industry); border-color: var(--border); }
         [data-theme="light"] .btn-primary,
         [data-theme="light"] .btn-action,
-        [data-theme="light"] .btn-gold    { color: var(--text-invert); }
         [data-theme="light"] .input-inline { background: var(--bg-raised); border-color: var(--border); color: var(--text-main); }
-        [data-theme="light"] .tabbar      { background: rgba(251,249,244,0.94); border-top-color: var(--border); }
+        [data-theme="light"] .tabbar      { background: color-mix(in srgb, var(--surface) 94%, transparent); border-top-color: var(--border); }
         [data-theme="light"] .tabbar button { color: var(--text-muted); }
         [data-theme="light"] .sound-btn   { background: var(--bg-raised); border-color: var(--border); }
         [data-theme="light"] .club-name   { color: var(--text-main); }
@@ -188,7 +244,6 @@
         [data-theme="light"] .fx-row b,
         [data-theme="light"] .cost-chip b { color: var(--text-main); }
         [data-theme="light"] .cost-chip   { background: var(--bg-inset); }
-        [data-theme="light"] .btn-doc     { color: var(--bg-surface); }
         [data-theme="light"] .doc-scrim   { background: rgba(40,48,42,0.42); }
         [data-theme="light"] .df-card     { background: var(--bg-surface); }
         [data-theme="light"] .df-name     { color: var(--text-main); }
@@ -220,11 +275,6 @@
            Grün-Finance und Rot erreichen mit dunkler Schrift keine 4,5 und
            nehmen deshalb den abgedunkelten Wert mit weißer Schrift. */
         [data-theme="light"] .btn-action,
-        [data-theme="light"] .btn-gold    { background: var(--c-industry); color: #0B1410; }
-        [data-theme="light"] .btn-blue    { background: var(--c-squad); color: #0B1410; }
-        [data-theme="light"] .btn-primary { background: var(--c-finance-ink); color: #fff; }
-        [data-theme="light"] .btn-danger  { background: var(--c-matchday-ink); color: #fff; }
-        [data-theme="light"] .btn-doc     { background: var(--c-finance-ink); color: #fff; }
         [data-theme="light"] .radar-cta   { background: var(--c-live); color: #0B1410; }
         [data-theme="light"] .badge-count { background: var(--c-matchday); color: #fff; }
         [data-theme="light"] .badge-count { color: #fff; }
@@ -246,19 +296,6 @@
            aber sie kommt jetzt aus Zeilenhöhe und Abstand, nicht aus
            Schriftgröße. Eine Stufe: 11 / 12 / 13 / 15 / 18 / 22.
            ========================================================== */
-        :root {
-            --fs-micro: 11px;   /* Einheiten, Fußnoten, Achsbeschriftung  */
-            --fs-small: 12px;   /* Sekundärzeilen, Tabellenzellen         */
-            --fs-body:  13px;   /* Grundtext und Bedienelemente           */
-            --fs-lead:  15px;   /* Kartentitel, hervorgehobene Werte      */
-            --fs-title: 18px;   /* Bildschirmüberschriften                */
-            --fs-hero:  22px;   /* Kontostand, Spielstand                 */
-            --lh-tight: 1.25;
-            --lh-body:  1.55;
-
-            --tap-min: 44px;    /* kleinste Trefferfläche, Apple HIG      */
-            --tap-gap: 8px;     /* Mindestabstand zwischen zwei Zielen    */
-        }
 
         /* Trefferflächen: unter 44px wird auf einem Telefon danebengetippt.
            Wo die Optik klein bleiben soll, wächst nur die Fläche mit einem
@@ -296,6 +333,46 @@
             .radar-live i { animation: none; opacity: 1; }
         }
 
+        /* Beträge, Quoten, Spielstände: feste Ziffernbreite, damit Spalten
+           beim Hochzählen nicht wackeln. Wada-Stufe: Mono Stat 14px. */
+        .mono, .kpi-chip strong, .radar-score, #shop-coins-val, .cost-chip b, .kx-num {
+            font-family: var(--font-mono); font-size: var(--fs-mono);
+            font-variant-numeric: tabular-nums; letter-spacing: -0.2px;
+        }
+        .kpi-chip strong { font-size: var(--fs-body); }
+
+        /* Der alte Neon-Schein passt nicht zur Wada-Sprache: Flächen und
+           Linien tragen die Information, nicht Leuchtkanten. */
+        .panel { box-shadow: none; border: 1px solid var(--border); background: var(--card); border-radius: 10px; }
+        .app-layout { box-shadow: none; border: none; background: var(--bg); }
+        .club-logo { box-shadow: none; }
+        .nav-btn.active { box-shadow: none; }
+
+        /* Navigation ohne Bildschmuck: die Zugehörigkeit trägt ein
+           2px-Strich in der Ressortfarbe, nicht ein Piktogramm. */
+        .nav-btn { position: relative; padding-left: 14px; font-size: var(--fs-body); font-weight: 600; letter-spacing: .1px; }
+        .nav-btn::before {
+            content: ''; position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+            width: 2px; height: 14px; background: var(--border); border-radius: 1px; transition: none;
+        }
+        .nav-btn.active::before { background: currentColor; height: 20px; }
+        .nav-btn.active { background: var(--bg-inset); font-weight: 700; }
+        .nav-btn.special-industry::before { background: var(--c-industry); }
+        .nav-btn.special-gold::before     { background: var(--c-europe); }
+        .nav-btn.special-red::before      { background: var(--c-matchday); }
+        .nav-btn.special-europe::before   { background: var(--c-squad); }
+        .nav-category {
+            font-size: var(--fs-caption); font-weight: 700; letter-spacing: 1.6px;
+            text-transform: uppercase; color: var(--text-3); margin: var(--s4) var(--s1) var(--s1);
+        }
+
+        /* Panel-Überschriften: Wortmarke statt Bildmarke. */
+        .panel-header {
+            font-size: var(--fs-title); font-weight: 700; color: var(--text-1);
+            letter-spacing: -.2px; border-bottom: 1px solid var(--divider);
+            padding-bottom: var(--s2); margin-bottom: var(--s3);
+        }
+
         .theme-btn {
             background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-soft);
             width: 34px; height: 34px; border-radius: 9px; font-size: 15px; cursor: pointer;
@@ -303,7 +380,7 @@
         }
 
         * { box-sizing: border-box; -webkit-user-select: none; user-select: none; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg-body); color: var(--text-main); font-size: var(--fs-body); line-height: var(--lh-body); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text-1); font-size: var(--fs-body); line-height: var(--lh-body); -webkit-font-smoothing: antialiased; }
         
         .app-layout { display: flex; flex-direction: column; min-height: 100vh; max-width: 940px; margin: auto; background: var(--bg-sidebar); border: 1px solid var(--border); box-shadow: 0 15px 45px rgba(0,0,0,0.8); }
         
@@ -318,17 +395,17 @@
         .kpi-chip { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; text-align: center; }
         .kpi-chip span { font-size: 9px; color: var(--text-muted); display: block; }
         .kpi-chip strong { font-size: 11px; color: #fff; }
-        .sound-btn { background: #1a233a; border: 1px solid #334155; color: var(--accent); font-size: 10px; font-weight: 800; padding: 5px 9px; border-radius: 6px; cursor: pointer; }
+        .sound-btn { background: var(--surface); border: 1px solid var(--border); color: var(--accent); font-size: 10px; font-weight: 800; padding: 5px 9px; border-radius: 6px; cursor: pointer; }
         .sound-btn.active { color: var(--primary); border-color: var(--primary); box-shadow: 0 0 8px var(--primary-glow); }
 
         /* BODY LAYOUT */
         .main-wrapper { display: flex; flex: 1; min-height: 580px; }
         
         /* SIDEBAR */
-        .app-sidebar { width: 225px; background: #0a0e18; border-right: 1px solid var(--border); padding: 10px 8px; display: flex; flex-direction: column; gap: 3px; overflow-y: auto; max-height: calc(100vh - 70px); }
-        .nav-category { font-size: 9px; font-weight: 900; color: #64748b; text-transform: uppercase; margin: 8px 4px 2px 4px; letter-spacing: 0.5px; }
-        .nav-btn { background: transparent; color: #cbd5e1; border: 1px solid transparent; border-radius: 6px; padding: 6px 10px; text-align: left; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.15s; }
-        .nav-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .app-sidebar { width: 225px; background: var(--surface); border-right: 1px solid var(--border); padding: 10px 8px; display: flex; flex-direction: column; gap: 3px; overflow-y: auto; max-height: calc(100vh - 70px); }
+        .nav-category { font-size: 9px; font-weight: 900; color: var(--text-3); text-transform: uppercase; margin: 8px 4px 2px 4px; letter-spacing: 0.5px; }
+        .nav-btn { background: transparent; color: var(--text-2); border: 1px solid transparent; border-radius: 6px; padding: 6px 10px; text-align: left; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.15s; }
+        .nav-btn:hover { background: var(--bg-inset); color: #fff; }
         .nav-btn.active { background: rgba(0, 230, 118, 0.12); color: var(--primary); border-color: var(--border-highlight); font-weight: 900; }
         .nav-btn.special-industry { color: var(--industry); }
         .nav-btn.special-industry.active { background: rgba(255, 112, 67, 0.15); border-color: var(--industry); }
@@ -340,7 +417,7 @@
         .nav-btn.special-europe.active { background: rgba(61, 90, 254, 0.2); border-color: var(--europe); }
 
         /* CONTENT WORKSPACE */
-        .app-content { flex: 1; padding: 12px; overflow-y: auto; max-height: calc(100vh - 70px); background: #0d1322; }
+        .app-content { flex: 1; padding: 12px; overflow-y: auto; max-height: calc(100vh - 70px); background: var(--bg); }
         
         /* PANELS */
         .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
@@ -349,23 +426,28 @@
         
         /* BUTTONS */
         button { font-family: inherit; touch-action: manipulation; }
-        .btn-primary { background: var(--primary); color: #000; font-weight: 800; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: 0.15s; width: 100%; margin: 3px 0; }
+        /* Beschriftung je Fläche gerechnet, nicht pauschal gesetzt:
+             finance/industry/europe/youth/doctrine tragen dunkle Schrift,
+             matchday/squad/underworld tragen helle. stocks und transfer sind
+             Mitteltöne und erreichen mit KEINER der beiden 4,5:1 — sie nehmen
+             als Knopffläche daher ihr dunkles Triadenglied. */
+        .btn-primary { background: var(--c-finance); color: #0B1410; font-weight: 800; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: 0.15s; width: 100%; margin: 3px 0; }
         .btn-primary:active { transform: scale(0.98); }
-        .btn-secondary { background: #1e293b; color: var(--accent); border: 1px solid #334155; font-weight: 700; padding: 6px 10px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
+        .btn-secondary { background: var(--surface); color: var(--c-industry-ink); border: 1px solid var(--border); font-weight: 700; padding: 6px 10px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
         .btn-secondary:hover { background: #2a374f; }
-        .btn-action { background: var(--accent); color: #000; font-weight: 900; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
-        .btn-gold { background: var(--gold); color: #000; font-weight: 900; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
-        .btn-danger { background: var(--danger); color: #fff; font-weight: 800; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
-        .btn-blue { background: var(--blue); color: #000; font-weight: 800; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
-        .btn-industry { background: var(--industry); color: #000; font-weight: 900; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
-        .btn-europe { background: var(--europe); color: #fff; font-weight: 900; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
+        .btn-action { background: var(--c-industry); color: #0B1410; font-weight: 900; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
+        .btn-gold { background: var(--c-europe); color: #0B1410; font-weight: 900; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
+        .btn-danger { background: var(--c-matchday); color: #FFFDF7; font-weight: 800; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
+        .btn-blue { background: var(--c-squad); color: #FFFDF7; font-weight: 800; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
+        .btn-industry { background: var(--c-industry); color: #0B1410; font-weight: 900; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
+        .btn-europe { background: var(--wada-squad-1); color: #FFFDF7; font-weight: 900; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%; margin: 3px 0; }
 
         /* TABLES & ROWS */
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { border: 1px solid var(--border); padding: 5px 6px; text-align: center; }
-        th { background: #151e33; color: var(--accent); font-weight: 800; }
+        th { background: var(--surface); color: var(--accent); font-weight: 800; }
         tr:nth-child(even) { background: rgba(255,255,255,0.02); }
-        tr:hover { background: rgba(255,255,255,0.05); }
+        tr:hover { background: var(--bg-inset); }
 
         .player-row, .market-row, .fixture-row { display: flex; justify-content: space-between; align-items: center; background: rgba(22, 28, 38, 0.8); padding: 6px 8px; margin: 3px 0; border-radius: 6px; font-size: 10px; border: 1px solid var(--border); color: #eee; }
         .badge { display: inline-block; padding: 2px 5px; border-radius: 4px; font-size: 8px; font-weight: 800; }
@@ -406,11 +488,11 @@
            ========================================================== */
         #screen-doctrine {
             --doc: #2FA84F; --doc-dim: rgba(47,168,79,0.16);
-            --ink: #f4f4f0;                       /* Papierweiß */
+            --ink: var(--text-1);                       /* Papierweiß */
             --ink-2: rgba(244,244,240,0.62);
             --ink-3: rgba(244,244,240,0.34);
             --hair: rgba(244,244,240,0.11);
-            --ground: #0b0b0c;
+            --ground: var(--bg);
             --ground-2: #121214;
             font-feature-settings: "tnum" 1, "lnum" 1;
         }
@@ -422,7 +504,7 @@
         }
         .wp-count {
             width: 54px; height: 54px; display: grid; place-items: center;
-            background: var(--doc); color: #0b0b0c;
+            background: var(--doc); color: var(--bg);
             font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
         }
         .wp-meta { min-width: 0; }
@@ -498,7 +580,7 @@
         @keyframes bhFlow { to { stroke-dashoffset: -8; } }
         .bh-node { cursor: pointer; }
         .bh-glyph { font-size: 10px; font-weight: 800; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
-        .bh-glyph.on { fill: #0b0b0c; }
+        .bh-glyph.on { fill: var(--bg); }
         .bh-label { font-size: 7px; font-weight: 700; letter-spacing: 0.25px; text-anchor: middle; pointer-events: none; }
         .bh-cost { font-size: 6.8px; font-weight: 700; letter-spacing: 0.4px; text-anchor: middle; pointer-events: none; }
 
@@ -548,7 +630,7 @@
         .doc-sheet {
             position: fixed; left: 0; right: 0; bottom: 0; z-index: 400;
             transform: translateY(102%); transition: transform .24s cubic-bezier(.2,.8,.2,1);
-            background: #101012; border-top: 3px solid var(--doc);
+            background: var(--surface); border-top: 3px solid var(--doc);
             padding: 8px 15px calc(18px + env(safe-area-inset-bottom, 0px));
             max-height: 78vh; overflow-y: auto; max-width: 940px; margin: 0 auto;
             font-feature-settings: "tnum" 1;
@@ -557,7 +639,7 @@
         .sheet-grip { width: 34px; height: 3px; background: rgba(244,244,240,0.22); margin: 2px auto 12px; }
         .sheet-head { display: flex; gap: 12px; align-items: flex-start; }
         .sheet-pair { flex: 0 0 auto; padding-top: 2px; }
-        .sheet-title { font-size: 16px; font-weight: 800; color: #f4f4f0; line-height: 1.15; letter-spacing: -0.3px; }
+        .sheet-title { font-size: 16px; font-weight: 800; color: var(--text-1); line-height: 1.15; letter-spacing: -0.3px; }
         .sheet-sub { font-size: 9px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--doc); margin-top: 4px; }
         .sheet-x { background: none; border: 0; color: rgba(244,244,240,0.35); font-size: 22px; line-height: 1; cursor: pointer; padding: 0 2px; font-family: inherit; }
         .sheet-lore { font-size: 11.5px; color: rgba(244,244,240,0.55); line-height: 1.65; margin: 12px 0; padding-left: 11px; border-left: 1px solid var(--hair); }
@@ -565,18 +647,18 @@
         .fx-row { display: flex; align-items: baseline; gap: 8px; font-size: 11.5px; padding: 7px 0; border-bottom: 1px solid rgba(244,244,240,0.05); }
         .fx-row .fx-dot { width: 5px; height: 5px; background: var(--doc); flex: 0 0 5px; }
         .fx-row span { color: rgba(244,244,240,0.85); line-height: 1.4; }
-        .fx-row b { color: #f4f4f0; }
+        .fx-row b { color: var(--text-1); }
         .cost-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--hair); margin: 12px 0 2px; }
-        .cost-chip { background: #17171a; padding: 9px; text-align: center; }
+        .cost-chip { background: var(--card); padding: 9px; text-align: center; }
         .cost-chip small { display: block; font-size: 8px; letter-spacing: 1.4px; text-transform: uppercase; color: rgba(244,244,240,0.34); font-weight: 700; }
-        .cost-chip b { font-size: 14px; font-weight: 800; color: #f4f4f0; }
+        .cost-chip b { font-size: 14px; font-weight: 800; color: var(--text-1); }
         .cost-chip.short b { color: #D01F3C; }
         .req-warn { font-size: 10.5px; color: #ffb4c0; background: rgba(208,31,60,0.08);
             border-left: 3px solid #D01F3C; padding: 8px 10px; margin: 10px 0; line-height: 1.6; }
         .btn-doc { width: 100%; border: 0; padding: 14px; font-size: 12px; font-weight: 800;
             font-family: inherit; cursor: pointer; margin-top: 8px; letter-spacing: 1.2px; text-transform: uppercase;
-            background: var(--doc); color: #0b0b0c; }
-        .btn-doc:disabled { background: #1c1c20; color: rgba(244,244,240,0.28); cursor: not-allowed; }
+            background: var(--doc); color: var(--bg); }
+        .btn-doc:disabled { background: var(--surface); color: rgba(244,244,240,0.28); cursor: not-allowed; }
         .btn-doc.ghost { background: transparent; border: 1px solid var(--doc); color: var(--doc); }
         .doc-scrim { position: fixed; inset: 0; background: rgba(6,6,8,0.72); z-index: 399;
             opacity: 0; pointer-events: none; transition: opacity .24s; }
@@ -585,17 +667,17 @@
         /* --- Freischaltung: harte Geometrie, kein Glanz --- */
         .doc-flash { position: fixed; inset: 0; z-index: 500; pointer-events: none; display: grid; place-items: center; transition: opacity .38s; }
         .doc-flash .df-card {
-            background: #0b0b0c; border: 2px solid var(--doc); padding: 26px 32px; text-align: center; min-width: 230px;
+            background: var(--bg); border: 2px solid var(--doc); padding: 26px 32px; text-align: center; min-width: 230px;
             animation: dfIn .34s cubic-bezier(.2,.9,.25,1);
         }
         @keyframes dfIn { from { transform: scaleY(0.04); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
         .df-mark { width: 76px; height: 38px; display: block; margin: 0 auto 10px; }
         .df-kicker { font-size: 8px; letter-spacing: 2.8px; text-transform: uppercase; color: var(--doc); font-weight: 800; }
-        .df-name { font-size: 17px; font-weight: 800; color: #f4f4f0; margin-top: 5px; line-height: 1.2; letter-spacing: -0.2px; }
+        .df-name { font-size: 17px; font-weight: 800; color: var(--text-1); margin-top: 5px; line-height: 1.2; letter-spacing: -0.2px; }
 
         .wp-toast {
             position: fixed; left: 50%; top: 14px; transform: translateX(-50%); z-index: 600;
-            background: #f4f4f0; color: #0b0b0c; font-size: 10px; font-weight: 800;
+            background: var(--text-1); color: var(--bg); font-size: 10px; font-weight: 800;
             letter-spacing: 1.2px; text-transform: uppercase; padding: 9px 16px;
             pointer-events: none; transition: opacity .4s, transform .4s;
         }
@@ -616,13 +698,13 @@
         .tabbar {
             position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
             display: flex; align-items: stretch;
-            background: rgba(10, 14, 24, 0.94); backdrop-filter: blur(14px) saturate(140%);
-            border-top: 1px solid rgba(255,255,255,0.09);
+            background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(14px) saturate(140%);
+            border-top: 1px solid var(--border);
             padding-bottom: env(safe-area-inset-bottom, 0px);
             box-shadow: 0 -6px 24px rgba(0,0,0,0.55);
         }
         .tabbar button {
-            flex: 1; background: none; border: none; color: #64748b; cursor: pointer;
+            flex: 1; background: none; border: none; color: var(--text-3); cursor: pointer;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             gap: 2px; padding: 8px 2px 7px; min-height: 54px; position: relative; transition: color 0.18s;
         }
@@ -638,11 +720,10 @@
             border-radius: 99px; background: var(--danger); color: #fff; font-size: 9px; font-weight: 900;
             display: none; align-items: center; justify-content: center; padding: 0 4px; }
 
-        .burger { display: none; background: #1a233a; border: 1px solid #334155; color: var(--text-main);
+        .burger { display: none; background: var(--surface); border: 1px solid var(--border); color: var(--text-main);
             width: 36px; height: 36px; border-radius: 9px; font-size: 16px; cursor: pointer; flex: 0 0 36px; }
 
         @media (max-width: 760px) {
-            body { font-size: 12px; }
             .mobile-only { display: flex; }
             .burger { display: block; }
 
@@ -650,7 +731,7 @@
             .app-header {
                 position: sticky; top: 0; z-index: 250; gap: 6px; padding: 8px 10px;
                 padding-top: calc(8px + env(safe-area-inset-top, 0px));
-                background: rgba(19, 27, 46, 0.96); backdrop-filter: blur(12px);
+                background: color-mix(in srgb, var(--surface) 96%, transparent); backdrop-filter: blur(12px);
                 flex-wrap: wrap; align-items: center; row-gap: 7px;
             }
             .app-header > .burger, .app-header > .club-brand { order: 1; }
@@ -732,13 +813,13 @@
         /* ==========================================================
            SCHMAIL — Posteingang im Duktus einer nativen Mail-App
            ========================================================== */
-        .mail-app { background: #0d0f14; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; overflow: hidden; }
+        .mail-app { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
         .mail-top { display: flex; align-items: center; gap: 10px; padding: 11px 12px 9px; }
         .mail-logo { font-size: 15px; font-weight: 800; letter-spacing: -0.4px; color: #fff; }
         .mail-logo i { font-style: normal; color: #ff6b00; }
         .mail-search {
             flex: 1; display: flex; align-items: center; gap: 7px; min-width: 0;
-            background: rgba(255,255,255,0.06); border-radius: 99px; padding: 8px 13px;
+            background: var(--bg-inset); border-radius: 99px; padding: 8px 13px;
             font-size: 11.5px; color: #6b7688;
         }
         .mail-me { width: 27px; height: 27px; flex: 0 0 27px; border-radius: 50%; background: linear-gradient(135deg,#ffc107,#ff8f00);
@@ -747,8 +828,8 @@
         .mail-chips { display: flex; gap: 7px; padding: 2px 12px 11px; overflow-x: auto; scrollbar-width: none; }
         .mail-chips::-webkit-scrollbar { display: none; }
         .mail-chip {
-            flex: 0 0 auto; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
-            color: #9aa7b8; border-radius: 99px; padding: 7px 14px; font-size: 11.5px; font-weight: 700;
+            flex: 0 0 auto; background: var(--bg-inset); border: 1px solid var(--border);
+            color: var(--text-2); border-radius: 99px; padding: 7px 14px; font-size: 11.5px; font-weight: 700;
             font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 6px;
         }
         .mail-chip.on { background: #1e3a5f; border-color: #2D7FF9; color: #cfe3ff; }
@@ -759,48 +840,48 @@
 
         .mail-row {
             display: flex; gap: 11px; align-items: flex-start; padding: 11px 12px;
-            border-top: 1px solid rgba(255,255,255,0.05); cursor: pointer; position: relative;
+            border-top: 1px solid var(--bg-inset); cursor: pointer; position: relative;
         }
-        .mail-row:active { background: rgba(255,255,255,0.03); }
+        .mail-row:active { background: var(--bg-inset); }
         .mail-row.unread { background: rgba(45,127,249,0.05); }
         .mail-row.unread::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #2D7FF9; }
         .mail-av { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; display: grid; place-items: center;
-            font-size: 14px; font-weight: 800; color: #0b0b0c; }
+            font-size: 14px; font-weight: 800; color: var(--bg); }
         .mail-av.lg { width: 42px; height: 42px; flex: 0 0 42px; font-size: 17px; }
         .mail-main { flex: 1; min-width: 0; }
         .mail-l1 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-        .mail-from { font-size: 12px; color: #c6d1e0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mail-from { font-size: 12px; color: var(--text-2); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .mail-row.unread .mail-from { color: #fff; font-weight: 800; }
-        .mail-time { font-size: 9.5px; color: #64748b; flex: 0 0 auto; }
+        .mail-time { font-size: 9.5px; color: var(--text-3); flex: 0 0 auto; }
         .mail-row.unread .mail-time { color: #2D7FF9; font-weight: 700; }
-        .mail-subj { font-size: 12px; color: #aeb9c9; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mail-subj { font-size: 12px; color: var(--text-2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .mail-row.unread .mail-subj { color: #fff; font-weight: 700; }
-        .mail-prev { font-size: 11px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mail-prev { font-size: 11px; color: var(--text-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .mail-flag { position: absolute; right: 10px; bottom: 10px; background: rgba(0,230,118,0.14); color: #00e676;
             font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 7px; border-radius: 4px; }
 
-        .mail-empty { text-align: center; padding: 46px 20px; color: #64748b; }
+        .mail-empty { text-align: center; padding: 46px 20px; color: var(--text-3); }
         .mail-empty-mark { font-size: 30px; color: #2FA84F; margin-bottom: 10px; }
-        .mail-empty div { font-size: 12px; color: #94a3b8; }
-        .mail-empty small { display: block; font-size: 10px; margin-top: 4px; color: #4b5563; }
+        .mail-empty div { font-size: 12px; color: var(--text-2); }
+        .mail-empty small { display: block; font-size: 10px; margin-top: 4px; color: var(--text-3); }
 
-        .mail-thread { padding: 14px 14px 18px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .mail-thread { padding: 14px 14px 18px; border-top: 1px solid var(--bg-inset); }
         .mail-thread h3 { font-size: 16px; font-weight: 800; color: #fff; line-height: 1.3; letter-spacing: -0.2px; }
         .mt-head { display: flex; gap: 11px; align-items: center; margin: 13px 0; }
-        .mt-who b { display: block; font-size: 12.5px; color: #e6edf6; font-weight: 700; }
-        .mt-who span { font-size: 10.5px; color: #64748b; }
-        .mt-body { font-size: 12.5px; color: #c6d1e0; line-height: 1.68; }
+        .mt-who b { display: block; font-size: 12.5px; color: var(--text-1); font-weight: 700; }
+        .mt-who span { font-size: 10.5px; color: var(--text-3); }
+        .mt-body { font-size: 12.5px; color: var(--text-2); line-height: 1.68; }
         .mt-body p { margin: 0 0 10px; }
         .mt-body b { color: #fff; }
-        .mt-body small { color: #64748b; font-size: 10.5px; }
-        .mt-sig { margin-top: 12px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,0.06);
-            font-size: 10px; color: #4b5563; font-style: italic; }
+        .mt-body small { color: var(--text-3); font-size: 10.5px; }
+        .mt-sig { margin-top: 12px; padding-top: 9px; border-top: 1px solid var(--bg-inset);
+            font-size: 10px; color: var(--text-3); font-style: italic; }
         .mt-actions { display: flex; flex-direction: column; gap: 7px; margin-top: 16px; }
-        .mt-btn { width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04);
-            color: #dbe4f0; font-family: inherit; font-size: 12.5px; font-weight: 700; border-radius: 9px; cursor: pointer; }
+        .mt-btn { width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--bg-inset);
+            color: var(--text-1); font-family: inherit; font-size: 12.5px; font-weight: 700; border-radius: 9px; cursor: pointer; }
         .mt-btn.primary { background: #00e676; border-color: #00e676; color: #04240f; font-weight: 800; }
         .mt-btn.danger { background: transparent; border-color: rgba(208,31,60,0.5); color: #ff8fa3; }
-        .mt-btn.ghost { margin-top: 14px; background: none; border-color: transparent; color: #4b5563; font-size: 11px; }
+        .mt-btn.ghost { margin-top: 14px; background: none; border-color: transparent; color: var(--text-3); font-size: 11px; }
     
         /* ==========================================================
            T-RADAR — die Live-Spielansicht
@@ -1004,47 +1085,47 @@
         <!-- SIDEBAR -->
         <nav class="app-sidebar">
             <div class="nav-category">Hauptzentrale</div>
-            <button class="nav-btn active" onclick="showScreen('screen-dashboard')" data-screen="screen-dashboard">📊 FM13 Dashboard</button>
-            <button class="nav-btn" onclick="showScreen('screen-mail')" data-screen="screen-mail">✉️ Poodle Mehl <span id="sidebar-mail-badge" class="badge-count" style="display:none; margin-left:auto;">0</span></button>
-            <button class="nav-btn" onclick="showScreen('screen-calendar')" data-screen="screen-calendar">📅 Kalender & Termine</button>
-            <button class="nav-btn" onclick="showScreen('screen-squad')" data-screen="screen-squad">⚽ Kader & 3D Taktik</button>
-            <button class="nav-btn" onclick="showScreen('screen-training')" data-screen="screen-training">🏋️ Training & Förderung</button>
+            <button class="nav-btn active" onclick="showScreen('screen-dashboard')" data-screen="screen-dashboard">FM13 Dashboard</button>
+            <button class="nav-btn" onclick="showScreen('screen-mail')" data-screen="screen-mail">Poodle Mehl <span id="sidebar-mail-badge" class="badge-count" style="display:none; margin-left:auto;">0</span></button>
+            <button class="nav-btn" onclick="showScreen('screen-calendar')" data-screen="screen-calendar">Kalender & Termine</button>
+            <button class="nav-btn" onclick="showScreen('screen-squad')" data-screen="screen-squad">Kader & 3D Taktik</button>
+            <button class="nav-btn" onclick="showScreen('screen-training')" data-screen="screen-training">Training & Förderung</button>
 
             <div class="nav-category">Europapokal & RPG</div>
-            <button class="nav-btn special-europe" onclick="showScreen('screen-europe')" data-screen="screen-europe">🌟 UEFA Champions Cup</button>
-            <button class="nav-btn special-gold" onclick="showScreen('screen-doctrine')" data-screen="screen-doctrine">🌳 Doktrinen & Wissensbaum</button>
-            <button class="nav-btn" onclick="showScreen('screen-scouting-global')" data-screen="screen-scouting-global">🌍 Globales Scouting</button>
+            <button class="nav-btn special-europe" onclick="showScreen('screen-europe')" data-screen="screen-europe">UEFA Champions Cup</button>
+            <button class="nav-btn special-gold" onclick="showScreen('screen-doctrine')" data-screen="screen-doctrine">Doktrinen & Wissensbaum</button>
+            <button class="nav-btn" onclick="showScreen('screen-scouting-global')" data-screen="screen-scouting-global">Globales Scouting</button>
 
             <div class="nav-category">Industrie & Produktion</div>
-            <button class="nav-btn special-industry" onclick="showScreen('screen-industry')" data-screen="screen-industry">🏭 Fabriken & Produktion</button>
-            <button class="nav-btn special-industry" onclick="showScreen('screen-raw-materials')" data-screen="screen-raw-materials">📦 Rohstoffe & Börse</button>
-            <button class="nav-btn special-industry" onclick="showScreen('screen-holding')" data-screen="screen-holding">💼 Merch-Holding & B2B</button>
-            <button class="nav-btn" onclick="showScreen('screen-merch')" data-screen="screen-merch">🏪 Fanshop-Vertrieb (3-Kanal)</button>
+            <button class="nav-btn special-industry" onclick="showScreen('screen-industry')" data-screen="screen-industry">Fabriken & Produktion</button>
+            <button class="nav-btn special-industry" onclick="showScreen('screen-raw-materials')" data-screen="screen-raw-materials">Rohstoffe & Börse</button>
+            <button class="nav-btn special-industry" onclick="showScreen('screen-holding')" data-screen="screen-holding">Merch-Holding & B2B</button>
+            <button class="nav-btn" onclick="showScreen('screen-merch')" data-screen="screen-merch">Fanshop-Vertrieb (3-Kanal)</button>
 
             <div class="nav-category">Finanzen & Wirtschaft</div>
-            <button class="nav-btn" onclick="showScreen('screen-finances')" data-screen="screen-finances">🏦 Finanzen, GuV & Budget</button>
-            <button class="nav-btn" onclick="showScreen('screen-stocks')" data-screen="screen-stocks">📈 Aktien & Investments</button>
-            <button class="nav-btn" onclick="showScreen('screen-sponsors')" data-screen="screen-sponsors">🤝 Sponsoren & Banden</button>
+            <button class="nav-btn" onclick="showScreen('screen-finances')" data-screen="screen-finances">Finanzen, GuV & Budget</button>
+            <button class="nav-btn" onclick="showScreen('screen-stocks')" data-screen="screen-stocks">Aktien & Investments</button>
+            <button class="nav-btn" onclick="showScreen('screen-sponsors')" data-screen="screen-sponsors">Sponsoren & Banden</button>
 
             <div class="nav-category">Verein & Infrastruktur</div>
-            <button class="nav-btn" onclick="showScreen('screen-stadium')" data-screen="screen-stadium">🏟️ Stadion & 8 Blöcke</button>
-            <button class="nav-btn" onclick="showScreen('screen-campus')" data-screen="screen-campus">🏢 Campus & Gebäude</button>
-            <button class="nav-btn" onclick="showScreen('screen-staff')" data-screen="screen-staff">👔 Personal & Experten</button>
-            <button class="nav-btn" onclick="showScreen('screen-fans')" data-screen="screen-fans">📢 Fans & Ordnerdienst</button>
+            <button class="nav-btn" onclick="showScreen('screen-stadium')" data-screen="screen-stadium">Stadion & 8 Blöcke</button>
+            <button class="nav-btn" onclick="showScreen('screen-campus')" data-screen="screen-campus">Campus & Gebäude</button>
+            <button class="nav-btn" onclick="showScreen('screen-staff')" data-screen="screen-staff">Personal & Experten</button>
+            <button class="nav-btn" onclick="showScreen('screen-fans')" data-screen="screen-fans">Fans & Ordnerdienst</button>
 
             <div class="nav-category">Sport & Wettbewerbe</div>
-            <button class="nav-btn" onclick="showScreen('screen-transfer')" data-screen="screen-transfer" id="nav-btn-transfer">🤝 Transfermarkt & Scouting <span id="sidebar-offers-badge" class="badge-count" style="display:none; margin-left:auto;">0</span></button>
-            <button class="nav-btn" onclick="showScreen('screen-league')" data-screen="screen-league">🏆 Tabelle & Spielpläne</button>
-            <button class="nav-btn" onclick="showScreen('screen-cup')" data-screen="screen-cup">🏆 DFB-Pokal Baum</button>
-            <button class="nav-btn" onclick="showScreen('screen-youth')" data-screen="screen-youth">🌱 Jugendakademie</button>
-            <button class="nav-btn" onclick="showScreen('screen-contracts')" data-screen="screen-contracts">📝 Spielerverträge</button>
-            <button class="nav-btn" onclick="showScreen('screen-history')" data-screen="screen-history">🌟 Trophäenraum</button>
-            <button class="nav-btn" onclick="showScreen('screen-badges')" data-screen="screen-badges">🎖️ Auszeichnungen</button>
+            <button class="nav-btn" onclick="showScreen('screen-transfer')" data-screen="screen-transfer" id="nav-btn-transfer">Transfermarkt & Scouting <span id="sidebar-offers-badge" class="badge-count" style="display:none; margin-left:auto;">0</span></button>
+            <button class="nav-btn" onclick="showScreen('screen-league')" data-screen="screen-league">Tabelle & Spielpläne</button>
+            <button class="nav-btn" onclick="showScreen('screen-cup')" data-screen="screen-cup">DFB-Pokal Baum</button>
+            <button class="nav-btn" onclick="showScreen('screen-youth')" data-screen="screen-youth">Jugendakademie</button>
+            <button class="nav-btn" onclick="showScreen('screen-contracts')" data-screen="screen-contracts">Spielerverträge</button>
+            <button class="nav-btn" onclick="showScreen('screen-history')" data-screen="screen-history">Trophäenraum</button>
+            <button class="nav-btn" onclick="showScreen('screen-badges')" data-screen="screen-badges">Auszeichnungen</button>
 
             <div class="nav-category">Spezial & Karriere</div>
-            <button class="nav-btn special-gold" onclick="showScreen('screen-private')" data-screen="screen-private">🎩 Trainer-Privatleben</button>
-            <button class="nav-btn special-red" onclick="showScreen('screen-underworld')" data-screen="screen-underworld">🕵️ Unterwelt & Sabotage</button>
-            <button class="nav-btn special-gold" onclick="showScreen('screen-admin')" data-screen="screen-admin">🛠️ Admin & Cheats PRO</button>
+            <button class="nav-btn special-gold" onclick="showScreen('screen-private')" data-screen="screen-private">Trainer-Privatleben</button>
+            <button class="nav-btn special-red" onclick="showScreen('screen-underworld')" data-screen="screen-underworld">Unterwelt & Sabotage</button>
+            <button class="nav-btn special-gold" onclick="showScreen('screen-admin')" data-screen="screen-admin">Admin & Cheats PRO</button>
         </nav>
 
         <!-- MAIN WORKSPACE -->
@@ -1060,8 +1141,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>⚽ NÄCHSTE BEGEGNUNG (SPIELTAG <span id="dash-mday">1</span>)</span>
+                    <div class="panel-header"><span>⚽ NÄCHSTE BEGEGNUNG (SPIELTAG <span id="dash-mday">1</span>)</span>
                         <span id="dash-league-name" style="color:var(--text-main); font-size:10px;">4. Liga</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-inset); border-radius:8px; margin-bottom:8px;">
@@ -1085,8 +1165,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>Offene Vorgänge</span>
+                    <div class="panel-header"><span>Offene Vorgänge</span>
                         <span style="font-size:11px;">Gesamt: <strong id="todo-total" style="color:var(--accent);">0</strong></span>
                     </div>
                     <div class="todo-list" id="todo-list"></div>
@@ -1094,19 +1173,19 @@
 
                 <div class="panel-grid">
                     <div class="panel">
-                        <div class="panel-header">💰 VEREINS- & TRANSFERBUDGET</div>
+                        <div class="panel-header">VEREINS- & TRANSFERBUDGET</div>
                         <div>Transferbudget: <strong id="dash-transfer-budget" style="color:var(--primary);">100.000 €</strong></div>
                         <div>Gehaltsbudget: <strong id="dash-wage-budget">15.000 € / SpT</strong></div>
                         <div>Monatssaldo (GuV): <strong id="dash-monthly-net" style="color:var(--accent);">+0 €</strong></div>
                     </div>
                     <div class="panel">
-                        <div class="panel-header" style="color:var(--industry);">🏭 INDUSTRIE & HOLDING</div>
+                        <div class="panel-header" style="color:var(--industry);">INDUSTRIE & HOLDING</div>
                         <div>Holding-Kapital: <strong id="dash-holding-cap" style="color:var(--industry);">50.000 €</strong></div>
                         <div>Aktive Fabriken: <strong id="dash-active-factories">0 / 4</strong></div>
                         <div>Lager-Rohstoffe: <strong id="dash-raw-total">1.750 kg</strong></div>
                     </div>
                     <div class="panel">
-                        <div class="panel-header" style="color:var(--europe);">🌟 EUROPA & MANAGER</div>
+                        <div class="panel-header" style="color:var(--europe);">EUROPA & MANAGER</div>
                         <div>Champions Cup: <strong id="dash-europe-status" style="color:#82b1ff;">Nicht qualifiziert</strong></div>
                         <div>Wissensbaum: <strong id="dash-perks-count" style="color:var(--gold);">0 / 56 Knoten</strong></div>
                         <div id="dash-doctrine-line" style="margin-top:2px;"></div>
@@ -1114,7 +1193,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header">💾 SCHNELL-SPEICHERN & LADEN</div>
+                    <div class="panel-header">SCHNELL-SPEICHERN & LADEN</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
                         <button onclick="saveGame()" class="btn-blue">💾 Spielstand speichern</button>
                         <button onclick="loadGame(false)" class="btn-secondary">📂 Spielstand laden</button>
@@ -1125,8 +1204,7 @@
             <!-- 2. UEFA CHAMPIONS CUP -->
             <div id="screen-europe" style="display:none;">
                 <div class="panel box-europe">
-                    <div class="panel-header" style="color:#82b1ff;">
-                        <span>🌟 UEFA CHAMPIONS CUP (KÖNIGSKLASSE)</span>
+                    <div class="panel-header" style="color:#82b1ff;"><span>🌟 UEFA CHAMPIONS CUP (KÖNIGSKLASSE)</span>
                         <span id="europe-status-tag" style="font-size:10px; color:var(--text-main);">Status: Gruppenphase</span>
                     </div>
                     <div class="box">
@@ -1146,7 +1224,7 @@
                     </div>
 
                     <div class="panel">
-                        <div class="panel-header" style="font-size:11px;">🏆 K.O.-PHASE & FINALE</div>
+                        <div class="panel-header" style="font-size:11px;">K.O.-PHASE & FINALE</div>
                         <div id="europe-ko-tree"></div>
                     </div>
                 </div>
@@ -1209,8 +1287,7 @@
                 <div class="doc-stage" id="doc-stage-body"></div>
 
                 <div class="panel" style="margin-top:12px;">
-                    <div class="panel-header">
-                        <span>Eigene Betriebe</span>
+                    <div class="panel-header"><span>Eigene Betriebe</span>
                         <span style="font-size:11px;">Pro Spieltag: <strong id="doc-ops-total" style="color:var(--primary);">0 €</strong></span>
                     </div>
                     <div class="ops-grid" id="doc-ops"></div>
@@ -1235,8 +1312,7 @@
             <!-- 4. GLOBALES SCOUTING -->
             <div id="screen-scouting-global" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>🌍 WELTWEITES SCOUTING-NETZWERK</span>
+                    <div class="panel-header"><span>🌍 WELTWEITES SCOUTING-NETZWERK</span>
                         <span>Chef-Scout Status: <strong id="global-scout-status" style="color:var(--primary);">Bereit</strong></span>
                     </div>
                     <div class="box">
@@ -1244,28 +1320,28 @@
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;" id="scouting-regions-grid">
                         <div class="panel">
-                            <div class="panel-header" style="font-size:11px; color:var(--accent);">🌴 Südamerika (Brasilien/Argentinien)</div>
+                            <div class="panel-header" style="font-size:11px; color:var(--accent);">Südamerika (Brasilien/Argentinien)</div>
                             <div style="font-size:9px; color:var(--text-muted); margin-bottom:6px;">Fokus: Trickreiche Stürmer & Torjäger mit "Tor-Instinkt".</div>
                             <button onclick="sendScoutMission('southAmerica', 18000)" class="btn-action">Scout entsenden [18.000 €]</button>
                         </div>
                         <div class="panel">
-                            <div class="panel-header" style="font-size:11px; color:var(--primary);">🦁 Afrika (Nigeria/Senegal/Ghana)</div>
+                            <div class="panel-header" style="font-size:11px; color:var(--primary);">Afrika (Nigeria/Senegal/Ghana)</div>
                             <div style="font-size:9px; color:var(--text-muted); margin-bottom:6px;">Fokus: Athletische Flügel & Dauerläufer mit "Flügelflitzer".</div>
                             <button onclick="sendScoutMission('africa', 14000)" class="btn-action">Scout entsenden [14.000 €]</button>
                         </div>
                         <div class="panel">
-                            <div class="panel-header" style="font-size:11px; color:var(--blue);">🏰 Westeuropa & UK</div>
+                            <div class="panel-header" style="font-size:11px; color:var(--blue);">Westeuropa & UK</div>
                             <div style="font-size:9px; color:var(--text-muted); margin-bottom:6px;">Fokus: Taktisch geschulte Spielmacher & "Freistoß-Götter".</div>
                             <button onclick="sendScoutMission('westEurope', 25000)" class="btn-action">Scout entsenden [25.000 €]</button>
                         </div>
                         <div class="panel">
-                            <div class="panel-header" style="font-size:11px; color:var(--danger);">🛡️ Osteuropa & Balkan</div>
+                            <div class="panel-header" style="font-size:11px; color:var(--danger);">Osteuropa & Balkan</div>
                             <div style="font-size:9px; color:var(--text-muted); margin-bottom:6px;">Fokus: Zweikampfstarke Abwehr-Bollwerke & "Eisenfüße".</div>
                             <button onclick="sendScoutMission('eastEurope', 12000)" class="btn-action">Scout entsenden [12.000 €]</button>
                         </div>
                     </div>
                     <div class="panel" style="margin-top:8px;">
-                        <div class="panel-header">🎯 SCOUTING-BERICHTE & KANDIDATEN</div>
+                        <div class="panel-header">SCOUTING-BERICHTE & KANDIDATEN</div>
                         <div id="global-scouting-results"></div>
                     </div>
                 </div>
@@ -1274,8 +1350,7 @@
             <!-- 5. FABRIKEN & PRODUKTION -->
             <div id="screen-industry" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header" style="color:var(--industry);">
-                        <span>🏭 EIGENE PRODUKTIONS-FABRIKEN</span>
+                    <div class="panel-header" style="color:var(--industry);"><span>🏭 EIGENE PRODUKTIONS-FABRIKEN</span>
                         <span>Holding-Budget: <strong id="ind-holding-money" style="color:var(--industry);">50.000 €</strong></span>
                     </div>
                     <div class="box box-industry">
@@ -1285,7 +1360,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header">⚙️ PRODUKTIONSAUFTRÄGE ANSTOSSEN</div>
+                    <div class="panel-header">PRODUKTIONSAUFTRÄGE ANSTOSSEN</div>
                     <div class="box">Wähle einen Fanartikel und starte die Fertigung in deinen Fabriken:</div>
                     <div id="production-recipes-list" style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;"></div>
                 </div>
@@ -1294,8 +1369,7 @@
             <!-- 6. ROHSTOFFE & BÖRSE -->
             <div id="screen-raw-materials" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header" style="color:var(--industry);">
-                        <span>📦 ROHSTOFF-MARKT & DYNAMISCHE BÖRSE</span>
+                    <div class="panel-header" style="color:var(--industry);"><span>📦 ROHSTOFF-MARKT & DYNAMISCHE BÖRSE</span>
                         <span>Lager-Stufe: <strong id="raw-wh-level" style="color:var(--accent);">1 / 5</strong></span>
                     </div>
                     <div class="box box-industry" id="raw-market-news">
@@ -1309,8 +1383,7 @@
             <!-- 7. MERCH-HOLDING & B2B -->
             <div id="screen-holding" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header" style="color:var(--industry);">
-                        <span>💼 MERCHANDISING HOLDING GMBH (FIRMENZENTRALE)</span>
+                    <div class="panel-header" style="color:var(--industry);"><span>💼 MERCHANDISING HOLDING GMBH (FIRMENZENTRALE)</span>
                         <span>Unternehmenswert: <strong id="holding-enterprise-val" style="color:var(--primary);">125.000 €</strong></span>
                     </div>
                     <div class="box box-industry">
@@ -1334,8 +1407,7 @@
             <!-- 8. FANSHOP-VERTRIEB MIT 3 KANÄLEN -->
             <div id="screen-merch" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>🏪 3-KANAL FANSHOP-VERTRIEB & PREIS-ELASTIZITÄT</span>
+                    <div class="panel-header"><span>🏪 3-KANAL FANSHOP-VERTRIEB & PREIS-ELASTIZITÄT</span>
                         <span>Absatzkanäle: <strong>🏟️ Stadion | 🏬 Megastore | 🌐 Online</strong></span>
                     </div>
                     <div class="box">
@@ -1348,8 +1420,7 @@
             <!-- 9. KALENDER -->
             <div id="screen-calendar" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>📅 SAISON-KALENDER & TERMINE</span>
+                    <div class="panel-header"><span>📅 SAISON-KALENDER & TERMINE</span>
                         <span>Aktueller Monat: <strong id="cal-month-name" style="color:var(--text-main);">August</strong></span>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin:6px 0;">
@@ -1365,8 +1436,7 @@
             <!-- 10. FINANZEN & GuV -->
             <div id="screen-finances" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>🏦 MONATLICHE GEWINN- & VERLUSTRECHNUNG (GuV)</span>
+                    <div class="panel-header"><span>🏦 MONATLICHE GEWINN- & VERLUSTRECHNUNG (GuV)</span>
                         <span id="fin-month-title" style="color:var(--text-main);">Monat 1</span>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
@@ -1391,7 +1461,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header">💼 VORSTANDS-VERHANDLUNGEN</div>
+                    <div class="panel-header">VORSTANDS-VERHANDLUNGEN</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
                         <button onclick="negotiateBoardBudget('transfer', 500000)" class="btn-secondary">+500.000 € Transferbudget fordern</button>
                         <button onclick="negotiateBoardBudget('wage', 10000)" class="btn-secondary">+10.000 €/SpT Gehaltsbudget fordern</button>
@@ -1399,7 +1469,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header">🎟️ TICKETPREISE & KREDITE</div>
+                    <div class="panel-header">TICKETPREISE & KREDITE</div>
                     <div style="display:flex; gap:6px; align-items:center;">
                         Stehplatz: <input type="number" id="price-steh" class="input-inline" value="12" onchange="updateTicketPrices()"> €
                         Sitzplatz: <input type="number" id="price-sitz" class="input-inline" value="24" onchange="updateTicketPrices()"> €
@@ -1415,8 +1485,7 @@
             <!-- 11. AKTIENMARKT -->
             <div id="screen-stocks" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>📈 VEREINS-BÖRSE & INVESTMENT-DEPOT</span>
+                    <div class="panel-header"><span>📈 VEREINS-BÖRSE & INVESTMENT-DEPOT</span>
                         <span>Depotwert: <strong id="stocks-total-val" style="color:var(--blue);">0 €</strong></span>
                     </div>
                     <div id="stocks-market-list"></div>
@@ -1426,7 +1495,7 @@
             <!-- 12. SPONSOREN -->
             <div id="screen-sponsors" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">🤝 HAUPT- & AUSRÜSTER-SPONSOREN</div>
+                    <div class="panel-header">HAUPT- & AUSRÜSTER-SPONSOREN</div>
                     <div class="box">
                         <strong>Hauptsponsor:</strong> <span id="spons-curr-name" style="color:var(--accent);">Sparkasten</span> (Sockel: <span id="spons-curr-base">3.000 €</span>/SpT | Siegprämie: <span id="spons-curr-win">1.500 €</span>)<br>
                         <strong>Trikot-Ausrüster:</strong> <span id="kit-supplier-name" style="color:var(--blue);">Keiner</span> (+<span id="kit-supplier-income">0 €</span>/Heimspiel)
@@ -1440,7 +1509,7 @@
                     <div id="sponsors-offers-list" style="margin-top:6px;"></div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header">📢 BANDENWERBUNG</div>
+                    <div class="panel-header">BANDENWERBUNG</div>
                     <div id="banden-slots-list"></div>
                 </div>
             </div>
@@ -1448,7 +1517,7 @@
             <!-- 13. KADER & TAKTIK -->
             <div id="screen-squad" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">⚽ KADER & AUFSTELLUNG</div>
+                    <div class="panel-header">KADER & AUFSTELLUNG</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px; margin-bottom:6px;">
                         <div>Kapitän: <select id="sel-captain" class="input-inline" style="width:100%;" onchange="assignRoles()"></select></div>
                         <div>Elfmeter: <select id="sel-penalty" class="input-inline" style="width:100%;" onchange="assignRoles()"></select></div>
@@ -1463,7 +1532,7 @@
                     <button onclick="autoLineup()" class="btn-action" style="margin-top:6px;">🤖 Trainer stellt Top-Elf auf</button>
                 </div>
                 <div class="panel" style="text-align:center;">
-                    <div class="panel-header">🏟️ 3D TAKTIKTAFEL (<span id="squad-form-name">4-4-2</span>)</div>
+                    <div class="panel-header">3D TAKTIKTAFEL (<span id="squad-form-name">4-4-2</span>)</div>
                     <div class="pitch-3d-wrapper">
                         <div class="soccer-pitch" id="soccer-pitch">
                             <div class="pitch-center-line"></div>
@@ -1480,7 +1549,7 @@
             <!-- 14. TRAINING -->
             <div id="screen-training" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">🏋️ TEAM-TRAINING & WOCHENPLAN</div>
+                    <div class="panel-header">TEAM-TRAINING & WOCHENPLAN</div>
                     <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:3px;">
                         <button onclick="setTeamTraining('kondition')" id="tr-kondition" class="btn-secondary">🏃 Kondition</button>
                         <button onclick="setTeamTraining('taktik')" id="tr-taktik" class="btn-secondary">📋 Taktik</button>
@@ -1491,7 +1560,7 @@
                     <div style="margin-top:6px; font-size:9px; color:var(--text-muted);">Schwerpunkt: <strong id="cur-team-training" style="color:var(--accent);">AUSGEGLICHEN</strong></div>
                 </div>
                 <div class="panel">
-                    <div class="panel-header">🎯 INDIVIDUELLES SPIELERTRAINING</div>
+                    <div class="panel-header">INDIVIDUELLES SPIELERTRAINING</div>
                     <div id="individual-training-list" style="max-height:220px; overflow-y:auto;"></div>
                 </div>
             </div>
@@ -1499,7 +1568,7 @@
             <!-- 15. STADION -->
             <div id="screen-stadium" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">🏟️ STADION-AUSBAU (8 BLÖCKE)</div>
+                    <div class="panel-header">STADION-AUSBAU (8 BLÖCKE)</div>
                     <div class="stadium-3d-wrapper">
                         <div class="stadium-3d-box">
                             <div class="stadium-block-3d" style="top:4%; left:50%; transform:translateX(-50%) translateZ(25px);" onclick="selectStadiumBlock('hauptNord')">Nord-Oberrang<br><span id="cap-hauptNord">1.500</span></div>
@@ -1528,7 +1597,7 @@
             <!-- 16. CAMPUS -->
             <div id="screen-campus" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">🏢 STADIONUMFELD & GEBÄUDE-CAMPUS</div>
+                    <div class="panel-header">STADIONUMFELD & GEBÄUDE-CAMPUS</div>
                     <div id="campus-buildings-list" style="max-height:450px; overflow-y:auto;"></div>
                 </div>
             </div>
@@ -1536,7 +1605,7 @@
             <!-- 17. PERSONAL -->
             <div id="screen-staff" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">👔 PERSONAL & EXPERTENSTAB</div>
+                    <div class="panel-header">PERSONAL & EXPERTENSTAB</div>
                     <div id="staff-list-container" style="max-height:450px; overflow-y:auto;"></div>
                 </div>
             </div>
@@ -1544,8 +1613,7 @@
             <!-- 18. FANS & ORDNER -->
             <div id="screen-fans" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>📢 FAN-ZENTRALE & ORDNERDIENST</span>
+                    <div class="panel-header"><span>📢 FAN-ZENTRALE & ORDNERDIENST</span>
                         <span>Stimmung: <strong id="fan-mood-val" style="color:var(--primary);">75%</strong></span>
                     </div>
                     <div class="box">
@@ -1568,8 +1636,7 @@
             <!-- 19. TRANSFERMARKT MIT KI-ANGEBOTEN -->
             <div id="screen-transfer" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>🤝 TRANSFERMARKT, SCOUTING & VERHANDLUNGEN</span>
+                    <div class="panel-header"><span>🤝 TRANSFERMARKT, SCOUTING & VERHANDLUNGEN</span>
                         <span id="transfer-offers-summary" style="font-size:10px; color:var(--accent);"></span>
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px; margin-bottom:6px;">
@@ -1595,7 +1662,7 @@
             <!-- 20. LIGA TABELLEN -->
             <div id="screen-league" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">🏆 WETTBEWERBE & STATISTIKEN</div>
+                    <div class="panel-header">WETTBEWERBE & STATISTIKEN</div>
                     <div style="display:flex; gap:2px; margin-bottom:6px;">
                         <button onclick="setLeagueLevel(0)" id="btn-lvl-0" class="btn-secondary">1. Liga</button>
                         <button onclick="setLeagueLevel(1)" id="btn-lvl-1" class="btn-secondary">2. Liga</button>
@@ -1621,8 +1688,7 @@
             <!-- 21. DFB POKAL -->
             <div id="screen-cup" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">
-                        <span>🏆 DFB-POKAL TURNIERBAUM</span>
+                    <div class="panel-header"><span>🏆 DFB-POKAL TURNIERBAUM</span>
                         <span id="cup-status-badge" style="font-size:10px; color:var(--primary); font-weight:bold;">Im Wettbewerb</span>
                     </div>
                     <div class="box" style="margin-bottom:8px;">
@@ -1635,7 +1701,7 @@
             <!-- 22. JUGEND -->
             <div id="screen-youth" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">🌱 JUGENDAKADEMIE</div>
+                    <div class="panel-header">JUGENDAKADEMIE</div>
                     <div class="box">Akademie-Stufe: <strong id="youth-lvl-disp">1</strong></div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
                         <button onclick="upgradeYouthAcademy()" class="btn-secondary">Akademie ausbauen [35.000 €]</button>
@@ -1648,7 +1714,7 @@
             <!-- 23. VERTRÄGE -->
             <div id="screen-contracts" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">📝 VERTRAGSVERWALTUNG</div>
+                    <div class="panel-header">VERTRAGSVERWALTUNG</div>
                     <div id="contracts-list"></div>
                 </div>
             </div>
@@ -1656,7 +1722,7 @@
             <!-- 24. PRIVATLEBEN -->
             <div id="screen-private" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">🎩 TRAINER-PRIVATLEBEN</div>
+                    <div class="panel-header">TRAINER-PRIVATLEBEN</div>
                     <div class="box">
                         Privatvermögen: <strong id="priv-money" style="color:var(--primary);">15.000 €</strong> | Gehalt: <strong id="priv-wage">1.200 €</strong>/SpT<br>
                         Lizenz: <strong id="priv-license" style="color:var(--blue);">C-Lizenz</strong> | Stress: <strong id="priv-stress" style="color:var(--primary);">15%</strong>
@@ -1673,7 +1739,7 @@
             <!-- 25. UNTERWELT -->
             <div id="screen-underworld" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header" style="color:var(--purple);">🕵️ UNTERWELT, SABOTAGE & MANIPULATION</div>
+                    <div class="panel-header" style="color:var(--purple);">UNTERWELT, SABOTAGE & MANIPULATION</div>
                     <div class="box box-underworld">
                         DFB-Ermittlungsdruck: <strong id="uw-pressure" style="color:var(--danger);">0%</strong><br>
                         Aktive Aktionen für nächstes Spiel: <strong id="uw-active-tricks" style="color:var(--accent);">Keine</strong>
@@ -1694,7 +1760,7 @@
             <!-- 26. TROPHÄEN -->
             <div id="screen-history" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">🌟 TROPHÄENRAUM</div>
+                    <div class="panel-header">TROPHÄENRAUM</div>
                     <div id="trophies-list"></div>
                 </div>
             </div>
@@ -1702,8 +1768,7 @@
             <!-- 27. ADMIN & CHEATS PRO -->
             <div id="screen-admin" style="display:none;">
                 <div class="panel box-admin">
-                    <div class="panel-header" style="color:var(--gold);">
-                        <span>🛠️ ADMIN-DIAGNOSE & LIVE-INSPECTOR</span>
+                    <div class="panel-header" style="color:var(--gold);"><span>🛠️ ADMIN-DIAGNOSE & LIVE-INSPECTOR</span>
                         <span style="font-size:10px; color:var(--text-main);">Entwickler-Konsole Aktiv</span>
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:6px; font-size:10px;" id="admin-inspector-grid">
@@ -1717,7 +1782,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header" style="color:var(--primary);">💰 FINANZEN, KONTEN & ROHSTOFFE</div>
+                    <div class="panel-header" style="color:var(--primary);">FINANZEN, KONTEN & ROHSTOFFE</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-bottom:6px;">
                         <button onclick="adminAddClubMoney(10000000)" class="btn-action">💵 +10.000.000 € Vereinskonto</button>
                         <button onclick="adminAddClubMoney(100000000)" class="btn-primary">💰 +100.000.000 € Vereinskonto</button>
@@ -1731,7 +1796,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header" style="color:var(--accent);">⚽ KADER, SPIELER & TRAINER-KARRIERE</div>
+                    <div class="panel-header" style="color:var(--accent);">KADER, SPIELER & TRAINER-KARRIERE</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-bottom:6px;">
                         <button onclick="adminHealAndBoostSquad()" class="btn-primary">✨ 100% Fitness & 100% Moral & Geheilt</button>
                         <button onclick="adminUpgradeEntireSquad(5)" class="btn-action">⚡ Alle Spieler im Kader +5 Stärke</button>
@@ -1751,7 +1816,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header" style="color:var(--blue);">🏟️ STADION, CAMPUS & EXPERTENSTAB</div>
+                    <div class="panel-header" style="color:var(--blue);">STADION, CAMPUS & EXPERTENSTAB</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
                         <button onclick="adminMaxOutAllBuildings()" class="btn-action">🌟 Stadion & Alle 8 Blöcke Max (100.000 Plätze)</button>
                         <button onclick="adminHireAllStaffFree()" class="btn-blue">👔 Alle 10 Staff-Experten sofort anstellen</button>
@@ -1759,7 +1824,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header" style="color:var(--danger);">🏆 WETTBEWERBE, ZEITREISE & TELEPORT</div>
+                    <div class="panel-header" style="color:var(--danger);">WETTBEWERBE, ZEITREISE & TELEPORT</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px; margin-bottom:6px;">
                         <button onclick="adminTeleportLeague(0)" class="btn-action">🚀 Teleport 1. Bundesliga</button>
                         <button onclick="adminTeleportLeague(1)" class="btn-secondary">🚀 Teleport 2. Liga</button>
@@ -1774,7 +1839,7 @@
                 </div>
 
                 <div class="panel">
-                    <div class="panel-header">💾 SAVEGAME EXPORT & JSON-IMPORT</div>
+                    <div class="panel-header">SAVEGAME EXPORT & JSON-IMPORT</div>
                     <textarea id="adm-save-json" style="width:100%; height:65px; background:#07090e; color:var(--primary); font-family:monospace; font-size:9px; border:1px solid #334155; border-radius:4px; padding:4px;" placeholder="Hier Savegame-JSON einfügen oder exportieren..."></textarea>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px; margin-top:4px;">
                         <button onclick="adminExportSaveJson()" class="btn-blue">📤 JSON Exportieren</button>
@@ -1787,7 +1852,7 @@
             <!-- 28. PRE-MATCH & LIVESPIEL -->
             <div id="screen-prematch-press" style="display:none;">
                 <div class="panel">
-                    <div class="panel-header">🎙️ PRE-MATCH PRESSEKONFERENZ</div>
+                    <div class="panel-header">PRE-MATCH PRESSEKONFERENZ</div>
                     <div id="press-question-container" class="box"></div>
                     <div id="press-answers-container"></div>
                     <button onclick="skipPressAndPlay()" class="btn-secondary" style="margin-top:6px;">⏩ Direkt zum Spiel</button>
@@ -3049,8 +3114,7 @@
             let card = document.createElement('div');
             card.className = 'panel';
             card.innerHTML = `
-                <div class="panel-header" style="color:var(--industry);">
-                    <span>${f.name}</span>
+                <div class="panel-header" style="color:var(--industry);"><span>${f.name}</span>
                     <span>${f.owned ? `<strong style="color:var(--primary);">Stufe ${f.lvl}</strong>` : '<span style="color:var(--text-muted);">Nicht im Besitz</span>'}</span>
                 </div>
                 <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px;">${f.desc}</div>
@@ -3145,8 +3209,7 @@
             let card = document.createElement('div');
             card.className = 'panel';
             card.innerHTML = `
-                <div class="panel-header">
-                    <span>${r.name}</span>
+                <div class="panel-header"><span>${r.name}</span>
                     <strong style="color:var(--primary);">${r.stock.toLocaleString()} ${r.unit}</strong>
                 </div>
                 <div style="font-size:11px; margin-bottom:4px;">
@@ -3277,8 +3340,7 @@
             let card = document.createElement('div');
             card.className = 'panel';
             card.innerHTML = `
-                <div class="panel-header">
-                    <span>${m.name}</span>
+                <div class="panel-header"><span>${m.name}</span>
                     <strong style="color:var(--primary);">${m.stock} Stk. am Lager</strong>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:4px 0;">
@@ -3867,8 +3929,7 @@
                 let card = document.createElement('div');
                 card.className = 'panel box-offer';
                 card.innerHTML = `
-                    <div class="panel-header" style="color:var(--blue);">
-                        <span>💼 Angebot von <strong>${o.clubName}</strong></span>
+                    <div class="panel-header" style="color:var(--blue);"><span>💼 Angebot von <strong>${o.clubName}</strong></span>
                         <span style="font-size:9px; color:var(--text-muted);">Gültig: ${o.expiresIn} SpT</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -4057,8 +4118,7 @@
             }).join('');
 
             box.innerHTML = `
-                <div class="panel-header">
-                    <span>${r.name} (Termin: Spieltag ${r.matchday})</span>
+                <div class="panel-header"><span>${r.name} (Termin: Spieltag ${r.matchday})</span>
                     <span style="color:var(--primary); font-size:10px;">Prämie: +${formatVal(r.prize)}</span>
                 </div>
                 ${ourMatch ? `<div style="font-weight:bold; margin-bottom:4px; color:var(--accent);">Dein Spiel: ${ourMatch.home} vs ${ourMatch.away} ${ourMatch.played ? `[${ourMatch.homeGoals}:${ourMatch.awayGoals}${ourMatch.penaltyWinner ? ' (i.E.)' : ''}]` : ''}</div>` : '<div style="color:var(--danger); font-size:10px; margin-bottom:4px;">Nicht mehr vertreten</div>'}
