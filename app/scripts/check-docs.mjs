@@ -21,7 +21,7 @@ const IGNORE = 'docs-check-ignore';
 /** Raw <button>/<a>/<input> in a screen: should be a documented primitive. */
 const RAW_CONTROL = /<(button|input|select|textarea)\b(?![^>]*\bdocs-check-ignore\b)/g;
 /** Our own primitives must carry a doc id. */
-const PRIMITIVE = /<(Button|StatChip)\b([^>]*)>/g;
+const PRIMITIVE_OPEN = /<(Button|StatChip)\b/g;
 const HAS_DOC = /\bdoc\s*=/;
 const MATH_RANDOM = /Math\.random\s*\(/;
 
@@ -49,6 +49,32 @@ function stripComments(text) {
 
 function lineOf(text, index) {
   return text.slice(0, index).split('\n').length;
+}
+
+/**
+ * Return a tag's attribute text, from the tag name to its real closing `>`.
+ *
+ * A naive /[^>]*/ breaks on the first `>` inside an attribute expression —
+ * `value={a > 0 ? 'x' : 'y'}` truncates the scan and the doc id after it is
+ * never seen. That produced a false positive on a correctly documented
+ * control, which is precisely how a build gate earns its way into being
+ * switched off. So: walk forward tracking brace depth and quotes.
+ */
+function attributesOf(text, from) {
+  let depth = 0;
+  let quote = null;
+  for (let i = from; i < text.length; i++) {
+    const ch = text[i];
+    if (quote) {
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; continue; }
+    if (ch === '{') { depth++; continue; }
+    if (ch === '}') { depth--; continue; }
+    if (ch === '>' && depth === 0) return text.slice(from, i);
+  }
+  return text.slice(from); // unterminated tag; let the compiler complain
 }
 
 function precededByIgnore(text, index) {
@@ -86,9 +112,10 @@ for await (const file of walk(SRC)) {
   if (!file.endsWith('.svelte')) continue;
 
   // Rule 2: our primitives need a doc id.
-  for (const m of text.matchAll(PRIMITIVE)) {
+  for (const m of text.matchAll(PRIMITIVE_OPEN)) {
     stats.controls++;
-    if (!HAS_DOC.test(m[2])) {
+    const attrs = attributesOf(text, m.index + m[0].length);
+    if (!HAS_DOC.test(attrs)) {
       problems.push({
         file: rel,
         line: lineOf(text, m.index),

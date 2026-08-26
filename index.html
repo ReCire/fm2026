@@ -36,6 +36,16 @@
             --c-live:     #00FF88;
             --c-doctrine: #C084FC;
 
+            /* Schriftwerte. Im Dunkeln identisch mit der Fläche - dort trägt
+               dieselbe Farbe beides. Siehe [data-theme="light"] für den Grund. */
+            --c-finance-ink:  var(--c-finance);
+            --c-squad-ink:    var(--c-squad);
+            --c-industry-ink: var(--c-industry);
+            --c-matchday-ink: var(--c-matchday);
+            --c-live-ink:     var(--c-live);
+            --c-doctrine-ink: var(--c-doctrine);
+            --on-accent:      #06100A;   /* Beschriftung auf gefüllten Flächen */
+
             /* Flächen — Grün-Unterton statt neutralem Grau */
             --bg-app:     #070A08;
             --bg-sunken:  #0A0F0C;
@@ -45,7 +55,7 @@
 
             --text-main:  #E8F0EA;
             --text-soft:  #A8B8AE;
-            --text-muted: #6B7D72;
+            --text-muted: #718278;   /* 4,55:1 - #6B7D72 lag bei 4,23 */
             --text-invert:#06100A;
 
             --border:      rgba(232, 240, 234, 0.10);
@@ -84,6 +94,17 @@
             --c-live:     #00A85A;   /* #00FF7F ist auf Papier unlesbar - abgedunkelt */
             --c-doctrine: #7C4DBE;
 
+            /* Auf Papier reichen die Flächenwerte für Schrift nicht aus.
+               Diese Werte sind gegen den dunkleren der beiden hellen Gründe
+               (#F2EFE7) auf 4,5:1 gerechnet, damit sie auf beiden bestehen. */
+            --c-finance-ink:  #297B4D;
+            --c-squad-ink:    #336DBC;
+            --c-industry-ink: #916407;
+            --c-matchday-ink: #CE2E23;
+            --c-live-ink:     #007D43;
+            --c-doctrine-ink: #7C4DBE;
+            --on-accent:      #FFFFFF;
+
             /* Recyclingpapier: leicht warm, nie reines Weiß */
             --bg-app:     #F2EFE7;
             --bg-sunken:  #EAE6DC;
@@ -93,7 +114,7 @@
 
             --text-main:  #1A1F1C;
             --text-soft:  #4A554E;
-            --text-muted: #75817A;
+            --text-muted: #656F69;   /* 4,53:1 auf #F2EFE7 */
             --text-invert:#FBF9F4;
 
             --border:      rgba(26, 31, 28, 0.14);
@@ -178,7 +199,34 @@
         [data-theme="light"] .kpi-chip strong { color: var(--text-main); }
         [data-theme="light"] .kpi-chip span { color: var(--text-muted); }
         [data-theme="light"] .club-logo { border-color: var(--bg-raised); }
-        [data-theme="light"] .panel-header { color: var(--c-industry); border-bottom-color: var(--border-soft); }
+        [data-theme="light"] .panel-header { color: var(--c-industry-ink); border-bottom-color: var(--border-soft); }
+        [data-theme="light"] {
+            --primary: var(--c-finance-ink);
+            --accent:  var(--c-industry-ink);
+            --danger:  var(--c-matchday-ink);
+            --blue:    var(--c-squad-ink);
+            --purple:  var(--c-doctrine-ink);
+            --industry:var(--c-industry-ink);
+        }
+        /* Gefüllte Flächen nehmen im Tagmodus den Schriftwert als Fläche.
+           Weiß auf dem hellen Amber (#D4920A) erreicht nur 2,65:1; auf dem
+           abgedunkelten Wert sind es 5,2:1. Die helle Fläche bleibt Grafik
+           (Balken, Knoten, Radar), die dunkle trägt Beschriftung. */
+        /* Je Farbe die hellere der beiden bestehenden Varianten, damit der
+           Tagmodus freundlich bleibt statt gedeckt:
+             Amber  #D4920A + dunkle Schrift = 7,06:1  (weiß darauf nur 2,65)
+             Blau   #3B7DD8 + dunkle Schrift = 4,56:1
+             Grün   #00A85A + dunkle Schrift = 6,02:1
+           Grün-Finance und Rot erreichen mit dunkler Schrift keine 4,5 und
+           nehmen deshalb den abgedunkelten Wert mit weißer Schrift. */
+        [data-theme="light"] .btn-action,
+        [data-theme="light"] .btn-gold    { background: var(--c-industry); color: #0B1410; }
+        [data-theme="light"] .btn-blue    { background: var(--c-squad); color: #0B1410; }
+        [data-theme="light"] .btn-primary { background: var(--c-finance-ink); color: #fff; }
+        [data-theme="light"] .btn-danger  { background: var(--c-matchday-ink); color: #fff; }
+        [data-theme="light"] .btn-doc     { background: var(--c-finance-ink); color: #fff; }
+        [data-theme="light"] .radar-cta   { background: var(--c-live); color: #0B1410; }
+        [data-theme="light"] .badge-count { background: var(--c-matchday); color: #fff; }
         [data-theme="light"] .badge-count { color: #fff; }
         [data-theme="light"] .nav-category { color: var(--text-muted); }
         [data-theme="light"] .ticker-log { background: var(--bg-inset); color: var(--text-soft); }
@@ -188,6 +236,66 @@
         [data-theme="light"] table th, [data-theme="light"] table td { border-color: var(--border-soft); }
         [data-theme="light"] .app-layout { background: var(--bg-app); border-color: var(--border-soft); }
 
+        /* ==========================================================
+           TYPOGRAFIE & TREFFERFLÄCHEN
+           Der Prototyp startete auf 11px Grundschrift. Das war für einen
+           Datenbildschirm am Desktop gedacht und ist am Telefon zu klein:
+           iOS zoomt Formularfelder unter 16px automatisch, und 11px liegt
+           unter der Grenze, ab der Zahlenkolonnen ohne Mühe erfassbar sind.
+           Dichte bleibt erwünscht - ein Manager-Spiel lebt von Tabellen -
+           aber sie kommt jetzt aus Zeilenhöhe und Abstand, nicht aus
+           Schriftgröße. Eine Stufe: 11 / 12 / 13 / 15 / 18 / 22.
+           ========================================================== */
+        :root {
+            --fs-micro: 11px;   /* Einheiten, Fußnoten, Achsbeschriftung  */
+            --fs-small: 12px;   /* Sekundärzeilen, Tabellenzellen         */
+            --fs-body:  13px;   /* Grundtext und Bedienelemente           */
+            --fs-lead:  15px;   /* Kartentitel, hervorgehobene Werte      */
+            --fs-title: 18px;   /* Bildschirmüberschriften                */
+            --fs-hero:  22px;   /* Kontostand, Spielstand                 */
+            --lh-tight: 1.25;
+            --lh-body:  1.55;
+
+            --tap-min: 44px;    /* kleinste Trefferfläche, Apple HIG      */
+            --tap-gap: 8px;     /* Mindestabstand zwischen zwei Zielen    */
+        }
+
+        /* Trefferflächen: unter 44px wird auf einem Telefon danebengetippt.
+           Wo die Optik klein bleiben soll, wächst nur die Fläche mit einem
+           Pseudoelement - das Aussehen ändert sich nicht, das Ziel schon. */
+        @media (pointer: coarse) {
+            button, .nav-btn, .mail-chip, .doc-cell, .view-tab, .shop-item, .tabbar button {
+                min-height: var(--tap-min);
+            }
+            .mail-row { min-height: 56px; }
+            .kpi-chip { min-height: 38px; }
+            .btn-secondary, .btn-danger, .btn-blue, .btn-industry { padding: 11px 12px; }
+        }
+
+        /* Sichtbarer Fokus für Tastatur und Schalter-Steuerung. Zwei Ringe,
+           damit er auf hellem wie dunklem Grund steht - ein einfarbiger Ring
+           verschwindet je nach Modus in genau einem der beiden. */
+        :focus-visible {
+            outline: 2px solid var(--c-live);
+            outline-offset: 2px;
+            border-radius: 4px;
+            box-shadow: 0 0 0 4px var(--bg-app);
+        }
+        [data-theme="light"] :focus-visible { outline-color: var(--c-live-ink); }
+        :focus:not(:focus-visible) { outline: none; }
+
+        /* Bewegung ist Dekoration, nicht Information: wer sie abbestellt,
+           verliert nichts als Bewegung. Der Radar behält seine Aktualisierung,
+           weil dort die Bewegung der Inhalt ist. */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .radar-live i { animation: none; opacity: 1; }
+        }
+
         .theme-btn {
             background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-soft);
             width: 34px; height: 34px; border-radius: 9px; font-size: 15px; cursor: pointer;
@@ -195,7 +303,7 @@
         }
 
         * { box-sizing: border-box; -webkit-user-select: none; user-select: none; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg-body); color: var(--text-main); font-size: 11px; line-height: 1.4; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg-body); color: var(--text-main); font-size: var(--fs-body); line-height: var(--lh-body); }
         
         .app-layout { display: flex; flex-direction: column; min-height: 100vh; max-width: 940px; margin: auto; background: var(--bg-sidebar); border: 1px solid var(--border); box-shadow: 0 15px 45px rgba(0,0,0,0.8); }
         
@@ -268,7 +376,7 @@
         .badge-trait { background: #4c1d95; color: #e9d5ff; border: 1px solid #a855f7; font-size: 8px; font-weight: bold; border-radius: 4px; padding: 1px 4px; }
         .badge-count { background: var(--danger); color: #fff; padding: 1px 6px; border-radius: 10px; font-size: 9px; font-weight: 900; }
 
-        .box { background: rgba(15, 20, 28, 0.7); border: 1px solid var(--border); padding: 8px 10px; margin: 5px 0; border-left: 3px solid var(--accent); font-size: 11px; line-height: 1.45; border-radius: 6px; color: #cbd5e1; }
+        .box { background: var(--bg-inset); border: 1px solid var(--border-soft); padding: 9px 11px; margin: 5px 0; border-left: 3px solid var(--accent); font-size: var(--fs-small); line-height: var(--lh-body); border-radius: 6px; color: var(--text-soft); }
         .box-underworld { background: rgba(30, 10, 35, 0.8); border-left: 3px solid var(--purple); }
         .box-industry { background: rgba(40, 20, 15, 0.85); border-left: 3px solid var(--industry); border-color: rgba(255, 112, 67, 0.3); }
         .box-offer { background: rgba(14, 34, 45, 0.85); border-left: 4px solid var(--blue); }
@@ -288,7 +396,7 @@
         .stadium-3d-box { width: 94%; height: 150px; background: #0c1a14; border: 2px solid var(--accent); border-radius: 8px; position: relative; transform: rotateX(38deg); transform-style: preserve-3d; }
         .stadium-block-3d { position: absolute; background: rgba(18, 24, 34, 0.95); border: 1px solid var(--primary); color: #fff; padding: 2px 4px; border-radius: 4px; font-size: 8px; font-weight: bold; text-align: center; cursor: pointer; transform: translateZ(20px); white-space: nowrap; }
 
-        .input-inline { background: #0a0f18; border: 1px solid #334155; color: var(--accent); padding: 4px 6px; border-radius: 4px; width: 70px; font-weight: bold; text-align: center; font-size: 11px; }
+        .input-inline { background: var(--bg-sunken); border: 1px solid var(--border); color: var(--accent); padding: 8px 6px; border-radius: 6px; width: 78px; font-weight: bold; text-align: center; font-size: 16px; }
 
     
         /* ==========================================================
@@ -780,6 +888,72 @@
             75% { opacity: 1; transform: scale(1); }
             100% { opacity: 0; transform: scale(1); }
         }
+    
+        /* ==========================================================
+           VORGANGSZÄHLER & AUSZEICHNUNGEN
+           Dringlichkeit wird über Farbe UND Position codiert, nie über
+           Farbe allein - sonst trägt sie für Rotgrünblinde keine Information.
+           ========================================================== */
+        .nav-dot {
+            margin-left: auto; min-width: 19px; height: 19px; border-radius: 99px;
+            font-size: 10px; font-weight: 800; display: inline-flex; align-items: center;
+            justify-content: center; padding: 0 6px; flex: 0 0 auto;
+            background: var(--c-industry); color: var(--on-accent);
+        }
+        .nav-dot[data-urgency="now"]  { background: var(--c-matchday); color: #fff; }
+        .nav-dot[data-urgency="soon"] { background: var(--c-industry); color: var(--on-accent); }
+        .nav-dot[data-urgency="idle"] { background: transparent; color: var(--text-muted);
+                                        box-shadow: inset 0 0 0 1px var(--border); }
+        [data-theme="light"] .nav-dot[data-urgency="soon"] { background: var(--c-industry-ink); color: #fff; }
+
+        .tabbar .tb-dot[data-urgency="soon"] { background: var(--c-industry); color: var(--on-accent); }
+        .tabbar .tb-dot[data-urgency="idle"] { background: var(--text-muted); color: var(--bg-app); }
+
+        /* Zusammenfassung auf der Zentrale */
+        .todo-list { display: flex; flex-direction: column; gap: 1px; background: var(--border-soft); }
+        .todo-row {
+            display: flex; align-items: center; gap: 10px; padding: 10px 11px; cursor: pointer;
+            background: var(--bg-surface); border-left: 3px solid var(--text-muted);
+        }
+        .todo-row[data-urgency="now"]  { border-left-color: var(--c-matchday); }
+        .todo-row[data-urgency="soon"] { border-left-color: var(--c-industry); }
+        .todo-row .td-dept { font-size: 9px; font-weight: 800; letter-spacing: 1.1px;
+            text-transform: uppercase; color: var(--text-muted); }
+        .todo-row .td-label { font-size: 12px; color: var(--text-main); margin-top: 2px; line-height: 1.35; }
+        .todo-row .td-go { margin-left: auto; font-size: 16px; color: var(--text-muted); flex: 0 0 auto; }
+        .todo-empty { padding: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+        /* Auszeichnungen */
+        .badge-head { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+        .badge-head .bh-num { font-size: 15px; font-weight: 800; color: var(--c-industry); }
+        .badge-track { flex: 1; height: 4px; background: var(--bg-inset); border-radius: 99px; overflow: hidden; }
+        .badge-track i { display: block; height: 100%; background: var(--c-industry); }
+        .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 6px; }
+        .badge-card {
+            display: flex; gap: 9px; align-items: center; padding: 9px 10px; border-radius: 9px;
+            background: var(--bg-inset); border: 1px solid var(--border-soft); opacity: .45;
+        }
+        .badge-card.earned { opacity: 1; border-color: var(--c-industry); background: var(--bg-raised); }
+        .badge-card.secret { opacity: .3; }
+        .bc-icon { font-size: 20px; flex: 0 0 auto; width: 26px; text-align: center; }
+        .badge-card.secret .bc-icon { font-weight: 800; color: var(--text-muted); }
+        .bc-txt { min-width: 0; }
+        .bc-txt b { display: block; font-size: 11.5px; color: var(--text-main); font-weight: 700; }
+        .bc-txt span { font-size: 10px; color: var(--text-muted); line-height: 1.35; display: block; margin-top: 1px; }
+
+        .badge-pop { position: fixed; inset: 0; z-index: 520; display: grid; place-items: center;
+            pointer-events: none; transition: opacity .4s; }
+        .badge-pop .bp-card {
+            background: var(--bg-raised); border: 2px solid var(--c-industry); border-radius: 14px;
+            padding: 22px 26px; text-align: center; max-width: 280px; box-shadow: var(--shadow-lift);
+            animation: bpIn .4s cubic-bezier(.2,.9,.25,1);
+        }
+        @keyframes bpIn { from { transform: scale(.8) translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+        .bp-icon { font-size: 40px; }
+        .bp-kicker { font-size: 8px; letter-spacing: 2.4px; text-transform: uppercase;
+            color: var(--c-industry); font-weight: 800; margin-top: 6px; }
+        .bp-name { font-size: 16px; font-weight: 800; color: var(--text-main); margin-top: 3px; }
+        .bp-desc { font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.45; }
     </style>
 </head>
 <body>
@@ -830,46 +1004,47 @@
         <!-- SIDEBAR -->
         <nav class="app-sidebar">
             <div class="nav-category">Hauptzentrale</div>
-            <button class="nav-btn active" onclick="showScreen('screen-dashboard')">📊 FM13 Dashboard</button>
-            <button class="nav-btn" onclick="showScreen('screen-mail')">✉️ Poodle Mehl <span id="sidebar-mail-badge" class="badge-count" style="display:none; margin-left:auto;">0</span></button>
-            <button class="nav-btn" onclick="showScreen('screen-calendar')">📅 Kalender & Termine</button>
-            <button class="nav-btn" onclick="showScreen('screen-squad')">⚽ Kader & 3D Taktik</button>
-            <button class="nav-btn" onclick="showScreen('screen-training')">🏋️ Training & Förderung</button>
+            <button class="nav-btn active" onclick="showScreen('screen-dashboard')" data-screen="screen-dashboard">📊 FM13 Dashboard</button>
+            <button class="nav-btn" onclick="showScreen('screen-mail')" data-screen="screen-mail">✉️ Poodle Mehl <span id="sidebar-mail-badge" class="badge-count" style="display:none; margin-left:auto;">0</span></button>
+            <button class="nav-btn" onclick="showScreen('screen-calendar')" data-screen="screen-calendar">📅 Kalender & Termine</button>
+            <button class="nav-btn" onclick="showScreen('screen-squad')" data-screen="screen-squad">⚽ Kader & 3D Taktik</button>
+            <button class="nav-btn" onclick="showScreen('screen-training')" data-screen="screen-training">🏋️ Training & Förderung</button>
 
             <div class="nav-category">Europapokal & RPG</div>
-            <button class="nav-btn special-europe" onclick="showScreen('screen-europe')">🌟 UEFA Champions Cup</button>
-            <button class="nav-btn special-gold" onclick="showScreen('screen-doctrine')">🌳 Doktrinen & Wissensbaum</button>
-            <button class="nav-btn" onclick="showScreen('screen-scouting-global')">🌍 Globales Scouting</button>
+            <button class="nav-btn special-europe" onclick="showScreen('screen-europe')" data-screen="screen-europe">🌟 UEFA Champions Cup</button>
+            <button class="nav-btn special-gold" onclick="showScreen('screen-doctrine')" data-screen="screen-doctrine">🌳 Doktrinen & Wissensbaum</button>
+            <button class="nav-btn" onclick="showScreen('screen-scouting-global')" data-screen="screen-scouting-global">🌍 Globales Scouting</button>
 
             <div class="nav-category">Industrie & Produktion</div>
-            <button class="nav-btn special-industry" onclick="showScreen('screen-industry')">🏭 Fabriken & Produktion</button>
-            <button class="nav-btn special-industry" onclick="showScreen('screen-raw-materials')">📦 Rohstoffe & Börse</button>
-            <button class="nav-btn special-industry" onclick="showScreen('screen-holding')">💼 Merch-Holding & B2B</button>
-            <button class="nav-btn" onclick="showScreen('screen-merch')">🏪 Fanshop-Vertrieb (3-Kanal)</button>
+            <button class="nav-btn special-industry" onclick="showScreen('screen-industry')" data-screen="screen-industry">🏭 Fabriken & Produktion</button>
+            <button class="nav-btn special-industry" onclick="showScreen('screen-raw-materials')" data-screen="screen-raw-materials">📦 Rohstoffe & Börse</button>
+            <button class="nav-btn special-industry" onclick="showScreen('screen-holding')" data-screen="screen-holding">💼 Merch-Holding & B2B</button>
+            <button class="nav-btn" onclick="showScreen('screen-merch')" data-screen="screen-merch">🏪 Fanshop-Vertrieb (3-Kanal)</button>
 
             <div class="nav-category">Finanzen & Wirtschaft</div>
-            <button class="nav-btn" onclick="showScreen('screen-finances')">🏦 Finanzen, GuV & Budget</button>
-            <button class="nav-btn" onclick="showScreen('screen-stocks')">📈 Aktien & Investments</button>
-            <button class="nav-btn" onclick="showScreen('screen-sponsors')">🤝 Sponsoren & Banden</button>
+            <button class="nav-btn" onclick="showScreen('screen-finances')" data-screen="screen-finances">🏦 Finanzen, GuV & Budget</button>
+            <button class="nav-btn" onclick="showScreen('screen-stocks')" data-screen="screen-stocks">📈 Aktien & Investments</button>
+            <button class="nav-btn" onclick="showScreen('screen-sponsors')" data-screen="screen-sponsors">🤝 Sponsoren & Banden</button>
 
             <div class="nav-category">Verein & Infrastruktur</div>
-            <button class="nav-btn" onclick="showScreen('screen-stadium')">🏟️ Stadion & 8 Blöcke</button>
-            <button class="nav-btn" onclick="showScreen('screen-campus')">🏢 Campus & Gebäude</button>
-            <button class="nav-btn" onclick="showScreen('screen-staff')">👔 Personal & Experten</button>
-            <button class="nav-btn" onclick="showScreen('screen-fans')">📢 Fans & Ordnerdienst</button>
+            <button class="nav-btn" onclick="showScreen('screen-stadium')" data-screen="screen-stadium">🏟️ Stadion & 8 Blöcke</button>
+            <button class="nav-btn" onclick="showScreen('screen-campus')" data-screen="screen-campus">🏢 Campus & Gebäude</button>
+            <button class="nav-btn" onclick="showScreen('screen-staff')" data-screen="screen-staff">👔 Personal & Experten</button>
+            <button class="nav-btn" onclick="showScreen('screen-fans')" data-screen="screen-fans">📢 Fans & Ordnerdienst</button>
 
             <div class="nav-category">Sport & Wettbewerbe</div>
-            <button class="nav-btn" onclick="showScreen('screen-transfer')" id="nav-btn-transfer">🤝 Transfermarkt & Scouting <span id="sidebar-offers-badge" class="badge-count" style="display:none; margin-left:auto;">0</span></button>
-            <button class="nav-btn" onclick="showScreen('screen-league')">🏆 Tabelle & Spielpläne</button>
-            <button class="nav-btn" onclick="showScreen('screen-cup')">🏆 DFB-Pokal Baum</button>
-            <button class="nav-btn" onclick="showScreen('screen-youth')">🌱 Jugendakademie</button>
-            <button class="nav-btn" onclick="showScreen('screen-contracts')">📝 Spielerverträge</button>
-            <button class="nav-btn" onclick="showScreen('screen-history')">🌟 Trophäenraum</button>
+            <button class="nav-btn" onclick="showScreen('screen-transfer')" data-screen="screen-transfer" id="nav-btn-transfer">🤝 Transfermarkt & Scouting <span id="sidebar-offers-badge" class="badge-count" style="display:none; margin-left:auto;">0</span></button>
+            <button class="nav-btn" onclick="showScreen('screen-league')" data-screen="screen-league">🏆 Tabelle & Spielpläne</button>
+            <button class="nav-btn" onclick="showScreen('screen-cup')" data-screen="screen-cup">🏆 DFB-Pokal Baum</button>
+            <button class="nav-btn" onclick="showScreen('screen-youth')" data-screen="screen-youth">🌱 Jugendakademie</button>
+            <button class="nav-btn" onclick="showScreen('screen-contracts')" data-screen="screen-contracts">📝 Spielerverträge</button>
+            <button class="nav-btn" onclick="showScreen('screen-history')" data-screen="screen-history">🌟 Trophäenraum</button>
+            <button class="nav-btn" onclick="showScreen('screen-badges')" data-screen="screen-badges">🎖️ Auszeichnungen</button>
 
             <div class="nav-category">Spezial & Karriere</div>
-            <button class="nav-btn special-gold" onclick="showScreen('screen-private')">🎩 Trainer-Privatleben</button>
-            <button class="nav-btn special-red" onclick="showScreen('screen-underworld')">🕵️ Unterwelt & Sabotage</button>
-            <button class="nav-btn special-gold" onclick="showScreen('screen-admin')">🛠️ Admin & Cheats PRO</button>
+            <button class="nav-btn special-gold" onclick="showScreen('screen-private')" data-screen="screen-private">🎩 Trainer-Privatleben</button>
+            <button class="nav-btn special-red" onclick="showScreen('screen-underworld')" data-screen="screen-underworld">🕵️ Unterwelt & Sabotage</button>
+            <button class="nav-btn special-gold" onclick="showScreen('screen-admin')" data-screen="screen-admin">🛠️ Admin & Cheats PRO</button>
         </nav>
 
         <!-- MAIN WORKSPACE -->
@@ -887,9 +1062,9 @@
                 <div class="panel">
                     <div class="panel-header">
                         <span>⚽ NÄCHSTE BEGEGNUNG (SPIELTAG <span id="dash-mday">1</span>)</span>
-                        <span id="dash-league-name" style="color:#fff; font-size:10px;">4. Liga</span>
+                        <span id="dash-league-name" style="color:var(--text-main); font-size:10px;">4. Liga</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:rgba(0,0,0,0.3); border-radius:8px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:var(--bg-inset); border-radius:8px; margin-bottom:8px;">
                         <div style="text-align:center; flex:1;">
                             <div style="font-size:14px; font-weight:900; color:var(--primary);">FC Anstoß Pro</div>
                             <div style="font-size:9px; color:var(--text-muted);">Heimteam (Str: <span id="dash-our-str">60</span>)</div>
@@ -907,6 +1082,14 @@
                     <div id="dash-season-end-actions" style="display:none;">
                         <button onclick="concludeSeasonAndAdvance()" class="btn-danger" style="font-size:13px; padding:10px;">🏆 Saison abschließen & Neue Saison starten</button>
                     </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Offene Vorgänge</span>
+                        <span style="font-size:11px;">Gesamt: <strong id="todo-total" style="color:var(--accent);">0</strong></span>
+                    </div>
+                    <div class="todo-list" id="todo-list"></div>
                 </div>
 
                 <div class="panel-grid">
@@ -944,7 +1127,7 @@
                 <div class="panel box-europe">
                     <div class="panel-header" style="color:#82b1ff;">
                         <span>🌟 UEFA CHAMPIONS CUP (KÖNIGSKLASSE)</span>
-                        <span id="europe-status-tag" style="font-size:10px; color:#fff;">Status: Gruppenphase</span>
+                        <span id="europe-status-tag" style="font-size:10px; color:var(--text-main);">Status: Gruppenphase</span>
                     </div>
                     <div class="box">
                         Hier duellieren sich Europas 8 beste Spitzenvereine in 2 Vierergruppen. Spieltage finden an den Spieltagen <strong>3, 7, 11, 15, 19 und 23</strong> statt (Halbfinale: SpT 27, Finale: SpT 31)!<br>
@@ -970,6 +1153,25 @@
             </div>
 
             <!-- 3. MANAGER-RPG & TALENTBAUM -->
+            <!-- ===== AUSZEICHNUNGEN ===== -->
+            <div id="screen-badges" style="display:none;">
+                <div class="panel">
+                    <div class="panel-header"><span>Auszeichnungen</span></div>
+                    <div class="badge-head">
+                        <span class="bh-num" id="badge-progress">0 / 28</span>
+                        <span class="badge-track"><i id="badge-bar" style="width:0%"></i></span>
+                    </div>
+                    <div class="badge-grid" id="badge-grid"></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><span>Verborgen</span></div>
+                    <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;line-height:1.5;">
+                        Diese Auszeichnungen verraten ihre Bedingung nicht. Sie belohnen Spielweisen, keine Meilensteine.
+                    </div>
+                    <div class="badge-grid" id="badge-secret"></div>
+                </div>
+            </div>
+
             <!-- ===== SCHMAIL ===== -->
             <div id="screen-mail" style="display:none;">
                 <div class="mail-app">
@@ -1043,22 +1245,22 @@
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;" id="scouting-regions-grid">
                         <div class="panel">
                             <div class="panel-header" style="font-size:11px; color:var(--accent);">🌴 Südamerika (Brasilien/Argentinien)</div>
-                            <div style="font-size:9px; color:#aaa; margin-bottom:6px;">Fokus: Trickreiche Stürmer & Torjäger mit "Tor-Instinkt".</div>
+                            <div style="font-size:9px; color:var(--text-muted); margin-bottom:6px;">Fokus: Trickreiche Stürmer & Torjäger mit "Tor-Instinkt".</div>
                             <button onclick="sendScoutMission('southAmerica', 18000)" class="btn-action">Scout entsenden [18.000 €]</button>
                         </div>
                         <div class="panel">
                             <div class="panel-header" style="font-size:11px; color:var(--primary);">🦁 Afrika (Nigeria/Senegal/Ghana)</div>
-                            <div style="font-size:9px; color:#aaa; margin-bottom:6px;">Fokus: Athletische Flügel & Dauerläufer mit "Flügelflitzer".</div>
+                            <div style="font-size:9px; color:var(--text-muted); margin-bottom:6px;">Fokus: Athletische Flügel & Dauerläufer mit "Flügelflitzer".</div>
                             <button onclick="sendScoutMission('africa', 14000)" class="btn-action">Scout entsenden [14.000 €]</button>
                         </div>
                         <div class="panel">
                             <div class="panel-header" style="font-size:11px; color:var(--blue);">🏰 Westeuropa & UK</div>
-                            <div style="font-size:9px; color:#aaa; margin-bottom:6px;">Fokus: Taktisch geschulte Spielmacher & "Freistoß-Götter".</div>
+                            <div style="font-size:9px; color:var(--text-muted); margin-bottom:6px;">Fokus: Taktisch geschulte Spielmacher & "Freistoß-Götter".</div>
                             <button onclick="sendScoutMission('westEurope', 25000)" class="btn-action">Scout entsenden [25.000 €]</button>
                         </div>
                         <div class="panel">
                             <div class="panel-header" style="font-size:11px; color:var(--danger);">🛡️ Osteuropa & Balkan</div>
-                            <div style="font-size:9px; color:#aaa; margin-bottom:6px;">Fokus: Zweikampfstarke Abwehr-Bollwerke & "Eisenfüße".</div>
+                            <div style="font-size:9px; color:var(--text-muted); margin-bottom:6px;">Fokus: Zweikampfstarke Abwehr-Bollwerke & "Eisenfüße".</div>
                             <button onclick="sendScoutMission('eastEurope', 12000)" class="btn-action">Scout entsenden [12.000 €]</button>
                         </div>
                     </div>
@@ -1148,7 +1350,7 @@
                 <div class="panel">
                     <div class="panel-header">
                         <span>📅 SAISON-KALENDER & TERMINE</span>
-                        <span>Aktueller Monat: <strong id="cal-month-name" style="color:#fff;">August</strong></span>
+                        <span>Aktueller Monat: <strong id="cal-month-name" style="color:var(--text-main);">August</strong></span>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin:6px 0;">
                         <button onclick="scheduleFriendlyMatch()" class="btn-action">⚽ Freundschaftsspiel vereinbaren (+Einnahmen)</button>
@@ -1165,7 +1367,7 @@
                 <div class="panel">
                     <div class="panel-header">
                         <span>🏦 MONATLICHE GEWINN- & VERLUSTRECHNUNG (GuV)</span>
-                        <span id="fin-month-title" style="color:#fff;">Monat 1</span>
+                        <span id="fin-month-title" style="color:var(--text-main);">Monat 1</span>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
                         <div class="box">
@@ -1286,7 +1488,7 @@
                         <button onclick="setTeamTraining('matchprep')" id="tr-matchprep" class="btn-secondary">🎯 Match-Prep</button>
                         <button onclick="setTeamTraining('erholung')" id="tr-erholung" class="btn-secondary">🧘 Erholung</button>
                     </div>
-                    <div style="margin-top:6px; font-size:9px; color:#aaa;">Schwerpunkt: <strong id="cur-team-training" style="color:var(--accent);">AUSGEGLICHEN</strong></div>
+                    <div style="margin-top:6px; font-size:9px; color:var(--text-muted);">Schwerpunkt: <strong id="cur-team-training" style="color:var(--accent);">AUSGEGLICHEN</strong></div>
                 </div>
                 <div class="panel">
                     <div class="panel-header">🎯 INDIVIDUELLES SPIELERTRAINING</div>
@@ -1502,7 +1704,7 @@
                 <div class="panel box-admin">
                     <div class="panel-header" style="color:var(--gold);">
                         <span>🛠️ ADMIN-DIAGNOSE & LIVE-INSPECTOR</span>
-                        <span style="font-size:10px; color:#fff;">Entwickler-Konsole Aktiv</span>
+                        <span style="font-size:10px; color:var(--text-main);">Entwickler-Konsole Aktiv</span>
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:6px; font-size:10px;" id="admin-inspector-grid">
                         <div class="kpi-chip"><span>Liga-Level</span><strong id="adm-ins-league">4. Liga</strong></div>
@@ -1625,7 +1827,7 @@
                     <div class="ticker-log" id="ticker-log" style="display:none;"></div>
 
                     <!-- LIVE SHOUTS -->
-                    <div class="panel" style="margin:4px 0; padding:6px; background:rgba(0,0,0,0.5);">
+                    <div class="panel" style="margin:4px 0; padding:6px; background:var(--bg-inset);">
                         <div style="font-size:9px; font-weight:bold; color:var(--accent); margin-bottom:3px;">📢 LIVE-COACHING ANWEISUNGEN:</div>
                         <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:3px;">
                             <button onclick="setLiveShout('standard')" id="shout-standard" class="btn-action" style="font-size:8px; padding:4px 2px;">⚖️ Standard</button>
@@ -2634,7 +2836,7 @@
         if (content) content.scrollTop = 0;
         const screens = [
             'screen-dashboard', 'screen-calendar', 'screen-squad', 'screen-training',
-            'screen-europe', 'screen-doctrine', 'screen-mail', 'screen-scouting-global',
+            'screen-europe', 'screen-doctrine', 'screen-mail', 'screen-badges', 'screen-scouting-global',
             'screen-industry', 'screen-raw-materials', 'screen-holding', 'screen-merch',
             'screen-finances', 'screen-stocks', 'screen-sponsors', 'screen-stadium',
             'screen-campus', 'screen-staff', 'screen-fans', 'screen-transfer',
@@ -2662,6 +2864,7 @@
         if (screenId === 'screen-europe') renderEuropeView();
         if (screenId === 'screen-doctrine') renderDoctrineView();
         if (screenId === 'screen-mail') renderMailView();
+        if (screenId === 'screen-badges') renderBadgeView();
         if (screenId === 'screen-scouting-global') renderGlobalScoutingView();
         if (screenId === 'screen-industry') renderIndustryView();
         if (screenId === 'screen-raw-materials') renderRawMaterialsView();
@@ -2721,6 +2924,8 @@
         }
         let wpEl = document.getElementById('top-wp');
         if (wpEl) wpEl.innerText = knowledge.wp + ' WP';
+        renderAttentionBadges();
+        renderTodoList();
     }
 
     // ==========================================
@@ -2846,9 +3051,9 @@
             card.innerHTML = `
                 <div class="panel-header" style="color:var(--industry);">
                     <span>${f.name}</span>
-                    <span>${f.owned ? `<strong style="color:var(--primary);">Stufe ${f.lvl}</strong>` : '<span style="color:#aaa;">Nicht im Besitz</span>'}</span>
+                    <span>${f.owned ? `<strong style="color:var(--primary);">Stufe ${f.lvl}</strong>` : '<span style="color:var(--text-muted);">Nicht im Besitz</span>'}</span>
                 </div>
-                <div style="font-size:10px; color:#aaa; margin-bottom:4px;">${f.desc}</div>
+                <div style="font-size:10px; color:var(--text-muted); margin-bottom:4px;">${f.desc}</div>
                 ${f.owned ? 
                     `<button onclick="upgradeFactory('${k}')" class="btn-industry" ${f.lvl>=f.max?'disabled':''}>${f.lvl>=f.max?'Maximalstufe ✓':`Fabrik ausbauen (Stufe ${f.lvl+1}) [${formatVal(f.cost*(f.lvl+1))}]`}</button>` : 
                     `<button onclick="buyFactory('${k}')" class="btn-action">🏭 Fabrik kaufen [${formatVal(f.cost)}]</button>`
@@ -2948,7 +3153,7 @@
                     Aktueller Börsenkurs: <strong>${r.currentPrice.toFixed(2)} € / kg</strong> 
                     <span style="color:${deltaClass}; font-size:9px; font-weight:bold;">(${deltaIcon}${r.delta.toFixed(2)} €)</span>
                 </div>
-                <div style="font-size:9px; color:#aaa; margin-bottom:6px;">Basispreis: ${r.basePrice.toFixed(2)} € | Spanne: ${r.minPrice.toFixed(2)} - ${r.maxPrice.toFixed(2)} €</div>
+                <div style="font-size:9px; color:var(--text-muted); margin-bottom:6px;">Basispreis: ${r.basePrice.toFixed(2)} € | Spanne: ${r.minPrice.toFixed(2)} - ${r.maxPrice.toFixed(2)} €</div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
                     <button onclick="buyRawMaterial('${k}', 500)" class="btn-secondary">+500 kg [${formatVal(Math.round(r.currentPrice * 500))}]</button>
                     <button onclick="buyRawMaterial('${k}', 2000)" class="btn-secondary">+2.000 kg [${formatVal(Math.round(r.currentPrice * 2000))}]</button>
@@ -3082,7 +3287,7 @@
                 </div>
                 <div style="font-size:10px; margin-bottom:6px;">Marktlage: <strong style="color:${elast.color};">${elast.label}</strong></div>
                 
-                <div class="box" style="font-size:10px; background:rgba(0,0,0,0.4); padding:6px;">
+                <div class="box" style="font-size:10px; background:var(--bg-inset); padding:6px;">
                     <strong style="color:var(--accent);">Absatz letzter Spieltag: ${s.total} Stk. (+${formatVal(s.revenue)})</strong><br>
                     🏟️ Stadion: <strong>${s.stadium}</strong> | 🏬 City: <strong>${s.city}</strong> | 🌐 Online: <strong>${s.online}</strong>
                     ${s.missed > 0 ? `<div style="color:var(--danger); font-weight:bold; margin-top:2px;">⚠️ ${s.missed} Kunden gingen wegen Lagermangel leer aus!</div>` : ''}
@@ -3131,7 +3336,7 @@
             let isEuro = europeTournament.matchdays.includes(i);
 
             let eventText = isCup ? '🏆 DFB-Pokal Termin' : (isEuro ? '🌟 Champions Cup Spieltag' : '⚽ Ligaspiel');
-            let eventColor = isCup ? 'var(--accent)' : (isEuro ? '#82b1ff' : '#aaa');
+            let eventColor = isCup ? 'var(--accent)' : (isEuro ? '#82b1ff' : 'var(--text-muted)');
 
             item.innerHTML = `
                 <span><strong>Spieltag ${i}</strong> ${isCurrent ? '<span style="color:var(--primary); font-weight:900;">(HEUTE)</span>' : ''}</span>
@@ -3279,7 +3484,7 @@
             let card = document.createElement('div');
             card.className = 'player-row';
             card.innerHTML = `
-                <div><strong>${s.name}</strong><br><span style="color:#aaa;">Kurs: ${formatVal(s.price)} | Dividende: ${(s.dividendRate*100).toFixed(1)}%</span></div>
+                <div><strong>${s.name}</strong><br><span style="color:var(--text-muted);">Kurs: ${formatVal(s.price)} | Dividende: ${(s.dividendRate*100).toFixed(1)}%</span></div>
                 <div>Besitz: <strong style="color:var(--blue);">${s.owned}</strong> (${formatVal(s.owned * s.price)})</div>
                 <div style="display:flex; gap:3px;">
                     <button onclick="buyStockShares('${key}', 100)" class="btn-action" style="font-size:9px; width:auto;">+100</button>
@@ -3417,7 +3622,7 @@
                 <span class="badge ${badgeClass}">${p.pos}</span>
                 <span style="flex:1; text-align:left; padding-left:6px;">
                     <strong>${p.name}</strong>${roleBadge} ${traitBadge}<br>
-                    <span style="font-size:9px; color:#aaa;">Str: <strong>${p.strength}</strong> | PAC:${p.pace} SHO:${p.shooting} PAS:${p.passing} DEF:${p.defense} PHY:${p.physique}</span>
+                    <span style="font-size:9px; color:var(--text-muted);">Str: <strong>${p.strength}</strong> | PAC:${p.pace} SHO:${p.shooting} PAS:${p.passing} DEF:${p.defense} PHY:${p.physique}</span>
                 </span>
                 <span style="width:70px; text-align:center; font-size:9px;">${status}</span>
                 <button onclick="toggleLineupPlayer('${p.id}')" style="width:auto; padding:3px 8px; font-size:9px; background:${isStarting ? 'var(--danger)' : 'var(--primary)'}; color:${isStarting ? '#fff' : '#000'};">
@@ -3568,7 +3773,7 @@
             row.className = 'panel';
             row.innerHTML = `
                 <div class="panel-header"><span>${b.name}</span><span style="color:var(--accent);">Stufe ${b.lvl}/${b.max}</span></div>
-                <div style="font-size:9px; color:#aaa; margin-bottom:4px;">${b.desc}</div>
+                <div style="font-size:9px; color:var(--text-muted); margin-bottom:4px;">${b.desc}</div>
                 <button onclick="upgradeCampusBuilding('${key}')" class="btn-action" ${b.lvl>=b.max?'disabled':''}>${b.lvl>=b.max?'Voll ausgebaut ✓':`Ausbauen auf Stufe ${b.lvl+1} [${formatVal(cost)}]`}</button>
             `;
             container.appendChild(row);
@@ -3593,7 +3798,7 @@
             let row = document.createElement('div');
             row.className = 'player-row';
             row.innerHTML = `
-                <div><strong>${s.name}</strong> (${s.hired?'<span style="color:var(--primary);">Aktiv</span>':'Frei'})<br><span style="color:#aaa;">${s.desc}</span></div>
+                <div><strong>${s.name}</strong> (${s.hired?'<span style="color:var(--primary);">Aktiv</span>':'Frei'})<br><span style="color:var(--text-muted);">${s.desc}</span></div>
                 <button onclick="toggleStaffMember('${key}')" class="${s.hired?'btn-danger':'btn-action'}" style="width:auto;">${s.hired?'Entlassen':`Einstellen [${formatVal(s.cost)}]`}</button>
             `;
             container.appendChild(row);
@@ -3622,7 +3827,7 @@
         fanGroups.forEach(g => {
             let row = document.createElement('div');
             row.className = 'box';
-            row.innerHTML = `<div style="display:flex; justify-content:space-between;"><strong>${g.name}</strong><span style="color:var(--primary);">${g.mood}%</span></div><div style="color:#aaa;">${g.desc}</div>`;
+            row.innerHTML = `<div style="display:flex; justify-content:space-between;"><strong>${g.name}</strong><span style="color:var(--primary);">${g.mood}%</span></div><div style="color:var(--text-muted);">${g.desc}</div>`;
             list.appendChild(row);
         });
     }
@@ -3664,12 +3869,12 @@
                 card.innerHTML = `
                     <div class="panel-header" style="color:var(--blue);">
                         <span>💼 Angebot von <strong>${o.clubName}</strong></span>
-                        <span style="font-size:9px; color:#aaa;">Gültig: ${o.expiresIn} SpT</span>
+                        <span style="font-size:9px; color:var(--text-muted);">Gültig: ${o.expiresIn} SpT</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                         <div>
                             <span class="badge ${badgeClass}">${o.playerPos}</span> <strong>${o.playerName}</strong> (Stärke: ${o.playerStr})
-                            <div style="font-size:9px; color:#aaa;">Marktwert: ${formatVal(o.marketValue)}</div>
+                            <div style="font-size:9px; color:var(--text-muted);">Marktwert: ${formatVal(o.marketValue)}</div>
                         </div>
                         <div style="text-align:right;">
                             <div style="font-size:13px; font-weight:900; color:var(--accent);">${formatVal(o.currentBid)}</div>
@@ -3683,7 +3888,7 @@
                         <button onclick="rejectTransferOffer('${o.id}')" class="btn-danger" style="font-size:10px;">✖ Ablehnen</button>
                     </div>
 
-                    <div style="font-size:9px; font-weight:bold; color:#aaa; margin:4px 0 2px 0;">Nachverhandeln (Gegenangebot):</div>
+                    <div style="font-size:9px; font-weight:bold; color:var(--text-muted); margin:4px 0 2px 0;">Nachverhandeln (Gegenangebot):</div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:3px;">
                         <button onclick="counterTransferOffer('${o.id}', 1.15, '+15%')" class="btn-secondary" style="font-size:9px; padding:4px;">+15% fordern<br>(${formatVal(Math.round(o.currentBid * 1.15))})</button>
                         <button onclick="counterTransferOffer('${o.id}', 1.35, '+35%')" class="btn-gold" style="font-size:9px; padding:4px;">+35% fordern<br>(${formatVal(Math.round(o.currentBid * 1.35))})</button>
@@ -3904,6 +4109,7 @@
 
     function promoteYouth(idx) {
         playSound('click');
+        badges.stats.youthPromoted = (badges.stats.youthPromoted || 0) + 1;
         squad.push(youthTalents[idx]);
         youthTalents.splice(idx, 1);
         renderYouthView();
@@ -4255,7 +4461,15 @@
         }
 
         let won = (currentMatch.isHome && currentMatch.homeGoals > currentMatch.awayGoals) || (!currentMatch.isHome && currentMatch.awayGoals > currentMatch.homeGoals);
-        if (won) addManagerXP(150);
+        badges.stats.matches++;
+        badges.stats.goals += currentMatch.isHome ? currentMatch.homeGoals : currentMatch.awayGoals;
+        if (won) {
+            badges.stats.wins++;
+            addManagerXP(150);
+            const bought = Object.values(radar.boosts).reduce((s, v) => s + v, 0);
+            if (bought === 0) awardBadge('minimalist');
+            if (Object.values(radar.boosts).every(v => v > 0)) awardBadge('shopaholic');
+        }
 
         applyMatchdayFinances(currentMatch.isHome, won);
         processPostMatchRoutine();
@@ -4335,6 +4549,7 @@
                 game.fans = Math.max(10, game.fans - 10);
                 underworld.pressure = Math.max(0, underworld.pressure - 30);
                 mailRaid(fine);
+                awardBadge('raid');
                 alert(`🚨 DFB-RAZZIA!\nDie Staatsanwaltschaft ermittelt wegen Spielmanipulationen.\nStrafe: -${formatVal(fine)} & drastischer Image-Verlust!\n\nDas Verfahren liegt in deinem Postfach (Verband).`);
             }
         }
@@ -4347,6 +4562,9 @@
         if (game.boardSat < 45 && Math.random() < 0.4) mailBoardWarning();
         if (game.fans < 40 && Math.random() < 0.3) mailPressJab('Die Kurve pfeift — steht der Trainer vor dem Aus?');
         if (Math.random() < 0.12) mailAgentSpam(squad[Math.floor(Math.random() * squad.length)]);
+        invalidateAttention();
+        mailPendingDecisions();
+        checkBadges();
         updateCommodityMarket();
         checkIncomingTransferOffers();
 
@@ -4470,6 +4688,8 @@
         if (dx('transferBudgetMod')) game.transferBudget = Math.max(0, Math.round(game.transferBudget * (1 + dx('transferBudgetMod'))));
         mailSeasonReview(myRank);
         grantWP(3, `Saison ${game.season} abgeschlossen`);
+        invalidateAttention();
+        checkBadges();
         incomingOffers = [];
         game.season++;
         game.matchday = 1;
@@ -4745,6 +4965,320 @@
     // ==========================================
     // STORAGE & GETTER RESTORATION
 
+
+
+    // ==========================================================
+    // VORGÄNGE — Aufmerksamkeitssteuerung
+    // Das Spiel hat 29 Bildschirme. Ohne Hinweis besucht ein Spieler drei
+    // davon und übersieht, dass im Stadion, beim Personal oder bei den Fans
+    // seit Wochen eine Entscheidung offen liegt. Jede Abteilung meldet daher
+    // selbst, was dort ansteht. Aus derselben Quelle speisen sich die Zähler
+    // an der Navigation UND die Mails - eine Wahrheit, zwei Ausgaben.
+    // Dringlichkeit: 'now' = kostet gerade Geld oder Punkte,
+    //                'soon' = wird bald teuer, 'idle' = verschenktes Potenzial.
+    // ==========================================================
+    const DEPTS = {
+        'screen-transfer': { label:'Transfermarkt', cast:'agent', check: () =>
+            incomingOffers.map(o => ({ id:'off_'+o.id, urgency:'now',
+                label:`Angebot über ${formatVal(o.currentBid)} für ${o.playerName}` })) },
+
+        'screen-contracts': { label:'Verträge', cast:'board', check: () =>
+            squad.filter(p => p.contracts <= 1).map(p => ({ id:'con_'+p.id, urgency:'now',
+                label:`${p.name} läuft in ${p.contracts} Saison aus` })) },
+
+        'screen-youth': { label:'Jugendakademie', cast:'scout', check: () =>
+            youthTalents.map(p => ({ id:'yth_'+p.id, urgency:'soon',
+                label:`${p.name} (Stärke ${p.strength}) wartet auf Beförderung` })) },
+
+        'screen-doctrine': { label:'Wissensbaum', cast:'president', check: () =>
+            knowledge.wp > 0 ? [{ id:'wp', urgency:'soon',
+                label:`${knowledge.wp} Wissenspunkt(e) nicht investiert` }] : [] },
+
+        'screen-fans': { label:'Fans', cast:'ultra', check: () =>
+            fanGroups.filter(g => g.mood < 55).map(g => ({ id:'fan_'+g.id, urgency: g.mood < 40 ? 'now' : 'soon',
+                label:`${g.name}: Stimmung bei ${g.mood} %` })) },
+
+        'screen-staff': { label:'Personal', cast:'board', check: () => {
+            const open = Object.keys(staffMembers).filter(k => !staffMembers[k].hired && game.money > staffMembers[k].cost * 3);
+            return open.length ? [{ id:'staff', urgency:'idle',
+                label:`${open.length} Fachkraft-Stellen unbesetzt, Budget wäre da` }] : []; } },
+
+        'screen-stadium': { label:'Stadion', cast:'president', check: () => {
+            const out = [];
+            const blocks = Object.keys(stadium.blocks || {});
+            const afford = blocks.filter(k => game.money > stadium.blocks[k].cost * 2.5);
+            if (afford.length) out.push({ id:'expand', urgency:'idle',
+                label:`${afford.length} Block/Blöcke ausbaufähig, Geld ist vorhanden` });
+            if (!stadium.flutlicht && game.leagueLevel <= 2) out.push({ id:'flut', urgency:'now',
+                label:'Ohne Flutlicht droht Lizenzauflage in dieser Liga' });
+            if (!stadium.rasenheizung && game.leagueLevel <= 1) out.push({ id:'heiz', urgency:'soon',
+                label:'Rasenheizung fehlt für den Winterspielplan' });
+            return out; } },
+
+        'screen-campus': { label:'Campus', cast:'president', check: () => {
+            const zero = Object.keys(campusBuildings).filter(k => campusBuildings[k].lvl === 0 && game.money > campusBuildings[k].baseCost * 3);
+            return zero.length ? [{ id:'campus', urgency:'idle',
+                label:`${zero.length} Gebäude noch nicht gebaut, Budget reicht` }] : []; } },
+
+        'screen-sponsors': { label:'Sponsoren', cast:'board', check: () =>
+            (game.kitSupplier.name === 'Keiner') ? [{ id:'kit', urgency:'soon',
+                label:'Kein Trikot-Ausrüster unter Vertrag' }] : [] },
+
+        'screen-merch': { label:'Fanshop', cast:'board', check: () =>
+            Object.keys(merchandise).filter(k => merchandise[k].stock < 40).map(k => ({
+                id:'mer_'+k, urgency:'soon', label:`${merchandise[k].name}: nur noch ${merchandise[k].stock} Stück` })) },
+
+        'screen-industry': { label:'Fabriken', cast:'president', check: () => {
+            const idle = Object.keys(factories).filter(k => !factories[k].owned && holdingCompany.money > factories[k].cost * 1.5);
+            return idle.length ? [{ id:'fab', urgency:'idle',
+                label:`${idle.length} Fabrik(en) bezahlbar, Holding hat Kapital` }] : []; } },
+
+        'screen-finances': { label:'Finanzen', cast:'board', check: () => {
+            const out = [];
+            if (game.money < 0) out.push({ id:'neg', urgency:'now', label:'Vereinskonto im Minus' });
+            if (game.loanDebt > game.money * 2) out.push({ id:'debt', urgency:'now',
+                label:`Kreditlast ${formatVal(game.loanDebt)} übersteigt die Reserven` });
+            return out; } },
+
+        'screen-training': { label:'Training', cast:'physio', check: () =>
+            squad.filter(p => (p.injured || 0) > 0).length >= 3
+                ? [{ id:'inj', urgency:'soon', label:`${squad.filter(p => (p.injured||0)>0).length} Spieler verletzt` }] : [] }
+    };
+
+    let attentionCache = null, mailedVorgaenge = {};
+
+    function getAttention() {
+        if (attentionCache) return attentionCache;
+        const map = {};
+        for (const screen in DEPTS) {
+            let items = [];
+            try { items = DEPTS[screen].check() || []; } catch (e) { items = []; }
+            if (items.length) map[screen] = items;
+        }
+        attentionCache = map;
+        return map;
+    }
+    function invalidateAttention() { attentionCache = null; }
+
+    function attentionCount(screen) { const a = getAttention()[screen]; return a ? a.length : 0; }
+    function attentionUrgency(screen) {
+        const a = getAttention()[screen];
+        if (!a || !a.length) return null;
+        if (a.some(x => x.urgency === 'now')) return 'now';
+        if (a.some(x => x.urgency === 'soon')) return 'soon';
+        return 'idle';
+    }
+    function attentionTotal() {
+        const a = getAttention();
+        return Object.keys(a).reduce((s, k) => s + a[k].length, 0);
+    }
+
+    /** Zeichnet die Zähler an Seitenleiste und Tableiste neu. */
+    /** Die Zentrale zeigt, was in den selten besuchten Abteilungen liegt. */
+    function renderTodoList() {
+        const box = document.getElementById('todo-list');
+        if (!box) return;
+        const a = getAttention();
+        const rank = { now: 0, soon: 1, idle: 2 };
+        const rows = [];
+        for (const s in a) a[s].forEach(x => rows.push({ screen: s, dept: DEPTS[s].label, urgency: x.urgency, label: x.label }));
+        rows.sort((p, q) => rank[p.urgency] - rank[q.urgency]);
+        const tot = document.getElementById('todo-total');
+        if (tot) tot.textContent = rows.length;
+        box.innerHTML = rows.length
+            ? rows.slice(0, 7).map(r => `<div class="todo-row" data-urgency="${r.urgency}" onclick="showScreen('${r.screen}')">
+                   <div style="min-width:0;">
+                     <div class="td-dept">${escapeXml(r.dept)}</div>
+                     <div class="td-label">${escapeXml(r.label)}</div>
+                   </div>
+                   <div class="td-go">&rsaquo;</div>
+               </div>`).join('')
+            : `<div class="todo-empty">Nichts offen. Alle Abteilungen sind auf Stand.</div>`;
+    }
+
+    function renderAttentionBadges() {
+        invalidateAttention();
+        document.querySelectorAll('.nav-btn[data-screen]').forEach(btn => {
+            const s = btn.dataset.screen;
+            let dot = btn.querySelector('.nav-dot');
+            const n = attentionCount(s), u = attentionUrgency(s);
+            if (!n) { if (dot) dot.remove(); return; }
+            if (!dot) {
+                dot = document.createElement('span');
+                dot.className = 'nav-dot';
+                btn.appendChild(dot);
+            }
+            dot.textContent = n;
+            dot.dataset.urgency = u;
+        });
+        document.querySelectorAll('#tabbar button[data-target]').forEach(btn => {
+            const s = btn.dataset.target;
+            if (s === 'screen-mail') return;      // trägt bereits die Post
+            const n = attentionCount(s);
+            let d = btn.querySelector('.tb-dot');
+            if (!d) return;
+            d.style.display = n ? 'flex' : 'none';
+            if (n) { d.textContent = n; d.dataset.urgency = attentionUrgency(s); }
+        });
+        const more = document.getElementById('tab-more-dot');
+        if (more) {
+            const shown = ['screen-dashboard','screen-squad','screen-doctrine','screen-mail'];
+            const rest = Object.keys(getAttention()).filter(s => shown.indexOf(s) === -1)
+                          .reduce((sum, s) => sum + attentionCount(s), 0);
+            more.style.display = rest ? 'flex' : 'none';
+            more.textContent = rest;
+        }
+    }
+
+    /** Dringende Vorgänge melden sich per Post - einmal je Vorgang, nicht jede Woche. */
+    function mailPendingDecisions() {
+        const a = getAttention();
+        for (const screen in a) {
+            const urgent = a[screen].filter(x => x.urgency === 'now');
+            if (!urgent.length) continue;
+            const key = screen + '|' + urgent.map(x => x.id).join(',');
+            if (mailedVorgaenge[key]) continue;
+            if (screen === 'screen-transfer') continue;   // hat eigene Angebotsmails
+            mailedVorgaenge[key] = game.matchday;
+            const d = DEPTS[screen], who = CAST[d.cast] || CAST.board;
+            sendMail({
+                from: who.name, role: who.role, color: who.color, cat: 'primary',
+                subject: `${d.label}: Entscheidung erforderlich`,
+                body: `<p>Folgendes liegt seit Spieltag ${game.matchday} unbearbeitet vor:</p>
+                       <p>${urgent.map(x => '• ' + x.label).join('<br>')}</p>
+                       <p>Ohne Entscheidung wird das nicht besser, sondern nur teurer.</p>`,
+                tagline: `${d.label} · Geschäftsstelle`,
+                actions: [{ label: `Zu ${d.label}`, kind: 'primary', consume: true,
+                            fn: `showScreen('${screen}');` }]
+            });
+        }
+        // Erledigte Vorgänge dürfen sich später erneut melden.
+        for (const k in mailedVorgaenge) {
+            if (game.matchday - mailedVorgaenge[k] > 8) delete mailedVorgaenge[k];
+        }
+    }
+
+    // ==========================================================
+    // AUSZEICHNUNGEN
+    // Langfristige Ziele jenseits der Tabelle. Zwei Sorten:
+    // sichtbare (man weiß, worauf man hinarbeitet) und verborgene
+    // (man stolpert hinein). Die verborgenen sind der Grund, warum
+    // jemand einen zweiten Durchgang beginnt - sie belohnen Spielweisen,
+    // nicht Fortschritt, und lassen sich nicht abarbeiten wie eine Liste.
+    // ==========================================================
+    let badges = { earned: {}, stats: { wins: 0, goals: 0, matches: 0, spamDeleted: 0, mailsRead: 0, cleanSweeps: 0 } };
+
+    const BADGES = [
+        // --- sichtbar: Fortschritt ---
+        { id:'first_win',   icon:'🥅', name:'Erster Dreier',       desc:'Gewinne ein Pflichtspiel.',                   test:()=>badges.stats.wins >= 1 },
+        { id:'ten_wins',    icon:'🔟', name:'Seriensieger',         desc:'Gewinne zehn Spiele.',                        test:()=>badges.stats.wins >= 10 },
+        { id:'promo',       icon:'⬆️', name:'Aufstieg',             desc:'Steige in eine höhere Liga auf.',             test:()=>game.leagueLevel < 3 },
+        { id:'topflight',   icon:'🏆', name:'Erstklassig',          desc:'Erreiche die 1. Bundesliga.',                 test:()=>game.leagueLevel === 0 },
+        { id:'cup',         icon:'🏅', name:'Pokalsieger',          desc:'Gewinne den DFB-Pokal.',                      test:()=>game.trophies.some(t=>/Pokal/i.test(t)) },
+        { id:'europe',      icon:'🌟', name:'Europapokalsieger',    desc:'Gewinne den Champions Cup.',                  test:()=>game.trophies.some(t=>/Champions/i.test(t)) },
+        { id:'season5',     icon:'📅', name:'Fünf Jahre Aufbau',    desc:'Erreiche Saison 5.',                          test:()=>game.season >= 5 },
+
+        // --- sichtbar: Wirtschaft ---
+        { id:'millionaire', icon:'💰', name:'Erste Million',        desc:'Halte 1.000.000 € auf dem Vereinskonto.',     test:()=>game.money >= 1000000 },
+        { id:'debtfree',    icon:'🧾', name:'Schuldenfrei',         desc:'Tilge alle Kredite bei positivem Konto.',      test:()=>game.loanDebt === 0 && game.money > 200000 },
+        { id:'factory',     icon:'🏭', name:'Fabrikbesitzer',       desc:'Kaufe deine erste Fabrik.',                   test:()=>Object.values(factories).some(f=>f.owned) },
+        { id:'fullchain',   icon:'⚙️', name:'Geschlossene Kette',   desc:'Besitze alle vier Fabriken.',                 test:()=>Object.values(factories).every(f=>f.owned) },
+        { id:'stadium10k',  icon:'🏟️', name:'Fünfstellig',          desc:'Baue das Stadion auf 20.000 Plätze aus.',      test:()=>(stadium.total||0) >= 20000 },
+
+        // --- sichtbar: Doktrin ---
+        { id:'firstnode',   icon:'🌱', name:'Erster Knoten',        desc:'Schalte einen Wissensknoten frei.',           test:()=>knowledge.owned.length >= 1 },
+        { id:'rank7',       icon:'📐', name:'Fachrichtung',         desc:'Erreiche Rang 7 in einer Doktrin.',           test:()=>DOC_IDS.some(d=>docRank(d)>=7) },
+        { id:'fulltree',    icon:'🌳', name:'Vollendete Lehre',     desc:'Schließe eine Doktrin vollständig ab.',        test:()=>DOC_IDS.some(d=>docRank(d)>=14) },
+        { id:'synth1',      icon:'🔗', name:'Synthese',             desc:'Erreiche eine Synthese.',                     test:()=>SYNTH_NODES.some(n=>ownsNode(n.id)) },
+        { id:'synth3',      icon:'⛓️', name:'Dreifach verschränkt', desc:'Erreiche drei Synthesen.',                    test:()=>SYNTH_NODES.filter(n=>ownsNode(n.id)).length>=3 },
+
+        // --- sichtbar: Kader ---
+        { id:'youthup',     icon:'👦', name:'Eigengewächs',         desc:'Befördere einen Jugendspieler.',              test:()=>badges.stats.youthPromoted >= 1 },
+        { id:'wonderkid',   icon:'💎', name:'Juwel',                desc:'Halte einen Spieler mit 88+ Potenzial.',       test:()=>squad.some(p=>(p.potential||0)>=88) },
+        { id:'star90',      icon:'⭐', name:'Weltklasse',           desc:'Halte einen Spieler mit Stärke 90+.',          test:()=>squad.some(p=>p.strength>=90) },
+
+        // --- verborgen ---
+        { id:'prince',      icon:'👑', name:'Königliche Post',      desc:'Du hast dem Prinzen tatsächlich geantwortet.', secret:true, test:()=>false },
+        { id:'inboxzero',   icon:'📭', name:'Posteingang Null',     desc:'Keine ungelesene Nachricht, in keiner Kategorie.', secret:true, test:()=>mailbox.mails.length>=8 && unreadCount()===0 },
+        { id:'spamlord',    icon:'🗑️', name:'Filterarbeit',         desc:'Lösche zwanzig Spam-Nachrichten.',            secret:true, test:()=>badges.stats.spamDeleted >= 20 },
+        { id:'raid',        icon:'🚨', name:'Aktenzeichen offen',    desc:'Überstehe eine Razzia des Verbandes.',         secret:true, test:()=>false },
+        { id:'doubleagent', icon:'🎭', name:'Doppelagent',          desc:'Rang 6 in zwei verfeindeten Doktrinen.',       secret:true,
+          test:()=>Object.keys(AFFINITY).some(k=>{ if(AFFINITY[k]!=='hostile') return false;
+                    const [a,b]=k.split('|'); return docRank(a)>=6 && docRank(b)>=6; }) },
+        { id:'minimalist',  icon:'🪶', name:'Ohne Hilfsmittel',     desc:'Gewinne ein Spiel ohne ein einziges Upgrade.', secret:true, test:()=>false },
+        { id:'shopaholic',  icon:'🛒', name:'Kaufrausch',           desc:'Kaufe in einer Partie alle vier Power-Ups.',   secret:true, test:()=>false },
+        { id:'bratwurst',   icon:'🌭', name:'Bratwurst-Imperium',   desc:'Baue die Catering-Meile voll aus.',           secret:true, test:()=>(campusBuildings.foodtrucks?.lvl||0) >= 5 }
+    ];
+
+    const BADGE_BY_ID = BADGES.reduce((m,b)=>{ m[b.id]=b; return m; }, {});
+
+    /** Vergibt eine Auszeichnung genau einmal und meldet sie sichtbar. */
+    function awardBadge(id) {
+        if (badges.earned[id]) return false;
+        const b = BADGE_BY_ID[id];
+        if (!b) return false;
+        badges.earned[id] = { season: game.season, matchday: game.matchday };
+        celebrateBadge(b);
+        sendMail({
+            from:'Vereinsarchiv', role:'Chronik', color:'#F5C542', cat:'primary',
+            subject:`Auszeichnung erhalten: ${b.name}`,
+            body:`<p>${b.icon} <b>${b.name}</b></p><p>${b.desc}</p>
+                  <p>Vermerkt in der Vereinschronik, Saison ${game.season}, Spieltag ${game.matchday}.</p>`,
+            tagline:'Vereinsarchiv · Trophäenraum'
+        });
+        updateUI();
+        return true;
+    }
+
+    /** Nach Spieltagen und Saisonwechseln: alles prüfen, was sich geändert haben kann. */
+    function checkBadges() {
+        BADGES.forEach(b => {
+            if (badges.earned[b.id]) return;
+            let ok = false;
+            try { ok = b.test(); } catch (e) { ok = false; }
+            if (ok) awardBadge(b.id);
+        });
+    }
+
+    function badgeCount() { return Object.keys(badges.earned).length; }
+
+    function celebrateBadge(b) {
+        const w = document.createElement('div');
+        w.className = 'badge-pop';
+        w.innerHTML = `<div class="bp-card">
+            <div class="bp-icon">${b.icon}</div>
+            <div class="bp-kicker">Auszeichnung${b.secret ? ' · verborgen' : ''}</div>
+            <div class="bp-name">${escapeXml(b.name)}</div>
+            <div class="bp-desc">${escapeXml(b.desc)}</div>
+        </div>`;
+        document.body.appendChild(w);
+        sfx8bitBuy();
+        setTimeout(()=>{ w.style.opacity='0'; }, 2100);
+        setTimeout(()=>w.remove(), 2500);
+    }
+
+    function renderBadgeView() {
+        const earned = BADGES.filter(b => badges.earned[b.id]);
+        const openVisible = BADGES.filter(b => !badges.earned[b.id] && !b.secret);
+        const openSecret = BADGES.filter(b => !badges.earned[b.id] && b.secret);
+        const card = b => `<div class="badge-card earned">
+                <div class="bc-icon">${b.icon}</div>
+                <div class="bc-txt"><b>${escapeXml(b.name)}</b><span>${escapeXml(b.desc)}</span></div>
+            </div>`;
+        const open = b => `<div class="badge-card">
+                <div class="bc-icon">${b.icon}</div>
+                <div class="bc-txt"><b>${escapeXml(b.name)}</b><span>${escapeXml(b.desc)}</span></div>
+            </div>`;
+        document.getElementById('badge-grid').innerHTML =
+            (earned.length ? earned.map(card).join('') : '') + openVisible.map(open).join('');
+        document.getElementById('badge-secret').innerHTML = openSecret.map(() =>
+            `<div class="badge-card secret"><div class="bc-icon">?</div>
+             <div class="bc-txt"><b>Verborgen</b><span>Noch nicht entdeckt.</span></div></div>`).join('')
+            || `<div class="kx-empty">Alle verborgenen Auszeichnungen gefunden.</div>`;
+        document.getElementById('badge-progress').textContent = `${earned.length} / ${BADGES.length}`;
+        const pct = Math.round((earned.length / BADGES.length) * 100);
+        document.getElementById('badge-bar').style.width = pct + '%';
+    }
 
     // ==========================================================
     // T-RADAR — Live-Spielansicht mit Eingriffsmöglichkeit
@@ -5306,13 +5840,19 @@
     function openMail(id) {
         playSound('click');
         const m = mailbox.mails.find(x => x.id === id);
-        if (m) m.read = true;
+        if (m) {
+            m.read = true;
+            badges.stats.mailsRead = (badges.stats.mailsRead || 0) + 1;
+            if (/Prinz/i.test(m.from)) awardBadge('prince');
+        }
         mailbox.open = id;
         renderMailView(); updateUI();
     }
     function closeMail() { playSound('click'); mailbox.open = null; renderMailView(); }
     function deleteMail(id) {
         playSound('click');
+        const dm = mailbox.mails.find(x => x.id === id);
+        if (dm && dm.cat === 'spam') badges.stats.spamDeleted = (badges.stats.spamDeleted || 0) + 1;
         mailbox.mails = mailbox.mails.filter(x => x.id !== id);
         mailbox.open = null; renderMailView(); updateUI();
     }
@@ -7004,7 +7544,7 @@
     // ==========================================
     // ---------- Gemeinsame Serialisierung (von saveGame, loadGame und dem Admin-JSON genutzt) ----------
     function buildSaveState() {
-        return { game, managerRPG, knowledge, mailbox, youthTalents, incomingOffers, holdingCompany, rawMaterials,
+        return { game, managerRPG, knowledge, mailbox, badges, youthTalents, incomingOffers, holdingCompany, rawMaterials,
                  factories, merchandise, stockMarket, underworld, stadium, campusBuildings, staffMembers,
                  fanGroups, privateLife, bandenSponsors, squad, lineup, leaguesData, fixturesData,
                  cupTournament, europeTournament };
@@ -7024,6 +7564,8 @@
             knowledge.owned = [];
         }
         if (p.mailbox) Object.assign(mailbox, p.mailbox);
+        if (p.badges) Object.assign(badges, p.badges);
+        invalidateAttention();
         if (p.youthTalents) youthTalents = p.youthTalents;
         if (p.incomingOffers) incomingOffers = p.incomingOffers;
         if (p.holdingCompany) Object.assign(holdingCompany, p.holdingCompany);
@@ -7123,7 +7665,7 @@
     <button data-target="screen-squad" onclick="showScreen('screen-squad')"><span class="tb-ico">⚽</span><span class="tb-lbl">Kader</span></button>
     <button data-target="screen-doctrine" onclick="showScreen('screen-doctrine')"><span class="tb-ico">🌳</span><span class="tb-lbl">Doktrin</span></button>
     <button data-target="screen-mail" onclick="showScreen('screen-mail')"><span class="tb-ico">✉️</span><span class="tb-lbl">Mehl</span><span class="tb-dot" id="tab-nav-badge">0</span></button>
-    <button onclick="toggleNavDrawer(true)"><span class="tb-ico">☰</span><span class="tb-lbl">Mehr</span></button>
+    <button onclick="toggleNavDrawer(true)"><span class="tb-ico">☰</span><span class="tb-lbl">Mehr</span><span class="tb-dot" id="tab-more-dot" data-urgency="soon">0</span></button>
 </nav>
 <div class="doc-scrim" id="doc-scrim" onclick="closeNodeSheet()"></div>
 <div class="doc-sheet" id="doc-sheet"></div>
