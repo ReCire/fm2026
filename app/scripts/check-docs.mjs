@@ -54,11 +54,11 @@ function lineOf(text, index) {
 /**
  * Return a tag's attribute text, from the tag name to its real closing `>`.
  *
- * A naive /[^>]*/ breaks on the first `>` inside an attribute expression —
- * `value={a > 0 ? 'x' : 'y'}` truncates the scan and the doc id after it is
- * never seen. That produced a false positive on a correctly documented
- * control, which is precisely how a build gate earns its way into being
- * switched off. So: walk forward tracking brace depth and quotes.
+ * A naive non-greedy character-class scan breaks on the first `>` inside an
+ * attribute expression: `value={a > 0 ? 'x' : 'y'}` ends the scan early and
+ * the doc id after it is never seen. That produced a false positive on a
+ * correctly documented control — precisely how a build gate earns its way
+ * into being switched off. So: walk forward tracking brace depth and quotes.
  */
 function attributesOf(text, from) {
   let depth = 0;
