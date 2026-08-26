@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: app · typecheck, docs gate, tests, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - run: npm ci
+
+      # Types first: it is the cheapest check and catches the most.
+      - name: Typecheck
+        run: npm run check
+
+      # Undocumented UI does not ship. This is the gate that keeps the manual
+      # complete, and it also bans Math.random() inside rules files.
+      - name: Documentation gate
+        run: npm run docs:check
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

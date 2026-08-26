@@ -1,0 +1,239 @@
+import { describe, it, expect } from 'vitest';
+import { Registry } from './registry';
+import { runTick } from './clock';
+import { createRng, seedFrom } from './rng';
+import { serialise, deserialise } from './save';
+import { modules } from '$lib/modules';
+import type { GameState, MetaState, ModuleStates } from './state';
+import { defineModule } from './module';
+import { z } from 'zod';
+
+/**
+ * Integration tests for the architecture itself, not for any one feature.
+ *
+ * These are the tests that would have caught the coupling problems in the
+ * prototype: that a tick runs every module in the right order, that adding or
+ * removing a feature does not disturb the others, and that a save written by an
+ * older build still loads.
+ */
+
+const registry = new Registry(modules);
+
+function meta(seed = seedFrom('test')): MetaState {
+  return { seed, rngCursor: 0, season: 1, matchday: 1, tick: 0, createdAt: 0, lastPlayedAt: 0 };
+}
+
+function freshGame(seedText = 'test'): GameState {
+  const seed = seedFrom(seedText);
+  const rng = createRng(seed);
+  const mods: Record<string, unknown> = {};
+  for (const m of registry.all) mods[m.id] = m.state.create(rng.fork(m.id));
+  return { meta: meta(seed), modules: mods as unknown as ModuleStates };
+}
+
+describe('registry', () => {
+  it('boots every declared module', () => {
+    expect(registry.all.map((m) => m.id).sort()).toEqual(['core', 'finance', 'squad', 'stadium']);
+  });
+
+  it('rejects a duplicate module id', () => {
+    expect(() => new Registry([...modules, modules[1]!])).toThrow(/Duplicate module id/);
+  });
+
+  it('refuses to boot when a declared dependency is missing', () => {
+    const orphan = defineModule({
+      id: 'squad',
+      title: 'Kader',
+      summary: 'x',
+      requires: ['finance'],
+      state: { schema: z.any(), create: () => ({}) as any, version: 1 }
+    });
+    expect(() => new Registry([orphan])).toThrow(/requires "finance"/);
+  });
+
+  it('leaves a disabled module out entirely', () => {
+    const off = modules.map((m) =>
+      m.id === 'stadium' ? { ...m, enabled: () => false } : m
+    );
+    const r = new Registry(off);
+    expect(r.byId.has('stadium')).toBe(false);
+    expect(r.hooks('matchday').some((h) => h.module.id === 'stadium')).toBe(false);
+  });
+
+  it('refuses duplicate doc ids across modules', () => {
+    const clash = [...modules, { ...modules[1]!, id: 'finance2' }];
+    expect(() => new Registry(clash).docs()).toThrow(/Duplicate doc id/);
+  });
+});
+
+describe('tick ordering', () => {
+  it('runs hooks in phase order regardless of registration order', () => {
+    const phases = registry.hooks('matchday').map((h) => h.phase);
+    const rank = { pre: 0, sim: 1, post: 2, economy: 3, world: 4 };
+    for (let i = 1; i < phases.length; i++) {
+      expect(rank[phases[i]!]).toBeGreaterThanOrEqual(rank[phases[i - 1]!]);
+    }
+  });
+
+  it('charges interest last, after every other module has posted', () => {
+    const economy = registry.hooks('matchday').filter((h) => h.phase === 'economy');
+    expect(economy.at(-1)!.module.id).toBe('finance');
+  });
+
+  it('lets one module contribute two hooks in different phases', () => {
+    const squadHooks = registry.hooks('matchday').filter((h) => h.module.id === 'squad');
+    expect(squadHooks.map((h) => h.phase).sort()).toEqual(['economy', 'post']);
+  });
+});
+
+describe('a matchday', () => {
+  it('moves money through the ledger and advances the calendar', () => {
+    const game = freshGame();
+    const before = game.modules.finance.money;
+
+    const result = runTick(registry, game, 'matchday');
+
+    expect(game.meta.matchday).toBe(2);
+    expect(game.meta.tick).toBe(1);
+    expect(game.modules.finance.money).not.toBe(before);
+    expect(game.modules.finance.ledger.length).toBeGreaterThan(0);
+    expect(result.events.length).toBeGreaterThan(0);
+  });
+
+  it('collects income from stadium and costs from squad, without them knowing each other', () => {
+    const game = freshGame();
+    runTick(registry, game, 'matchday');
+
+    const sources = new Set(game.modules.finance.ledger.map((e) => e.source));
+    expect(sources.has('stadium')).toBe(true);
+    expect(sources.has('squad')).toBe(true);
+
+    const wages = game.modules.finance.ledger.find((e) => e.source === 'squad')!;
+    expect(wages.amount).toBeLessThan(0);
+    const gate = game.modules.finance.ledger.find((e) => e.source === 'stadium')!;
+    expect(gate.amount).toBeGreaterThan(0);
+  });
+
+  it('fields eleven players even though the new game starts with no lineup', () => {
+    const game = freshGame();
+    expect(game.modules.squad.lineup).toHaveLength(0);
+    runTick(registry, game, 'matchday');
+    expect(game.modules.squad.lineup).toHaveLength(11);
+  });
+
+  it('is fully reproducible from its seed', () => {
+    const a = freshGame('same-seed');
+    const b = freshGame('same-seed');
+    for (let i = 0; i < 10; i++) {
+      runTick(registry, a, 'matchday');
+      runTick(registry, b, 'matchday');
+    }
+    expect(a.modules).toEqual(b.modules);
+    expect(a.meta).toEqual(b.meta);
+  });
+
+  it('produces different careers from different seeds', () => {
+    const a = freshGame('seed-a');
+    const b = freshGame('seed-b');
+    for (let i = 0; i < 5; i++) {
+      runTick(registry, a, 'matchday');
+      runTick(registry, b, 'matchday');
+    }
+    expect(a.modules.squad.players).not.toEqual(b.modules.squad.players);
+  });
+
+  it('survives a module that throws, and reports it instead of aborting the tick', () => {
+    const broken = modules.map((m) =>
+      m.id === 'stadium'
+        ? { ...m, hooks: { matchday: { phase: 'economy' as const, run() { throw new Error('boom'); } } } }
+        : m
+    );
+    const r = new Registry(broken);
+    const game = freshGame();
+    const seed = createRng(1);
+    for (const m of r.all) (game.modules as any)[m.id] ??= m.state.create(seed);
+
+    const result = runTick(r, game, 'matchday');
+
+    // The tick still completed and still charged wages.
+    expect(game.meta.matchday).toBe(2);
+    expect(game.modules.finance.ledger.some((e) => e.source === 'squad')).toBe(true);
+    // And the failure is visible rather than silent.
+    expect(result.events.some((e) => e.severity === 'bad' && e.title.includes('Stadion'))).toBe(true);
+  });
+
+  it('survives a full 34-matchday season', () => {
+    const game = freshGame('season');
+    for (let i = 0; i < 34; i++) runTick(registry, game, 'matchday');
+    expect(game.meta.matchday).toBe(35);
+    expect(game.modules.squad.players.every((p) => p.fitness >= 10 && p.fitness <= 100)).toBe(true);
+    expect(game.modules.finance.ledger.length).toBeLessThanOrEqual(2000);
+  });
+});
+
+describe('saves', () => {
+  it('round-trips a game unchanged', () => {
+    const game = freshGame('roundtrip');
+    for (let i = 0; i < 3; i++) runTick(registry, game, 'matchday');
+
+    const file = serialise(registry, game, 'slot1');
+    const { state, notes } = deserialise(registry, file, () => createRng(1));
+
+    expect(notes).toEqual([]);
+    expect(state.modules).toEqual(game.modules);
+    expect(state.meta).toEqual(game.meta);
+  });
+
+  it('gives a feature fresh state when the save predates it, and says so', () => {
+    const game = freshGame();
+    const file = serialise(registry, game, 'old');
+    delete file.modules.stadium; // as if stadium did not exist when this was saved
+
+    const { state, notes } = deserialise(registry, file, () => createRng(1));
+
+    expect(state.modules.stadium).toBeDefined();
+    expect(notes.join(' ')).toMatch(/Stadion.*neu angelegt/);
+  });
+
+  it('resets one bad slice instead of failing the whole load', () => {
+    const game = freshGame();
+    const file = serialise(registry, game, 'corrupt');
+    file.modules.finance!.data = { money: 'nicht-eine-zahl' };
+
+    const { state, notes } = deserialise(registry, file, () => createRng(1));
+
+    expect(state.modules.finance.money).toBe(150_000);
+    expect(state.modules.squad.players.length).toBeGreaterThan(0); // untouched
+    expect(notes.join(' ')).toMatch(/Finanzen.*ungültig/);
+  });
+
+  it('resets a slice whose version moved on with no migration, and says so', () => {
+    const game = freshGame();
+    const file = serialise(registry, game, 'v0');
+    file.modules.squad!.v = 0;
+
+    const { notes } = deserialise(registry, file, () => createRng(1));
+    expect(notes.join(' ')).toMatch(/Kader.*ohne Migration/);
+  });
+});
+
+describe('documentation', () => {
+  it('has an entry for every id, with a tooltip and a rationale', () => {
+    const docs = registry.docs();
+    expect(docs.size).toBeGreaterThan(15);
+    for (const [id, entry] of docs) {
+      expect(entry.label, `${id} label`).toBeTruthy();
+      expect(entry.tooltip, `${id} tooltip`).toBeTruthy();
+      expect(entry.why, `${id} why`).toBeTruthy();
+    }
+  });
+
+  it('never points `related` at an id that does not exist', () => {
+    const docs = registry.docs();
+    for (const [id, entry] of docs) {
+      for (const rel of entry.related ?? []) {
+        expect(docs.has(rel), `${id} → ${rel}`).toBe(true);
+      }
+    }
+  });
+});

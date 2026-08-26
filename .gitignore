@@ -10,3 +10,6 @@ coverage/
 playwright-report/
 test-results/
 docs/screenshots/*.png
+.svelte-kit/
+app/build/
+app/.vercel/
