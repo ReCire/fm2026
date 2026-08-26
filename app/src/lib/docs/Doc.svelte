@@ -45,9 +45,17 @@
     padding: 2px 4px;
     cursor: pointer;
     border-radius: 4px;
-    /* Touch targets stay tappable even though the glyph is small. */
+    position: relative;
+    /* The glyph is small on purpose; the target is not. */
     min-width: 24px;
     min-height: 24px;
+  }
+  .doc-btn::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 50%;
+    width: var(--tap); height: var(--tap);
+    transform: translate(-50%, -50%);
   }
   .doc-btn:hover, .doc-btn:focus-visible { color: var(--primary); }
   .tip { margin: 0 0 10px; color: var(--text-main); }

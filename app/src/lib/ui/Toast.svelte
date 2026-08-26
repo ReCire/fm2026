@@ -1,5 +1,9 @@
 <script lang="ts">
   import { toasts, dismiss } from './toasts.svelte';
+
+  // A 3px coloured left border was the only thing separating an injury from a
+  // gate receipt. Severity now has a glyph as well.
+  const GLYPH = { good: '▲', bad: '▼', warn: '!', info: '■' } as const;
 </script>
 
 <!-- Replaces alert(). Non-blocking, styleable, and it does not say
@@ -7,7 +11,7 @@
 <div class="stack" aria-live="polite">
   {#each toasts.items as t (t.id)}
     <button class="toast {t.severity}" type="button" onclick={() => dismiss(t.id)}>
-      <strong>{t.title}</strong>
+      <strong><i class="glyph" aria-hidden="true">{GLYPH[t.severity]}</i>{t.title}</strong>
       {#if t.detail}<span>{t.detail}</span>{/if}
     </button>
   {/each}

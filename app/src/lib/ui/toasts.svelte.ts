@@ -11,9 +11,18 @@ let nextId = 1;
 
 export const toasts = $state<{ items: ToastItem[] }>({ items: [] });
 
+/**
+ * At most this many at once. A matchday emits six to eight events, and an
+ * uncapped stack covered the screen with the same information the matchday
+ * report already shows in a readable form.
+ */
+const MAX_VISIBLE = 3;
+
 export function toast(title: string, detail?: string, severity: EventSeverity = 'info'): void {
   const id = nextId++;
   toasts.items.push({ id, title, detail, severity });
+  // Drop the oldest rather than the newest: the most recent news is the news.
+  while (toasts.items.length > MAX_VISIBLE) toasts.items.shift();
   // Bad news stays up longer, because it usually needs a decision.
   const ttl = severity === 'bad' ? 7000 : 4000;
   setTimeout(() => dismiss(id), ttl);

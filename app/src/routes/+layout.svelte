@@ -32,12 +32,15 @@
       {#each groups as group (group.group)}
         <p class="group">{group.group}</p>
         {#each group.items as m (m.id)}
+          <!-- No pictogram. With this many entries the icons were noise, and
+               none carried information the word did not already carry. A rule
+               in the department colour does the wayfinding instead. -->
           <a
             href="/{m.id}"
             class:active={current === m.id}
             onclick={() => (drawerOpen = false)}
           >
-            <span aria-hidden="true">{m.nav?.icon}</span>{m.title}
+            <i class="rule" aria-hidden="true"></i>{m.title}
           </a>
         {/each}
       {/each}
@@ -53,12 +56,12 @@
   <nav class="tabbar">
     {#each primary as m (m.id)}
       <a href="/{m.id}" class:on={current === m.id}>
-        <span class="ico" aria-hidden="true">{m.nav?.icon}</span>
+        <i class="rule" aria-hidden="true"></i>
         <span class="lbl">{m.title}</span>
       </a>
     {/each}
-    <button class="more" onclick={() => (drawerOpen = true)}>
-      <span class="ico" aria-hidden="true">☰</span>
+    <button class="more" aria-label="Weitere Bereiche" onclick={() => (drawerOpen = true)}>
+      <i class="rule" aria-hidden="true"></i>
       <span class="lbl">Mehr</span>
     </button>
   </nav>
@@ -73,11 +76,13 @@
     display: flex; align-items: center; gap: var(--sp-4);
     background: var(--bg-header);
     border-bottom: 2px solid var(--border);
-    padding: var(--sp-4) var(--sp-5);
-    padding-top: calc(var(--sp-4) + var(--safe-top));
+    padding: var(--s3);
+    padding-top: calc(var(--s3) + var(--safe-top));
+    padding-left: calc(var(--s3) + var(--safe-left));
+    padding-right: calc(var(--s3) + var(--safe-right));
     position: sticky; top: 0; z-index: 250;
   }
-  .burger { background: none; border: none; color: var(--text-main); font-size: 16px; cursor: pointer; min-width: 32px; min-height: 32px; }
+  .burger { background: none; border: none; color: var(--text-main); font-size: var(--fs-title); cursor: pointer; min-width: var(--tap); min-height: var(--tap); }
   .brand { display: flex; align-items: center; gap: var(--sp-3); flex: 1; min-width: 0; }
   .crest {
     width: 30px; height: 30px; border-radius: 50%;
@@ -110,8 +115,21 @@
   }
   .sidebar a:hover { background: rgba(255,255,255,0.05); color: #fff; }
   .sidebar a.active { background: var(--primary-glow); color: var(--primary); border-color: var(--border-highlight); }
+  /* The department rule: 2px in the domain colour, replacing the pictogram. */
+  .rule { flex: none; width: 2px; height: 14px; border-radius: 1px; background: currentColor; opacity: 0.45; }
+  .sidebar a.active .rule, .tabbar .on .rule { opacity: 1; }
 
-  main { flex: 1; min-width: 0; padding: var(--sp-5); background: var(--bg-sunken); overflow-x: hidden; }
+  /* Landscape on a notched phone: viewport-fit=cover means the notch and the
+     rounded corners overlay the page, so content needs the horizontal insets
+     as well as the vertical ones. These tokens existed and were unused. */
+  main {
+    flex: 1; min-width: 0;
+    padding: var(--s3);
+    padding-left: calc(var(--s3) + var(--safe-left));
+    padding-right: calc(var(--s3) + var(--safe-right));
+    background: var(--bg-sunken);
+    overflow-x: hidden;
+  }
 
   .scrim { display: none; }
 
@@ -135,6 +153,8 @@
       backdrop-filter: blur(14px);
       border-top: 1px solid var(--border);
       padding-bottom: var(--safe-bottom);
+      padding-left: var(--safe-left);
+      padding-right: var(--safe-right);
     }
     .tabbar a, .tabbar button {
       flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -144,7 +164,7 @@
       color: var(--text-dim); text-decoration: none;
     }
     .tabbar .on { color: var(--primary); }
-    .ico { font-size: 17px; line-height: 1; }
-    .lbl { font-size: var(--fs-micro); font-weight: 800; }
+    .tabbar .rule { width: 16px; height: 2px; }
+    .lbl { font-size: var(--fs-caption); font-weight: 800; }
   }
 </style>

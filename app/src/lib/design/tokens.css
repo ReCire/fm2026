@@ -28,35 +28,76 @@
   --gold: #ffd700;
   --europe: #3d5afe;
 
-  /* Text */
+  /* Text.
+     --text-2 and --text-3 are the audited values: the previous tertiary tone
+     cleared no contrast floor in either mode, and the secondary sat at 4.36:1,
+     just under AA. Do not "tidy" these back towards the original greys. */
   --text-main: #f1f5f9;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-muted: #8A9B90;   /* --text-2, dark mode */
+  --text-dim:   #708079;   /* --text-3, dark mode */
+
+  /* Live signal. Two tokens, not one: the phosphor green works as a FILL but
+     cannot be type. A colour asked to both glow as a field and stay legible as
+     type is being asked two contradictory things. */
+  --c-live:     #00FF7F;
+  --c-live-ink: #00FF88;
+  --c-under-ink: #917295;
 
   /* Lines */
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: #334155;
   --border-highlight: rgba(0, 230, 118, 0.35);
 
-  /* Type scale — the prototype ran at 11px base, which is right for a dense
-     management UI on a phone. Kept, but named. */
+  /* ------------------------------------------------------------------
+     Type scale — Creative Director's values, taken verbatim.
+
+     The prototype ran an 11px base, which is desktop density on a phone.
+     Density now comes from line height and spacing instead. 11px is the FLOOR:
+     anything smaller is either not information, or belongs at 11 with more room
+     around it. There is deliberately no 9px token any more.
+     ------------------------------------------------------------------ */
   --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-num: ui-monospace, 'SF Mono', Menlo, monospace;
-  --fs-micro: 9px;
-  --fs-small: 10px;
-  --fs-base: 11px;
-  --fs-body: 12px;
-  --fs-title: 13px;
-  --fs-head: 15px;
-  --fs-display: 18px;
 
-  /* Space */
-  --sp-1: 3px;
-  --sp-2: 6px;
-  --sp-3: 8px;
-  --sp-4: 10px;
-  --sp-5: 12px;
-  --sp-6: 16px;
+  --fs-display:  28px;
+  --fs-headline: 20px;
+  --fs-title:    16px;
+  --fs-body:     14px;
+  --fs-caption:  11px;   /* floor — nothing below this */
+  /* Tabular mono for any figure that updates in place, so money and score
+     columns stop shifting width as they count. */
+  --fs-mono:     14px;
+
+  --lh-tight: 1.2;
+  --lh-body:  1.55;
+
+  /* Space — 4px grid */
+  --s1:  4px;
+  --s2:  8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s6: 24px;
+  --s8: 32px;
+
+  /* Minimum touch target (Apple HIG). Appearance and hit area are separate
+     concerns: a control may LOOK smaller, but it must not be smaller to hit. */
+  --tap: 44px;
+
+  /* ------------------------------------------------------------------
+     Legacy aliases. The prototype's names kept pointing at the new values, so
+     existing rules retheme without a rewrite — the same approach fm-03-design
+     used on their side. New code should use the canonical names above.
+     ------------------------------------------------------------------ */
+  --fs-micro: var(--fs-caption);
+  --fs-small: var(--fs-caption);
+  --fs-base:  var(--fs-body);
+  --fs-head:  var(--fs-headline);
+  --sp-1: var(--s1);
+  --sp-2: var(--s2);
+  --sp-3: var(--s2);
+  --sp-4: var(--s3);
+  --sp-5: var(--s3);
+  --sp-6: var(--s4);
 
   /* Shape */
   --r-sm: 6px;
@@ -80,8 +121,8 @@ body {
   font-family: var(--font-ui);
   background: var(--bg-body);
   color: var(--text-main);
-  font-size: var(--fs-base);
-  line-height: 1.4;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   -webkit-user-select: none;
   user-select: none;
   /* Stops the whole-page rubber-band inside an installed PWA. */
@@ -98,3 +139,28 @@ button { font-family: inherit; touch-action: manipulation; }
 
 /* Numbers in columns must line up. */
 .tabular { font-variant-numeric: tabular-nums; }
+
+/* Numbers that update in place get the mono face so columns do not shift. */
+.tabular, .num {
+  font-variant-numeric: tabular-nums;
+}
+.figure {
+  font-family: var(--font-num);
+  font-size: var(--fs-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Status glyphs.
+ *
+ * Every status carries a non-colour channel. The test the Creative Director set:
+ * convert the screen to greyscale and every state must still be distinguishable.
+ * Colour alone fails WCAG 1.4.1, and in a UI that is entirely numbers-plus-status
+ * that failure is everywhere at once.
+ */
+.glyph {
+  font-style: normal;
+  font-size: 0.85em;
+  line-height: 1;
+  margin-right: 0.25em;
+}

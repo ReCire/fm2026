@@ -33,10 +33,13 @@
     class="btn {variant}"
     type="button"
     {disabled}
-    title={entry?.tooltip}
-    aria-label={entry ? `${text} — ${entry.tooltip}` : text}
+    aria-describedby={entry ? `${docId}-desc` : undefined}
     {onclick}
   >{text}</button>
+  <!-- The tooltip belongs in a description, not in the accessible NAME. As a
+       label it made a screen reader read the whole sentence on every focus pass
+       and in every list-of-buttons enumeration. -->
+  {#if entry}<span id="{docId}-desc" class="vh">{entry.tooltip}</span>{/if}
   {#if explain}<Doc id={docId} />{/if}
 </span>
 
@@ -46,13 +49,27 @@
     flex: 1;
     border: none;
     border-radius: var(--r-sm);
-    padding: var(--sp-3) var(--sp-5);
+    padding: var(--s2) var(--s3);
     font-weight: 800;
+    font-size: var(--fs-body);
     cursor: pointer;
     transition: transform 0.12s, background 0.15s;
-    /* Apple's minimum comfortable touch target. */
-    min-height: 38px;
+    position: relative;
+    /* Apple HIG minimum is 44x44pt. This was 38 under a comment claiming it was
+       the HIG figure, which would have propagated the wrong number to every
+       component built after it. */
+    min-height: var(--tap);
   }
+  /* Appearance and hit area are separate concerns: where a control must LOOK
+     smaller, the visual box shrinks and the target grows with this instead. */
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto;
+    height: var(--tap);
+    transform: translateY(-50%);
+  }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .btn:active:not(:disabled) { transform: scale(0.98); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
