@@ -2,10 +2,29 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "anstoss-static",
+      "name": "anstoss-legacy",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "5599"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5599"
+      ],
       "port": 5599
+    },
+    {
+      "name": "anstoss-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
+      "port": 5173
     }
   ]
 }
