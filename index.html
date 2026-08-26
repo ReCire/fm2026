@@ -465,7 +465,80 @@
         @media (display-mode: standalone) {
             body { overscroll-behavior-y: none; }
         }
-</style>
+
+        /* ==========================================================
+           SCHMAIL — Posteingang im Duktus einer nativen Mail-App
+           ========================================================== */
+        .mail-app { background: #0d0f14; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; overflow: hidden; }
+        .mail-top { display: flex; align-items: center; gap: 10px; padding: 11px 12px 9px; }
+        .mail-logo { font-size: 15px; font-weight: 800; letter-spacing: -0.4px; color: #fff; }
+        .mail-logo i { font-style: normal; color: #ff6b00; }
+        .mail-search {
+            flex: 1; display: flex; align-items: center; gap: 7px; min-width: 0;
+            background: rgba(255,255,255,0.06); border-radius: 99px; padding: 8px 13px;
+            font-size: 11.5px; color: #6b7688;
+        }
+        .mail-me { width: 27px; height: 27px; flex: 0 0 27px; border-radius: 50%; background: linear-gradient(135deg,#ffc107,#ff8f00);
+            display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #000; }
+
+        .mail-chips { display: flex; gap: 7px; padding: 2px 12px 11px; overflow-x: auto; scrollbar-width: none; }
+        .mail-chips::-webkit-scrollbar { display: none; }
+        .mail-chip {
+            flex: 0 0 auto; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+            color: #9aa7b8; border-radius: 99px; padding: 7px 14px; font-size: 11.5px; font-weight: 700;
+            font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .mail-chip.on { background: #1e3a5f; border-color: #2D7FF9; color: #cfe3ff; }
+        .mail-chip i { font-style: normal; background: #D01F3C; color: #fff; font-size: 9px; font-weight: 800;
+            min-width: 16px; height: 16px; border-radius: 99px; display: grid; place-items: center; padding: 0 4px; }
+        .mail-back { background: none; border: 0; color: #2D7FF9; font-family: inherit; font-size: 12px;
+            font-weight: 700; cursor: pointer; padding: 6px 2px; }
+
+        .mail-row {
+            display: flex; gap: 11px; align-items: flex-start; padding: 11px 12px;
+            border-top: 1px solid rgba(255,255,255,0.05); cursor: pointer; position: relative;
+        }
+        .mail-row:active { background: rgba(255,255,255,0.03); }
+        .mail-row.unread { background: rgba(45,127,249,0.05); }
+        .mail-row.unread::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #2D7FF9; }
+        .mail-av { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; display: grid; place-items: center;
+            font-size: 14px; font-weight: 800; color: #0b0b0c; }
+        .mail-av.lg { width: 42px; height: 42px; flex: 0 0 42px; font-size: 17px; }
+        .mail-main { flex: 1; min-width: 0; }
+        .mail-l1 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+        .mail-from { font-size: 12px; color: #c6d1e0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mail-row.unread .mail-from { color: #fff; font-weight: 800; }
+        .mail-time { font-size: 9.5px; color: #64748b; flex: 0 0 auto; }
+        .mail-row.unread .mail-time { color: #2D7FF9; font-weight: 700; }
+        .mail-subj { font-size: 12px; color: #aeb9c9; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mail-row.unread .mail-subj { color: #fff; font-weight: 700; }
+        .mail-prev { font-size: 11px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mail-flag { position: absolute; right: 10px; bottom: 10px; background: rgba(0,230,118,0.14); color: #00e676;
+            font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 7px; border-radius: 4px; }
+
+        .mail-empty { text-align: center; padding: 46px 20px; color: #64748b; }
+        .mail-empty-mark { font-size: 30px; color: #2FA84F; margin-bottom: 10px; }
+        .mail-empty div { font-size: 12px; color: #94a3b8; }
+        .mail-empty small { display: block; font-size: 10px; margin-top: 4px; color: #4b5563; }
+
+        .mail-thread { padding: 14px 14px 18px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .mail-thread h3 { font-size: 16px; font-weight: 800; color: #fff; line-height: 1.3; letter-spacing: -0.2px; }
+        .mt-head { display: flex; gap: 11px; align-items: center; margin: 13px 0; }
+        .mt-who b { display: block; font-size: 12.5px; color: #e6edf6; font-weight: 700; }
+        .mt-who span { font-size: 10.5px; color: #64748b; }
+        .mt-body { font-size: 12.5px; color: #c6d1e0; line-height: 1.68; }
+        .mt-body p { margin: 0 0 10px; }
+        .mt-body b { color: #fff; }
+        .mt-body small { color: #64748b; font-size: 10.5px; }
+        .mt-sig { margin-top: 12px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 10px; color: #4b5563; font-style: italic; }
+        .mt-actions { display: flex; flex-direction: column; gap: 7px; margin-top: 16px; }
+        .mt-btn { width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04);
+            color: #dbe4f0; font-family: inherit; font-size: 12.5px; font-weight: 700; border-radius: 9px; cursor: pointer; }
+        .mt-btn.primary { background: #00e676; border-color: #00e676; color: #04240f; font-weight: 800; }
+        .mt-btn.danger { background: transparent; border-color: rgba(208,31,60,0.5); color: #ff8fa3; }
+        .mt-btn.ghost { margin-top: 14px; background: none; border-color: transparent; color: #4b5563; font-size: 11px; }
+    </style>
 </head>
 <body>
 
@@ -515,6 +588,7 @@
         <nav class="app-sidebar">
             <div class="nav-category">Hauptzentrale</div>
             <button class="nav-btn active" onclick="showScreen('screen-dashboard')">📊 FM13 Dashboard</button>
+            <button class="nav-btn" onclick="showScreen('screen-mail')">✉️ Poodle Mehl <span id="sidebar-mail-badge" class="badge-count" style="display:none; margin-left:auto;">0</span></button>
             <button class="nav-btn" onclick="showScreen('screen-calendar')">📅 Kalender & Termine</button>
             <button class="nav-btn" onclick="showScreen('screen-squad')">⚽ Kader & 3D Taktik</button>
             <button class="nav-btn" onclick="showScreen('screen-training')">🏋️ Training & Förderung</button>
@@ -653,6 +727,19 @@
             </div>
 
             <!-- 3. MANAGER-RPG & TALENTBAUM -->
+            <!-- ===== SCHMAIL ===== -->
+            <div id="screen-mail" style="display:none;">
+                <div class="mail-app">
+                    <div class="mail-top">
+                        <div class="mail-logo">Poodle <i>Mehl</i></div>
+                        <div class="mail-search">In Poodle Mehl suchen</div>
+                        <div class="mail-me">AP</div>
+                    </div>
+                    <div class="mail-chips" id="mail-chips"></div>
+                    <div id="mail-body"></div>
+                </div>
+            </div>
+
             <!-- ===== DOKTRINEN & WISSENSBAUM ===== -->
             <!-- ===== DOKTRINEN & WISSENSBAUM ===== -->
             <div id="screen-doctrine" style="display:none;">
@@ -896,13 +983,14 @@
                 <div class="panel">
                     <div class="panel-header">🤝 HAUPT- & AUSRÜSTER-SPONSOREN</div>
                     <div class="box">
-                        <strong>Hauptsponsor:</strong> <span id="spons-curr-name" style="color:var(--accent);">Stadtwerke</span> (Sockel: <span id="spons-curr-base">3.000 €</span>/SpT | Siegprämie: <span id="spons-curr-win">1.500 €</span>)<br>
+                        <strong>Hauptsponsor:</strong> <span id="spons-curr-name" style="color:var(--accent);">Sparkasten</span> (Sockel: <span id="spons-curr-base">3.000 €</span>/SpT | Siegprämie: <span id="spons-curr-win">1.500 €</span>)<br>
                         <strong>Trikot-Ausrüster:</strong> <span id="kit-supplier-name" style="color:var(--blue);">Keiner</span> (+<span id="kit-supplier-income">0 €</span>/Heimspiel)
                     </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px;">
-                        <button onclick="signKitSupplier('Nike', 45000, 2500)" class="btn-secondary">Nike (45.000 € Handgeld)</button>
-                        <button onclick="signKitSupplier('Adidas', 60000, 3200)" class="btn-secondary">Adidas (60.000 € Handgeld)</button>
-                        <button onclick="signKitSupplier('Puma', 35000, 2000)" class="btn-secondary">Puma (35.000 € Handgeld)</button>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
+                        <button onclick="signKitSupplier('Adi#', 60000, 3200)" class="btn-secondary">Adi# — 60.000 €<br><small style="color:var(--text-muted);font-weight:400;">Drei Streifen, eine Raute, keine Lizenz</small></button>
+                        <button onclick="signKitSupplier('Swooshi', 45000, 2500)" class="btn-secondary">Swooshi — 45.000 €<br><small style="color:var(--text-muted);font-weight:400;">Just Do It Später</small></button>
+                        <button onclick="signKitSupplier('Pumor', 35000, 2000)" class="btn-secondary">Pumor — 35.000 €<br><small style="color:var(--text-muted);font-weight:400;">Katzenartig. Angeblich.</small></button>
+                        <button onclick="signKitSupplier('Jakko', 12000, 900)" class="btn-secondary">Jakko — 12.000 €<br><small style="color:var(--text-muted);font-weight:400;">Der Ausrüster für die 4. Liga</small></button>
                     </div>
                     <div id="sponsors-offers-list" style="margin-top:6px;"></div>
                 </div>
@@ -1413,7 +1501,7 @@
         ticketPrices: { steh: 12, sitz: 24, vip: 80 },
         stewards: 100,
         youthAcademyLvl: 1,
-        sponsor: { name: 'Stadtwerke & Regionalbank', base: 3000, winBonus: 1500, duration: 34 },
+        sponsor: { name: 'Sparkasten & Bäckerei Schmitz', base: 3000, winBonus: 1500, duration: 34 },
         kitSupplier: { name: 'Keiner', income: 0 },
         boardTargets: { minPlace: 6, cupTarget: "2. Runde", minCash: 30000 },
         inCup: true,
@@ -1479,10 +1567,10 @@
     };
 
     let stockMarket = {
-        techCorp: { name: "Global TechCorp AG", price: 120, dividendRate: 0.04, owned: 0 },
-        realEstate: { name: "Bundesliga Real Estate Fonds", price: 85, dividendRate: 0.06, owned: 0 },
-        greenEnergy: { name: "Green Energy Windpark", price: 45, dividendRate: 0.05, owned: 0 },
-        cryptoFund: { name: "Sports Crypto & Web3 ETF", price: 210, dividendRate: 0.02, owned: 0 }
+        techCorp: { name: "SAFT SE (Unternehmenssoftware)", price: 120, dividendRate: 0.04, owned: 0 },
+        realEstate: { name: "Stadionpark Immobilien AG", price: 85, dividendRate: 0.06, owned: 0 },
+        greenEnergy: { name: "Windpark Nordkurve eG", price: 45, dividendRate: 0.05, owned: 0 },
+        cryptoFund: { name: "KryptoKick Fan-Token ETF", price: 210, dividendRate: 0.02, owned: 0 }
     };
 
     let underworld = {
@@ -1551,10 +1639,12 @@
     ];
 
     let bandenSponsors = [
-        { id: 1, name: "Bäckerei Schmidt", type: "Statisch", income: 450, active: true },
-        { id: 2, name: "Brauerei Nordquell", type: "Statisch", income: 800, active: true },
-        { id: 3, name: "Autohaus Müller", type: "LED-Bande", income: 1200, active: true },
-        { id: 4, name: "TechSport Global", type: "LED-Bande", income: 1800, active: false }
+        { id: 1, name: "Bäckerei Schmitz", type: "Statisch", income: 450, active: true },
+        { id: 2, name: "Warsteiler", type: "Statisch", income: 800, active: true },
+        { id: 3, name: "Autohaus Möller", type: "LED-Bande", income: 1200, active: true },
+        { id: 4, name: "Tippiko", type: "LED-Bande", income: 1800, active: false },
+        { id: 5, name: "Kommerzbank", type: "LED-Bande", income: 2400, active: false },
+        { id: 6, name: "Media Marx", type: "LED-Bande", income: 2100, active: false }
     ];
 
     const traitsPool = ["Tor-Instinkt", "Freistoß-Gott", "Elfmeter-Killer", "Leader", "Eisenfuß", "Flügelflitzer", "Zweikampfmonster", "Kein"];
@@ -2043,6 +2133,7 @@
         };
 
         incomingOffers.unshift(newOffer);
+        mailTransferOffer({ id: newOffer.id, amount: offerSum, clubName: buyerClub }, targetPlayer);
         playSound('whistle');
     }
 
@@ -2262,7 +2353,7 @@
         if (content) content.scrollTop = 0;
         const screens = [
             'screen-dashboard', 'screen-calendar', 'screen-squad', 'screen-training',
-            'screen-europe', 'screen-doctrine', 'screen-scouting-global',
+            'screen-europe', 'screen-doctrine', 'screen-mail', 'screen-scouting-global',
             'screen-industry', 'screen-raw-materials', 'screen-holding', 'screen-merch',
             'screen-finances', 'screen-stocks', 'screen-sponsors', 'screen-stadium',
             'screen-campus', 'screen-staff', 'screen-fans', 'screen-transfer',
@@ -2289,6 +2380,7 @@
         if (screenId === 'screen-training') renderTrainingView();
         if (screenId === 'screen-europe') renderEuropeView();
         if (screenId === 'screen-doctrine') renderDoctrineView();
+        if (screenId === 'screen-mail') renderMailView();
         if (screenId === 'screen-scouting-global') renderGlobalScoutingView();
         if (screenId === 'screen-industry') renderIndustryView();
         if (screenId === 'screen-raw-materials') renderRawMaterialsView();
@@ -2336,8 +2428,15 @@
         if (tabBadge) tabBadge.innerText = incomingOffers.length;
         let navBadge = document.getElementById('tab-nav-badge');
         if (navBadge) {
-            navBadge.style.display = incomingOffers.length > 0 ? 'flex' : 'none';
-            navBadge.innerText = incomingOffers.length;
+            let u = importantUnread();
+            navBadge.style.display = u > 0 ? 'flex' : 'none';
+            navBadge.innerText = u;
+        }
+        let mailBadge = document.getElementById('sidebar-mail-badge');
+        if (mailBadge) {
+            let u = unreadCount();
+            mailBadge.style.display = u > 0 ? 'inline-block' : 'none';
+            mailBadge.innerText = u;
         }
         let wpEl = document.getElementById('top-wp');
         if (wpEl) wpEl.innerText = knowledge.wp + ' WP';
@@ -3920,7 +4019,7 @@
             }
         });
         if (pendingRedCards.length) {
-            alert(`🟥 PLATZVERWEISE:\n\n${pendingRedCards.join('\n')}`);
+            mailSuspension(pendingRedCards);
             pendingRedCards = [];
         }
         if (newInjuries.length) {
@@ -3943,13 +4042,19 @@
                 game.boardSat = Math.max(10, game.boardSat - 15);
                 game.fans = Math.max(10, game.fans - 10);
                 underworld.pressure = Math.max(0, underworld.pressure - 30);
-                alert(`🚨 DFB-RAZZIA ERFOLGREICH!\nDie Staatsanwaltschaft ermittelt wegen Spielmanipulationen.\nStrafe: -${formatVal(fine)} & drastischer Image-Verlust!`);
+                mailRaid(fine);
+                alert(`🚨 DFB-RAZZIA!\nDie Staatsanwaltschaft ermittelt wegen Spielmanipulationen.\nStrafe: -${formatVal(fine)} & drastischer Image-Verlust!\n\nDas Verfahren liegt in deinem Postfach (Verband).`);
             }
         }
 
         underworld.activeSabotages = { pyroHotel: false, stealBanner: false, weedKiller: false, refBribe: false };
 
         applyDoctrineMatchdayTick();
+        mailMatchdayTick();
+        if (Math.random() < 0.14) mailSponsorPitch();
+        if (game.boardSat < 45 && Math.random() < 0.4) mailBoardWarning();
+        if (game.fans < 40 && Math.random() < 0.3) mailPressJab('Die Kurve pfeift — steht der Trainer vor dem Aus?');
+        if (Math.random() < 0.12) mailAgentSpam(squad[Math.floor(Math.random() * squad.length)]);
         updateCommodityMarket();
         checkIncomingTransferOffers();
 
@@ -4071,6 +4176,7 @@
 
         if (dx('boardGain')) game.boardSat = Math.min(100, game.boardSat + dx('boardGain'));
         if (dx('transferBudgetMod')) game.transferBudget = Math.max(0, Math.round(game.transferBudget * (1 + dx('transferBudgetMod'))));
+        mailSeasonReview(myRank);
         grantWP(3, `Saison ${game.season} abgeschlossen`);
         incomingOffers = [];
         game.season++;
@@ -4346,6 +4452,435 @@
 
     // ==========================================
     // STORAGE & GETTER RESTORATION
+
+    // ==========================================================
+    // MARKENUNIVERSUM
+    // Modelliert die Werbewelt eines Vereins als Parodie: jede Marke ist
+    // erkennbar, keine ist echt. Wird von Sponsoren, Ausrüstern, Poodle Mehl
+    // und den Bandenwerbungen gemeinsam benutzt.
+    // ==========================================================
+    const BRANDS = {
+        kit: [
+            { n:'Adi#',            tag:'Drei Streifen, eine Raute, keine Lizenz', tier:3 },
+            { n:'Pumor',           tag:'Katzenartig. Angeblich.',                 tier:3 },
+            { n:'Swooshi',         tag:'Just Do It Später',                       tier:3 },
+            { n:'Jakko',           tag:'Der Ausrüster für die 4. Liga',           tier:1 },
+            { n:'Hummul',          tag:'Dänisch, hummelig, günstig',              tier:1 },
+            { n:'Kappaa',          tag:'Zwei Leute sitzen Rücken an Rücken',      tier:2 },
+            { n:'Under Armoire',   tag:'Sportkleidung im Kleiderschrank',         tier:2 },
+            { n:'Umbra',           tag:'Wirft lange Schatten auf deine Bilanz',   tier:2 }
+        ],
+        drink: [
+            { n:'Roter Ochse',     tag:'Verleiht Verbindlichkeiten',              tier:3 },
+            { n:'Monstrositäd',    tag:'Koffein jenseits der Grenzwerte',         tier:2 },
+            { n:'Krumbacher',      tag:'Eine Perle der Buchhaltung',              tier:2 },
+            { n:'Veltinz',         tag:'Aus dem Sauerland, mit Nachdruck',        tier:2 },
+            { n:'Bittburgor',      tag:'Bitte ein Bitt… oder zwei',               tier:2 },
+            { n:'Warsteiler',      tag:'Eine Steilvorlage für sich',              tier:1 },
+            { n:'Jägermeisterschaft', tag:'Der Kräuterlikör mit Titelambition',   tier:3 }
+        ],
+        bet: [
+            { n:'Tippiko',         tag:'Dein Tipp. Unser Haus.',                  tier:3 },
+            { n:'Bgewinn',         tag:'Wir gewinnen. B steht für beide.',        tier:3 },
+            { n:'Wett364',         tag:'Einen Tag weniger als die Konkurrenz',    tier:2 },
+            { n:'Unterwetten',     tag:'Über, unter, egal',                       tier:2 },
+            { n:'Kurvenquote',     tag:'Regional wetten, regional verlieren',     tier:1 }
+        ],
+        finance: [
+            { n:'Kommerzbank',     tag:'Die Bank an Ihrer Seite. Meistens.',      tier:3 },
+            { n:'Sparkasten',      tag:'Gut. Für Ihren Verein. Angeblich.',       tier:2 },
+            { n:'Allianzz',        tag:'Hoffentlich Allianzz versichert',         tier:3 },
+            { n:'Spardose',        tag:'Ihre Genossenschaft vor Ort',             tier:1 },
+            { n:'Volxbank',        tag:'Wir machen den Weg frei. Gegen Gebühr.',  tier:2 }
+        ],
+        tech: [
+            { n:'Telekombinat',    tag:'Netz ist da, wo wir sind',                tier:3 },
+            { n:'Wodafon',         tag:'Empfang im Stadion ab 2031',              tier:3 },
+            { n:'SAFT',            tag:'Enterprise-Software aus Walldorf-ish',    tier:3 },
+            { n:'Siemenz',         tag:'Ingenieurskunst mit Z',                   tier:2 },
+            { n:'KryptoKick',      tag:'Fan-Token. Bitte lesen Sie das Kleingedruckte.', tier:2 }
+        ],
+        retail: [
+            { n:'Liddl',           tag:'Lidl lohnt sich… fast',                   tier:2 },
+            { n:'Oldi Süd',        tag:'Einfach ist das Beste. Angeblich.',       tier:2 },
+            { n:'Rewä',           tag:'Dein Markt. Dein Trikot.',                 tier:2 },
+            { n:'Edeko',           tag:'Wir lieben Lebensmittel und Ablösen',     tier:2 },
+            { n:'Media Marx',      tag:'Ich bin doch nicht blöd — ich bin Genosse', tier:2 },
+            { n:'Bäckerei Schmitz', tag:'Brötchen seit 1904',                     tier:1 }
+        ],
+        auto: [
+            { n:'Opul',            tag:'Wir leben Autos. Leasing bevorzugt.',     tier:2 },
+            { n:'Mercedas',        tag:'Das Beste oder gar nichts',               tier:3 },
+            { n:'Audo',            tag:'Vorsprung durch Sponsoring',              tier:3 },
+            { n:'VuW',             tag:'Das Auto. Der Verein. Der Skandal.',      tier:3 },
+            { n:'Autohaus Möller', tag:'Ihr Partner für Dienstwagen',             tier:1 }
+        ],
+        media: [
+            { n:'BLÖD',            tag:'Die Schlagzeile weiß es besser',          tier:3 },
+            { n:'Knicker',         tag:'Das Fachblatt mit den Noten',             tier:3 },
+            { n:'Wolke7',          tag:'Fußball ist unser Abo-Modell',            tier:3 },
+            { n:'GÄHN',            tag:'Streaming. Angeblich in HD.',             tier:3 },
+            { n:'Sport0',          tag:'Doppelpass am Sonntag',                   tier:2 },
+            { n:'Rühr-Nachrichten',tag:'Lokaljournalismus mit Herz',              tier:1 }
+        ],
+        poodle: [
+            { n:'Poodle Mehl',       tag:'Ihre Post. Unsere Auswertung.',          tier:3 },
+            { n:'Poodle Karten',     tag:'Route zum Auswärtsspiel neu berechnet',  tier:3 },
+            { n:'Poodle Laufwerk',   tag:'15 GB frei. Ihr Kader braucht 400 MB.',  tier:3 },
+            { n:'Poodle Kalender',   tag:'Erinnerung: Vorstandssitzung (Sie sind Thema)', tier:3 },
+            { n:'Poodle Übersetzer', tag:'„Ich fühle mich sehr wohl hier" (unsicher)', tier:2 }
+        ],
+        travel: [
+            { n:'Luffthansa',      tag:'Nonstop you. Meistens pünktlich.',        tier:3 },
+            { n:'Eurodings',       tag:'Billig fliegen, teuer umbuchen',          tier:2 },
+            { n:'Reisebüro Kranz', tag:'Auswärtsfahrten seit 1978',               tier:1 }
+        ]
+    };
+
+    /** Zieht eine Marke passend zur Ligastärke - je höher die Liga, desto größer die Namen. */
+    function pickBrand(cat, maxTier) {
+        const pool = BRANDS[cat].filter(b => b.tier <= (maxTier || 3));
+        return pool.length ? pool[Math.floor(Math.random() * pool.length)] : BRANDS[cat][0];
+    }
+    function brandTierForLeague() { return [3, 3, 2, 1][game.leagueLevel] || 1; }
+
+    // Wiederkehrende Nebenfiguren. Sie schreiben Mails, sie tauchen in
+    // Schlagzeilen auf, sie sind immer leicht unangenehm.
+    const CAST = {
+        agent:      { name:'Rocco Salvatore',   role:'Spielerberater',        color:'#C43A8E' },
+        agent2:     { name:'Kevin-Pascal Brandt', role:'Berater (Nachwuchs)', color:'#E8542F' },
+        board:      { name:'Dr. Hannelore Vogt', role:'Aufsichtsratsvorsitz', color:'#2D7FF9' },
+        president:  { name:'Bernd Kuhlmann',    role:'Präsident',             color:'#E0A020' },
+        press:      { name:'Redaktion BLÖD',    role:'Sportressort',          color:'#D01F3C' },
+        ultra:      { name:'Szene Nord',        role:'Vorsänger',             color:'#D01F3C' },
+        scout:      { name:'Ferdi Osterkamp',   role:'Chefscout',             color:'#2FA84F' },
+        physio:     { name:'Dr. Marion Kessler', role:'Mannschaftsärztin',    color:'#00b0ff' },
+        lawyer:     { name:'Kanzlei Grau & Grau', role:'Vereinsjustiziar',    color:'#8B93A1' },
+        it:         { name:'IT-Abteilung',      role:'Systembetreuung',       color:'#8B93A1' },
+        verband:    { name:'DFV Spielbetrieb',  role:'Verbandsgeschäftsstelle', color:'#6E7681' }
+    };
+
+    // ==========================================================
+    // POODLE MEHL
+    // Der Posteingang des Managers. Modelliert Vereinskommunikation als
+    // echtes Mailprogramm, weil Entscheidungen so ankommen, wie sie im
+    // Alltag ankommen: zwischen Werbung und Spam.
+    // Kategorien tragen die Spannung - Wichtiges steht neben Unsinn.
+    // ==========================================================
+    let mailbox = { mails: [], nextId: 1, cat: 'primary', open: null, seededSpam: 0 };
+
+    const MAIL_CATS = [
+        { id:'primary', label:'Primär',  icon:'inbox' },
+        { id:'promo',   label:'Werbung', icon:'tag' },
+        { id:'verband', label:'Verband', icon:'gavel' },
+        { id:'spam',    label:'Spam',    icon:'ban' }
+    ];
+
+    /** Legt eine Mail an. `actions` sind Spielhandlungen, die im Thread als Buttons erscheinen. */
+    function sendMail(o) {
+        const m = {
+            id: mailbox.nextId++,
+            from: o.from || 'Unbekannt',
+            role: o.role || '',
+            color: o.color || '#8B93A1',
+            subject: o.subject || '(kein Betreff)',
+            preview: (o.body || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 90),
+            body: o.body || '',
+            cat: o.cat || 'primary',
+            read: false, starred: !!o.starred,
+            md: game.matchday, season: game.season,
+            actions: o.actions || [],
+            tagline: o.tagline || ''
+        };
+        mailbox.mails.unshift(m);
+        if (mailbox.mails.length > 120) mailbox.mails.length = 120;
+        updateUI();
+        return m;
+    }
+
+    function unreadCount(cat) {
+        return mailbox.mails.filter(m => !m.read && (!cat || m.cat === cat)).length;
+    }
+    function importantUnread() { return unreadCount('primary') + unreadCount('verband'); }
+
+    function mailTime(m) {
+        if (m.season === game.season && m.md === game.matchday) return 'jetzt';
+        if (m.season === game.season) {
+            const d = game.matchday - m.md;
+            return d === 1 ? 'letzter ST' : `vor ${d} ST`;
+        }
+        return `Saison ${m.season}`;
+    }
+
+    function renderMailView() {
+        if (mailbox.open) return renderMailThread();
+        const cat = mailbox.cat;
+        const list = mailbox.mails.filter(m => m.cat === cat);
+
+        document.getElementById('mail-chips').innerHTML = MAIL_CATS.map(c => {
+            const u = unreadCount(c.id);
+            return `<button class="mail-chip${c.id === cat ? ' on' : ''}" onclick="setMailCat('${c.id}')">
+                ${c.label}${u ? `<i>${u}</i>` : ''}
+            </button>`;
+        }).join('');
+
+        document.getElementById('mail-body').innerHTML = list.length ? list.map(m => `
+            <div class="mail-row${m.read ? '' : ' unread'}" onclick="openMail(${m.id})">
+                <div class="mail-av" style="background:${m.color}">${escapeXml(m.from.charAt(0).toUpperCase())}</div>
+                <div class="mail-main">
+                    <div class="mail-l1">
+                        <span class="mail-from">${escapeXml(m.from)}</span>
+                        <span class="mail-time">${mailTime(m)}</span>
+                    </div>
+                    <div class="mail-subj">${escapeXml(m.subject)}</div>
+                    <div class="mail-prev">${escapeXml(m.preview)}</div>
+                </div>
+                ${m.actions.length ? '<span class="mail-flag">Aktion</span>' : ''}
+            </div>`).join('')
+            : `<div class="mail-empty">
+                 <div class="mail-empty-mark">✓</div>
+                 <div>Keine Nachrichten in „${MAIL_CATS.find(c => c.id === cat).label}"</div>
+                 <small>Du bist durch. Genieß es.</small>
+               </div>`;
+    }
+
+    function renderMailThread() {
+        const m = mailbox.mails.find(x => x.id === mailbox.open);
+        if (!m) { mailbox.open = null; return renderMailView(); }
+        document.getElementById('mail-chips').innerHTML =
+            `<button class="mail-back" onclick="closeMail()">← Posteingang</button>`;
+        document.getElementById('mail-body').innerHTML = `
+            <article class="mail-thread">
+                <h3>${escapeXml(m.subject)}</h3>
+                <div class="mt-head">
+                    <div class="mail-av lg" style="background:${m.color}">${escapeXml(m.from.charAt(0).toUpperCase())}</div>
+                    <div class="mt-who">
+                        <b>${escapeXml(m.from)}</b>
+                        <span>${escapeXml(m.role || 'Externer Absender')} · ${mailTime(m)}</span>
+                    </div>
+                </div>
+                <div class="mt-body">${m.body}</div>
+                ${m.tagline ? `<div class="mt-sig">${escapeXml(m.tagline)}</div>` : ''}
+                ${m.actions.length ? `<div class="mt-actions">${m.actions.map((a, i) =>
+                    `<button class="mt-btn${a.kind === 'primary' ? ' primary' : (a.kind === 'danger' ? ' danger' : '')}"
+                             onclick="runMailAction(${m.id},${i})">${escapeXml(a.label)}</button>`).join('')}</div>` : ''}
+                <button class="mt-btn ghost" onclick="deleteMail(${m.id})">Löschen</button>
+            </article>`;
+    }
+
+    function setMailCat(c) { playSound('click'); mailbox.cat = c; mailbox.open = null; renderMailView(); }
+    function openMail(id) {
+        playSound('click');
+        const m = mailbox.mails.find(x => x.id === id);
+        if (m) m.read = true;
+        mailbox.open = id;
+        renderMailView(); updateUI();
+    }
+    function closeMail() { playSound('click'); mailbox.open = null; renderMailView(); }
+    function deleteMail(id) {
+        playSound('click');
+        mailbox.mails = mailbox.mails.filter(x => x.id !== id);
+        mailbox.open = null; renderMailView(); updateUI();
+    }
+    function runMailAction(id, idx) {
+        const m = mailbox.mails.find(x => x.id === id);
+        if (!m || !m.actions[idx]) return;
+        const a = m.actions[idx];
+        try { if (a.fn) (new Function(a.fn))(); } catch (e) { console.error(e); }
+        if (a.consume !== false) {
+            mailbox.mails = mailbox.mails.filter(x => x.id !== id);
+            mailbox.open = null;
+        }
+        renderMailView(); updateUI();
+    }
+
+
+    // ---------- Ereignis-Mails ----------
+    // Jede Mail hier ersetzt eine Meldung, die sonst nur als Systemhinweis
+    // erschienen wäre. Ziel: Entscheidungen kommen im Posteingang an.
+
+    function mailTransferOffer(offer, player) {
+        const club = offer.clubName || 'Ein interessierter Verein';
+        sendMail({
+            from: club, role: 'Sportliche Leitung', color: '#2D7FF9', cat: 'primary',
+            subject: `Angebot für ${player.name} — ${formatVal(offer.amount)}`,
+            body: `<p>Sehr geehrte Damen und Herren,</p>
+                   <p>wir möchten <b>${player.name}</b> (${player.pos}, Stärke ${player.strength}) verpflichten und bieten Ihnen
+                   <b>${formatVal(offer.amount)}</b> Ablöse.</p>
+                   <p>Der Spieler hat bereits Interesse signalisiert. Wir erwarten Ihre Rückmeldung zeitnah.</p>`,
+            tagline: `${club} · Geschäftsstelle`,
+            actions: [
+                { label: `Annehmen (${formatVal(offer.amount)})`, kind: 'primary', fn: `acceptTransferOffer('${offer.id}');` },
+                { label: 'Nachverhandeln (+40 %)', fn: `counterTransferOffer('${offer.id}', 1.4, '40 % mehr');` },
+                { label: 'Ablehnen', kind: 'danger', fn: `rejectTransferOffer('${offer.id}');` }
+            ]
+        });
+    }
+
+    function mailSponsorPitch() {
+        const b = pickBrand(Math.random() < 0.5 ? 'finance' : 'retail', brandTierForLeague());
+        const bonus = Math.round((4 - game.leagueLevel) * 18000 + Math.random() * 25000);
+        sendMail({
+            from: b.n, role: 'Sponsoring', color: '#E0A020', cat: 'primary', tagline: b.tag,
+            subject: 'Angebot: Zusatzsponsoring für diese Saison',
+            body: `<p>Wir haben Ihre letzten Auftritte verfolgt und möchten einsteigen.</p>
+                   <p>Unser Vorschlag: eine einmalige Zahlung von <b>${formatVal(bonus)}</b> gegen Präsenz auf der
+                   Aufwärmjacke. Kein Kleingedrucktes, das Sie beunruhigen müsste.</p>`,
+            actions: [
+                { label: `Annehmen — ${formatVal(bonus)}`, kind: 'primary',
+                  fn: `game.money += ${bonus}; playSound('goal'); toastWP('Sponsoring: +${bonus.toLocaleString('de-DE')} €'); updateUI();` },
+                { label: 'Dankend ablehnen', kind: 'danger', fn: `game.fans = Math.min(100, game.fans + 1);` }
+            ]
+        });
+    }
+
+    function mailBoardWarning() {
+        sendMail({
+            from: CAST.board.name, role: CAST.board.role, color: CAST.board.color, cat: 'primary',
+            subject: 'Zur sportlichen Lage — Gesprächsbedarf',
+            body: `<p>Der Aufsichtsrat hat getagt. Das Vertrauen liegt bei <b>${game.boardSat} %</b>.</p>
+                   <p>Wir erwarten mindestens Platz ${game.boardTargets.minPlace} und eine Liquidität von
+                   ${formatVal(game.boardTargets.minCash)}. Beides ist derzeit… ambitioniert.</p>
+                   <p>Diese Nachricht ist selbstverständlich vertraulich. Sie wird morgen in der BLÖD stehen.</p>`,
+            tagline: 'Diese E-Mail wurde auf einem Vereins-Tablet verfasst.'
+        });
+    }
+
+    function mailPressJab(headline) {
+        const b = pickBrand('media', 3);
+        sendMail({
+            from: b.n, role: 'Sportressort', color: '#D01F3C', cat: 'primary', tagline: b.tag,
+            subject: headline,
+            body: `<p>Wir planen diese Schlagzeile für morgen und geben Ihnen Gelegenheit zur Stellungnahme.</p>
+                   <p>Ein Verzicht auf Antwort wird als „wollte sich nicht äußern" gedruckt.</p>`
+        });
+    }
+
+    function mailVerband(subject, body, actions) {
+        sendMail({
+            from: CAST.verband.name, role: CAST.verband.role, color: CAST.verband.color,
+            cat: 'verband', subject: subject, body: body, actions: actions || [],
+            tagline: 'Deutscher Fußball-Verband e.V. · Abteilung Spielbetrieb'
+        });
+    }
+
+    function mailRaid(fine) {
+        mailVerband('Einleitung eines Verfahrens — Az. ' + (1000 + Math.floor(Math.random() * 8999)) + '/' + game.season,
+            `<p>Sehr geehrte Damen und Herren,</p>
+             <p>gegen Ihren Verein wurde ein Verfahren wegen des Verdachts der Einflussnahme auf den
+             sportlichen Wettbewerb eingeleitet.</p>
+             <p>Die Geldstrafe beträgt <b>${formatVal(fine)}</b> und wurde bereits eingezogen.
+             Ein Rechtsmittel steht Ihnen offen, ist jedoch aussichtslos.</p>`);
+    }
+
+    function mailSuspension(names) {
+        mailVerband('Sperren nach dem letzten Spieltag',
+            `<p>Das Sportgericht hat entschieden:</p><p>${names.map(n => '<b>' + n + '</b>').join('<br>')}</p>
+             <p>Die Sperren treten mit sofortiger Wirkung in Kraft.</p>`);
+    }
+
+    function mailSeasonReview(rank) {
+        mailVerband('Lizenzierungsunterlagen für die kommende Spielzeit',
+            `<p>Ihr Verein hat die Spielzeit auf <b>Platz ${rank}</b> beendet.</p>
+             <p>Bitte reichen Sie bis zum 15. des Folgemonats ein: Wirtschaftsplan, Stadionsicherheitskonzept,
+             Nachwuchsförderungsnachweis und eine Erklärung zu Ihren Beteiligungsverhältnissen.</p>
+             <p>Unvollständige Unterlagen führen zum Abzug von neun Punkten.</p>`);
+    }
+
+    function mailAgentSpam(player) {
+        sendMail({
+            from: CAST.agent.name, role: CAST.agent.role, color: CAST.agent.color, cat: 'promo',
+            subject: `Habe da was für Sie (${player ? player.pos : 'Flügel'})`,
+            body: `<p>Servus Chef,</p><p>ich hätte da einen Jungen. Bisschen Ausland, bisschen Verletzungshistorie,
+                   aber Mentalität wie ein Presslufthammer. Beraterhonorar verhandelbar, sagen wir: nicht wirklich.</p>
+                   <p>Ruf durch. Ich bin bis 3 Uhr wach.</p>`,
+            tagline: 'Gesendet von meinem Boot'
+        });
+    }
+
+    function mailWelcome() {
+        sendMail({
+            from: CAST.president.name, role: CAST.president.role, color: CAST.president.color, cat: 'primary',
+            subject: 'Herzlich willkommen beim FC Anstoß Pro',
+            body: `<p>Lieber Trainer,</p>
+                   <p>willkommen. Der Verein hat eine große Vergangenheit, eine schwierige Gegenwart und ein Vereinsheim,
+                   dessen Dach im Herbst besprochen werden muss.</p>
+                   <p>Sie haben freie Hand. Innerhalb des Budgets. Und der Erwartungen. Und der Satzung.</p>
+                   <p>Sportliche Grüße</p>`,
+            tagline: 'FC Anstoß Pro e.V. · Präsidium'
+        });
+        sendMail({
+            from: CAST.it.name, role: CAST.it.role, color: CAST.it.color, cat: 'primary',
+            subject: 'Ihr Poodle-Mehl-Konto ist eingerichtet',
+            body: `<p>Ihr Postfach ist aktiv. Bitte beachten Sie:</p>
+                   <p><b>Primär</b> enthält Angebote und Entscheidungen. <b>Verband</b> enthält Ärger.
+                   <b>Werbung</b> enthält Geld. <b>Spam</b> enthält Prinzen.</p>
+                   <p>Der Spamfilter arbeitet nach besten Kräften. Er arbeitet nicht gut.</p>`,
+            tagline: 'Bitte antworten Sie nicht auf diese Adresse.'
+        });
+        sendMail(Object.assign({ cat: 'spam' }, SPAM_POOL[0]));
+    }
+
+    // ---------- Inhalte ----------
+    // Spam und Werbung sind reine Würze: keine Spielwirkung, nur Weltbau.
+    const SPAM_POOL = [
+        { from:'Prinz Adebayo O.', role:'Königshaus (angeblich)', color:'#E0A020',
+          subject:'DRINGEND: 40 MILLIONEN EURO WARTEN AUF SIE',
+          body:'<p>Sehr geehrter Herr Manager,</p><p>ich bin ein Prinz und besitze einen Fußballverein, den ich aus steuerlichen Gründen SOFORT übertragen muss. Bitte senden Sie mir lediglich Ihre Vereinskontodaten sowie eine Bearbeitungsgebühr von 4.500 €.</p><p>Mit königlichen Grüßen</p>' },
+        { from:'Dr. Volker Steinmann', role:'Nahrungsergänzung', color:'#2FA84F',
+          subject:'Diese eine Wurzel macht Innenverteidiger 40 % schneller',
+          body:'<p>Ärzte HASSEN diesen Trick. Eine Wurzel aus dem Voralpenland steigert die Sprintwerte Ihrer Abwehr um bis zu 40 %.</p><p>Nur heute: 12 Packungen zum Preis von 11.</p>' },
+        { from:'FanToken.exe', role:'Web3-Partnerschaft', color:'#C43A8E',
+          subject:'Tokenisieren Sie Ihre Fans (rechtlich unbedenklich*)',
+          body:'<p>Verwandeln Sie Ihre Kurve in handelbare Vermögenswerte! Ihre Fans stimmen dann darüber ab, welche Farbe die Eckfahne hat.</p><p><small>*nach Recht der Kaimaninseln</small></p>' },
+        { from:'Bernd aus der Kreisliga', role:'Privat', color:'#8B93A1',
+          subject:'Bin Freitag frei, kann aushelfen',
+          body:'<p>Moin, hab gesehen ihr habt Verletzte. Bin 47, spiele Innenverteidiger, habe eine gültige Sportfreigabe von 2003.</p><p>Melde dich einfach.</p>' },
+        { from:'Taktik-Guru Ronny', role:'Onlinekurs', color:'#E8542F',
+          subject:'Das 3-2-2-3, das die Bundesliga dir verschweigt',
+          body:'<p>Ich habe in 14 Tagen von der Couch aus einen Zweitligisten trainiert (im Modus Karriere). Mein Kurs kostet nur 799 €.</p>' },
+        { from:'Stadionwurst Direkt', role:'Großhandel', color:'#E0A020',
+          subject:'Bratwurst-Kontingent Q3 — jetzt sichern',
+          body:'<p>Der Bratwurstpreis steigt. Sichern Sie sich 40.000 Stück zum Altpreis. Lagerfähig bis 2031.</p>' },
+        { from:'Rasen & Söhne', role:'Greenkeeping', color:'#2FA84F',
+          subject:'Ihr Rasen sieht aus wie ein Acker (Screenshot im Anhang)',
+          body:'<p>Wir haben Ihr letztes Heimspiel im Fernsehen gesehen. Wir müssen reden.</p>' }
+    ];
+
+    const PROMO_POOL = [
+        () => { const b = pickBrand('bet', brandTierForLeague()); return {
+            from:b.n, role:'Partnerschaften', color:'#7B4BC7', tagline:b.tag,
+            subject:'Werden Sie unser Ärmelpartner',
+            body:`<p>Wir bei <b>${b.n}</b> glauben an Vereine mit Charakter. Und an Quoten.</p><p>Unser Angebot: eine Zahl mit vielen Nullen, gegen ein kleines Logo am Ärmel und Ihr Schweigen zum Thema Spielsucht.</p>` }; },
+        () => { const b = pickBrand('drink', brandTierForLeague()); return {
+            from:b.n, role:'Marketing', color:'#E8542F', tagline:b.tag,
+            subject:'Kühlschränke für die Kabine — kostenlos',
+            body:`<p><b>${b.n}</b> stellt Ihrer Mannschaft 40 Kühlschränke zur Verfügung. Vollgefüllt. Selbstverständlich alkoholfrei*.</p><p><small>*das alkoholfreie Sortiment umfasst zwei Produkte</small></p>` }; },
+        () => { const b = pickBrand('tech', brandTierForLeague()); return {
+            from:b.n, role:'Enterprise Sales', color:'#2D7FF9', tagline:b.tag,
+            subject:'Digitale Transformation Ihres Vereins',
+            body:`<p>Mit <b>${b.n}</b> Cloud Suite verwalten Sie Kader, Rasen und Bratwurstbestände in einem Dashboard.</p><p>Implementierungsdauer: 18 Monate. Schulungskosten separat.</p>` }; },
+        () => { const b = pickBrand('auto', brandTierForLeague()); return {
+            from:b.n, role:'Flottenmanagement', color:'#8B93A1', tagline:b.tag,
+            subject:'Dienstwagen für Ihren Trainerstab',
+            body:`<p>Ihr Co-Trainer fährt einen 19 Jahre alten Kombi. Das schadet dem Vereinsimage.</p><p><b>${b.n}</b> hat da etwas für Sie. Leasing, versteht sich.</p>` }; },
+        () => { const b = pickBrand('media', brandTierForLeague()); return {
+            from:b.n, role:'Sportredaktion', color:'#D01F3C', tagline:b.tag,
+            subject:'Interviewanfrage (Antwort bis heute Abend erbeten)',
+            body:`<p>Wir planen eine Titelgeschichte über Ihren Verein. Der Ton ist noch offen und hängt sehr davon ab, ob Sie zusagen.</p>` }; }
+    ];
+
+    /** Nach jedem Spieltag: die Welt meldet sich. Selten genug, um nicht zu nerven. */
+    function mailMatchdayTick() {
+        if (Math.random() < 0.5) {
+            const s = SPAM_POOL[Math.floor(Math.random() * SPAM_POOL.length)];
+            sendMail(Object.assign({ cat:'spam' }, s));
+        }
+        if (Math.random() < 0.35) {
+            sendMail(Object.assign({ cat:'promo' }, PROMO_POOL[Math.floor(Math.random() * PROMO_POOL.length)]()));
+        }
+    }
+
     // ==========================================================
     // WISSENS-DATENBANK
     // Acht Doktrinen, 112 Kernknoten, 28 Synthesen, Affinitätsmatrix.
@@ -5835,7 +6370,7 @@
     // ==========================================
     // ---------- Gemeinsame Serialisierung (von saveGame, loadGame und dem Admin-JSON genutzt) ----------
     function buildSaveState() {
-        return { game, managerRPG, knowledge, youthTalents, incomingOffers, holdingCompany, rawMaterials,
+        return { game, managerRPG, knowledge, mailbox, youthTalents, incomingOffers, holdingCompany, rawMaterials,
                  factories, merchandise, stockMarket, underworld, stadium, campusBuildings, staffMembers,
                  fanGroups, privateLife, bandenSponsors, squad, lineup, leaguesData, fixturesData,
                  cupTournament, europeTournament };
@@ -5854,6 +6389,7 @@
             knowledge.spent = 0;
             knowledge.owned = [];
         }
+        if (p.mailbox) Object.assign(mailbox, p.mailbox);
         if (p.youthTalents) youthTalents = p.youthTalents;
         if (p.incomingOffers) incomingOffers = p.incomingOffers;
         if (p.holdingCompany) Object.assign(holdingCompany, p.holdingCompany);
@@ -5937,6 +6473,7 @@
         if (!loadGame(true)) {
             knowledge.wp = 3; // Startkapital an Wissen: eine erste Doktrin-Entscheidung
             initDefaultSquad();
+            mailWelcome();
             initLeagues();
             refreshTransferMarket();
             updateUI();
@@ -5950,7 +6487,7 @@
     <button data-target="screen-dashboard" onclick="showScreen('screen-dashboard')"><span class="tb-ico">📊</span><span class="tb-lbl">Zentrale</span></button>
     <button data-target="screen-squad" onclick="showScreen('screen-squad')"><span class="tb-ico">⚽</span><span class="tb-lbl">Kader</span></button>
     <button data-target="screen-doctrine" onclick="showScreen('screen-doctrine')"><span class="tb-ico">🌳</span><span class="tb-lbl">Doktrin</span></button>
-    <button data-target="screen-transfer" onclick="showScreen('screen-transfer')"><span class="tb-ico">🤝</span><span class="tb-lbl">Transfer</span><span class="tb-dot" id="tab-nav-badge">0</span></button>
+    <button data-target="screen-mail" onclick="showScreen('screen-mail')"><span class="tb-ico">✉️</span><span class="tb-lbl">Mehl</span><span class="tb-dot" id="tab-nav-badge">0</span></button>
     <button onclick="toggleNavDrawer(true)"><span class="tb-ico">☰</span><span class="tb-lbl">Mehr</span></button>
 </nav>
 <div class="doc-scrim" id="doc-scrim" onclick="closeNodeSheet()"></div>
