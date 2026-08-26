@@ -17,26 +17,181 @@
     <meta name="apple-mobile-web-app-title" content="Anstoß">
     <title>Anstoß Mobile Pro - FM13 Industrial & European Master Edition</title>
     <style>
+        /* ==========================================================
+           FARBSYSTEM — zwei vollwertige Modi
+           Dark  = "Phosphor": organisches Tiefgrün als Grund, damit die
+                   Leuchtfarben der Live-Ansicht Nachtsicht nicht zerstören.
+           Light = "Eco-Conscious": warme Recyclingpapier-Töne statt Weiß,
+                   senkt Blendung und trägt die nachhaltige Bildsprache.
+           Semantische Tokens zuerst, Legacy-Variablen darauf gemappt.
+           ========================================================== */
         :root {
-            --bg-body: #07090e;
-            --bg-sidebar: #0e1422;
-            --bg-header: #131b2e;
-            --bg-card: rgba(20, 29, 48, 0.85);
-            --bg-card-hover: rgba(28, 41, 68, 0.95);
-            --primary: #00e676;
-            --primary-glow: rgba(0, 230, 118, 0.25);
-            --accent: #ffc107;
-            --accent-glow: rgba(255, 193, 7, 0.25);
-            --danger: #ff1744;
-            --blue: #00b0ff;
-            --purple: #b388ff;
-            --industry: #ff7043;
-            --gold: #ffd700;
-            --europe: #3d5afe;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.08);
-            --border-highlight: rgba(0, 230, 118, 0.35);
+            color-scheme: dark;
+
+            /* Ressortfarben — bedeuten überall dasselbe */
+            --c-finance:  #4ADE80;
+            --c-squad:    #60A5FA;
+            --c-industry: #FBBF24;
+            --c-matchday: #FF4444;
+            --c-live:     #00FF88;
+            --c-doctrine: #C084FC;
+
+            /* Flächen — Grün-Unterton statt neutralem Grau */
+            --bg-app:     #070A08;
+            --bg-sunken:  #0A0F0C;
+            --bg-surface: #0E1512;
+            --bg-raised:  #141D18;
+            --bg-inset:   rgba(255, 255, 255, 0.04);
+
+            --text-main:  #E8F0EA;
+            --text-soft:  #A8B8AE;
+            --text-muted: #6B7D72;
+            --text-invert:#06100A;
+
+            --border:      rgba(232, 240, 234, 0.10);
+            --border-soft: rgba(232, 240, 234, 0.06);
+            --border-lit:  rgba(74, 222, 128, 0.38);
+
+            --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.55);
+            --glow-live:   0 0 14px rgba(0, 255, 136, 0.45);
+
+            /* Legacy-Aliasse: bestehende Regeln lesen weiter diese Namen */
+            --bg-body: var(--bg-app);
+            --bg-sidebar: var(--bg-sunken);
+            --bg-header: var(--bg-surface);
+            --bg-card: var(--bg-surface);
+            --bg-card-hover: var(--bg-raised);
+            --primary: var(--c-finance);
+            --primary-glow: rgba(74, 222, 128, 0.25);
+            --accent: var(--c-industry);
+            --accent-glow: rgba(251, 191, 36, 0.25);
+            --danger: var(--c-matchday);
+            --blue: var(--c-squad);
+            --purple: var(--c-doctrine);
+            --industry: var(--c-industry);
+            --gold: #F5C542;
+            --europe: #7C93F5;
+            --border-highlight: var(--border-lit);
+        }
+
+        [data-theme="light"] {
+            color-scheme: light;
+
+            --c-finance:  #2E8B57;
+            --c-squad:    #3B7DD8;
+            --c-industry: #D4920A;
+            --c-matchday: #D93025;
+            --c-live:     #00A85A;   /* #00FF7F ist auf Papier unlesbar - abgedunkelt */
+            --c-doctrine: #7C4DBE;
+
+            /* Recyclingpapier: leicht warm, nie reines Weiß */
+            --bg-app:     #F2EFE7;
+            --bg-sunken:  #EAE6DC;
+            --bg-surface: #FBF9F4;
+            --bg-raised:  #FFFFFF;
+            --bg-inset:   rgba(26, 31, 28, 0.045);
+
+            --text-main:  #1A1F1C;
+            --text-soft:  #4A554E;
+            --text-muted: #75817A;
+            --text-invert:#FBF9F4;
+
+            --border:      rgba(26, 31, 28, 0.14);
+            --border-soft: rgba(26, 31, 28, 0.08);
+            --border-lit:  rgba(46, 139, 87, 0.45);
+
+            --shadow-lift: 0 8px 24px rgba(60, 70, 60, 0.14);
+            --glow-live:   0 0 10px rgba(0, 168, 90, 0.30);
+
+            --primary-glow: rgba(46, 139, 87, 0.18);
+            --accent-glow: rgba(212, 146, 10, 0.20);
+            --gold: #B8860B;
+            --europe: #3B5BC0;
+        }
+
+        /* Flächen, die vorher fest dunkel waren, folgen jetzt dem Modus. */
+        [data-theme="light"] .app-sidebar { background: var(--bg-sunken); }
+        [data-theme="light"] .app-content { background: var(--bg-app); }
+        [data-theme="light"] .app-header  { background: var(--bg-surface); }
+        [data-theme="light"] .panel       { box-shadow: var(--shadow-lift); }
+        [data-theme="light"] .kpi-chip    { background: var(--bg-inset); }
+        [data-theme="light"] .box         { background: var(--bg-inset); color: var(--text-soft); }
+        [data-theme="light"] th           { background: var(--bg-sunken); }
+        [data-theme="light"] tr:nth-child(even) { background: rgba(26,31,28,0.025); }
+        [data-theme="light"] tr:hover     { background: rgba(26,31,28,0.05); }
+        [data-theme="light"] .player-row,
+        [data-theme="light"] .market-row,
+        [data-theme="light"] .fixture-row { background: var(--bg-raised); color: var(--text-main); }
+        [data-theme="light"] .nav-btn     { color: var(--text-soft); }
+        [data-theme="light"] .nav-btn:hover { background: rgba(26,31,28,0.05); color: var(--text-main); }
+        [data-theme="light"] .btn-secondary { background: var(--bg-raised); color: var(--c-industry); border-color: var(--border); }
+        [data-theme="light"] .btn-primary,
+        [data-theme="light"] .btn-action,
+        [data-theme="light"] .btn-gold    { color: var(--text-invert); }
+        [data-theme="light"] .input-inline { background: var(--bg-raised); border-color: var(--border); color: var(--text-main); }
+        [data-theme="light"] .tabbar      { background: rgba(251,249,244,0.94); border-top-color: var(--border); }
+        [data-theme="light"] .tabbar button { color: var(--text-muted); }
+        [data-theme="light"] .sound-btn   { background: var(--bg-raised); border-color: var(--border); }
+        [data-theme="light"] .club-name   { color: var(--text-main); }
+        [data-theme="light"] .mail-app    { background: var(--bg-surface); border-color: var(--border); }
+        [data-theme="light"] .mail-search { background: var(--bg-inset); color: var(--text-muted); }
+        [data-theme="light"] .mail-logo   { color: var(--text-main); }
+        [data-theme="light"] .mail-chip   { background: var(--bg-raised); border-color: var(--border); color: var(--text-soft); }
+        [data-theme="light"] .mail-chip.on { background: #E3EDFB; border-color: var(--c-squad); color: #1B4E8F; }
+        [data-theme="light"] .mail-row    { border-top-color: var(--border-soft); }
+        [data-theme="light"] .mail-row.unread { background: rgba(59,125,216,0.07); }
+        [data-theme="light"] .mail-from   { color: var(--text-soft); }
+        [data-theme="light"] .mail-row.unread .mail-from,
+        [data-theme="light"] .mail-row.unread .mail-subj { color: var(--text-main); }
+        [data-theme="light"] .mail-subj   { color: var(--text-soft); }
+        [data-theme="light"] .mail-prev,
+        [data-theme="light"] .mail-time   { color: var(--text-muted); }
+        [data-theme="light"] .mail-thread { border-top-color: var(--border-soft); }
+        [data-theme="light"] .mail-thread h3,
+        [data-theme="light"] .mt-who b    { color: var(--text-main); }
+        [data-theme="light"] .mt-body     { color: var(--text-soft); }
+        [data-theme="light"] .mt-body b   { color: var(--text-main); }
+        [data-theme="light"] .mt-btn      { background: var(--bg-raised); border-color: var(--border); color: var(--text-main); }
+        [data-theme="light"] .mt-btn.primary { background: var(--c-finance); color: #fff; border-color: var(--c-finance); }
+
+        /* Der Wissensbaum trägt eigene Grundwerte - hier gespiegelt. */
+        [data-theme="light"] #screen-doctrine {
+            --ink: #1A1F1C; --ink-2: rgba(26,31,28,0.66); --ink-3: rgba(26,31,28,0.42);
+            --hair: rgba(26,31,28,0.13); --ground: #FBF9F4; --ground-2: #F2EFE7;
+        }
+        [data-theme="light"] .view-tab.on { background: var(--text-main); color: var(--bg-surface); }
+        [data-theme="light"] .doc-sheet   { background: var(--bg-surface); }
+        [data-theme="light"] .sheet-title { color: var(--text-main); }
+        [data-theme="light"] .sheet-lore  { color: var(--text-soft); }
+        [data-theme="light"] .fx-row span { color: var(--text-soft); }
+        [data-theme="light"] .fx-row b,
+        [data-theme="light"] .cost-chip b { color: var(--text-main); }
+        [data-theme="light"] .cost-chip   { background: var(--bg-inset); }
+        [data-theme="light"] .btn-doc     { color: var(--bg-surface); }
+        [data-theme="light"] .doc-scrim   { background: rgba(40,48,42,0.42); }
+        [data-theme="light"] .df-card     { background: var(--bg-surface); }
+        [data-theme="light"] .df-name     { color: var(--text-main); }
+        [data-theme="light"] .wp-toast    { background: var(--text-main); color: var(--bg-surface); }
+
+        /* Reste aus der Dunkel-Ära, die im Tagmodus sonst als schwarze Löcher stehen. */
+        [data-theme="light"] .burger { background: var(--bg-raised); border-color: var(--border); color: var(--text-main); }
+        [data-theme="light"] .kpi-chip strong { color: var(--text-main); }
+        [data-theme="light"] .kpi-chip span { color: var(--text-muted); }
+        [data-theme="light"] .club-logo { border-color: var(--bg-raised); }
+        [data-theme="light"] .panel-header { color: var(--c-industry); border-bottom-color: var(--border-soft); }
+        [data-theme="light"] .badge-count { color: #fff; }
+        [data-theme="light"] .nav-category { color: var(--text-muted); }
+        [data-theme="light"] .ticker-log { background: var(--bg-inset); color: var(--text-soft); }
+        [data-theme="light"] .stadium-3d-box { background: #E7EFE6; }
+        [data-theme="light"] .stadium-block-3d { background: var(--bg-raised); color: var(--text-main); }
+        [data-theme="light"] .soccer-pitch { background: #DCE9D8; }
+        [data-theme="light"] table th, [data-theme="light"] table td { border-color: var(--border-soft); }
+        [data-theme="light"] .app-layout { background: var(--bg-app); border-color: var(--border-soft); }
+
+        .theme-btn {
+            background: var(--bg-inset); border: 1px solid var(--border); color: var(--text-soft);
+            width: 34px; height: 34px; border-radius: 9px; font-size: 15px; cursor: pointer;
+            flex: 0 0 34px; display: grid; place-items: center; font-family: inherit; padding: 0;
         }
 
         * { box-sizing: border-box; -webkit-user-select: none; user-select: none; margin: 0; padding: 0; }
@@ -538,6 +693,93 @@
         .mt-btn.primary { background: #00e676; border-color: #00e676; color: #04240f; font-weight: 800; }
         .mt-btn.danger { background: transparent; border-color: rgba(208,31,60,0.5); color: #ff8fa3; }
         .mt-btn.ghost { margin-top: 14px; background: none; border-color: transparent; color: #4b5563; font-size: 11px; }
+    
+        /* ==========================================================
+           T-RADAR — die Live-Spielansicht
+           8-Bit-Funkbild statt Textticker: Spieler sind Quadrate, Pässe
+           sind Linien, alles auf Phosphorgrün. Bewusst niedrig aufgelöst
+           (Pixelraster), damit Bewegung lesbar bleibt statt hübsch.
+           ========================================================== */
+        .radar-shell {
+            background: #050A07; border: 1px solid rgba(0,255,136,0.22); border-radius: 12px;
+            padding: 10px; position: relative; overflow: hidden;
+            font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        }
+        .radar-shell::after {   /* Zeilenraster einer alten Röhre */
+            content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+            background: repeating-linear-gradient(180deg, rgba(0,255,136,.045) 0 1px, transparent 1px 3px);
+        }
+        .radar-hud { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+        .radar-live { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700;
+            letter-spacing: 1.4px; color: var(--c-live); white-space: nowrap; flex: 0 0 auto; }
+        .radar-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--c-live);
+            box-shadow: var(--glow-live); animation: radarPulse 1.4s ease-in-out infinite; }
+        @keyframes radarPulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+        .radar-score {
+            border: 1px solid rgba(0,255,136,.3); padding: 5px 12px; font-size: 14px; font-weight: 700;
+            color: var(--c-live); letter-spacing: 1px; white-space: nowrap;
+        }
+        .radar-score b { color: #fff; }
+        .radar-score .away { color: var(--c-industry); }
+        .radar-ver { font-size: 8px; letter-spacing: 1.4px; color: rgba(0,255,136,.35); white-space: nowrap; flex: 0 0 auto; }
+        .shop-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        @media (max-width: 560px) {
+            .radar-ver { display: none; }
+            .radar-live span { display: none; }          /* nur der Punkt bleibt */
+            .radar-live { letter-spacing: 0; }
+            .radar-score { font-size: 13px; padding: 5px 9px; }
+            .shop-title { font-size: 8.5px; letter-spacing: 1px; }
+        }
+
+        .radar-canvas-wrap { position: relative; border: 1px solid rgba(0,255,136,.2); background: #061009; }
+        #radar-canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+
+        .radar-events { height: 60px; overflow: hidden; margin-top: 8px; font-size: 10px; line-height: 1.5; }
+        .radar-events div { color: rgba(0,255,136,.75); }
+        .radar-events div.goal { color: #fff; font-weight: 700; }
+        .radar-events div.bad { color: var(--c-matchday); }
+
+        /* --- Upgrade-Shop --- */
+        .shop { margin-top: 9px; border: 1px solid rgba(0,255,136,.2); padding: 9px; }
+        .shop-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .shop-title { font-size: 9.5px; font-weight: 700; letter-spacing: 1.5px; color: var(--c-live); }
+        .shop-coins { font-size: 11px; font-weight: 700; color: var(--c-industry); display: flex; align-items: center; gap: 5px; }
+        .shop-coins i { width: 8px; height: 8px; border-radius: 50%; background: var(--c-industry); }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .shop-item {
+            background: rgba(0,255,136,.05); border: 1px solid rgba(0,255,136,.22); padding: 8px 9px;
+            cursor: pointer; text-align: left; font-family: inherit; color: var(--c-live);
+            display: flex; flex-direction: column; gap: 3px; transition: none;
+        }
+        .shop-item:disabled { opacity: .35; cursor: not-allowed; }
+        .shop-item:not(:disabled):active { background: rgba(0,255,136,.16); }
+        .shop-item .si-top { display: flex; align-items: center; gap: 6px; }
+        .shop-item .si-name { font-size: 9.5px; font-weight: 700; letter-spacing: .8px; }
+        .shop-item .si-cost { font-size: 9px; color: var(--c-industry); display: flex; align-items: center; gap: 4px; }
+        .shop-item .si-cost i { width: 6px; height: 6px; border-radius: 50%; background: var(--c-industry); }
+        .shop-item .si-lvl { font-size: 8px; color: rgba(0,255,136,.5); letter-spacing: .6px; }
+        .shop-item.maxed { border-color: var(--c-industry); background: rgba(251,191,36,.08); }
+
+        .radar-cta {
+            width: 100%; margin-top: 7px; padding: 12px; border: 0; cursor: pointer;
+            background: var(--c-live); color: #052012; font-family: inherit;
+            font-size: 11px; font-weight: 700; letter-spacing: 1.4px;
+        }
+        .radar-cta.ghost { background: transparent; border: 1px solid rgba(0,255,136,.3); color: var(--c-live); }
+
+        /* Aufschrift, die bei einem Treffer über das Feld schlägt */
+        .radar-flash {
+            position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+            font-size: 30px; font-weight: 800; letter-spacing: 5px; color: #fff;
+            text-shadow: 0 0 18px var(--c-live); opacity: 0;
+        }
+        .radar-flash.on { animation: flashIn .75s ease-out; }
+        @keyframes flashIn {
+            0% { opacity: 0; transform: scale(.5); }
+            25% { opacity: 1; transform: scale(1.08); }
+            75% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -579,6 +821,7 @@
                 <span>Spieltag</span>
                 <strong id="top-matchday">1 / 34</strong>
             </div>
+            <button id="btn-theme-toggle" class="theme-btn" onclick="toggleTheme()" aria-label="Hell- und Dunkelmodus wechseln">🌙</button>
             <button id="btn-sound-toggle" class="sound-btn" onclick="toggleMasterSound()">🔇 Sound: AUS</button>
         </div>
     </header>
@@ -1352,17 +1595,34 @@
             <div id="screen-matchday" style="display:none;">
                 <div class="panel">
                     <div class="panel-header" id="match-title">Livespiel</div>
-                    <div class="pitch-3d-wrapper">
-                        <div class="soccer-pitch" id="live-pitch">
-                            <div class="pitch-center-line"></div>
-                            <div class="pitch-center-circle"></div>
+                    <div class="radar-shell">
+                        <div class="radar-hud">
+                            <div class="radar-live"><i></i><span>LIVE SIGNAL</span></div>
+                            <div class="radar-score">
+                                <span id="live-home-name">BAL</span>
+                                <span id="radar-score-val"><b>0</b> - <b>0</b></span>
+                                <span class="away" id="live-away-name">MÜN</span>
+                                <span style="opacity:.4">|</span>
+                                <span id="live-minute">0'</span>
+                            </div>
+                            <div class="radar-ver">T-RADAR V2.4</div>
+                        </div>
+                        <div class="radar-canvas-wrap">
+                            <canvas id="radar-canvas" width="720" height="444"></canvas>
+                            <div class="radar-flash" id="radar-flash"></div>
+                        </div>
+                        <div class="radar-events" id="radar-events"></div>
+
+                        <div class="shop">
+                            <div class="shop-head">
+                                <div class="shop-title">UPGRADE-SHOP // TAKTISCHE POWER-UPS</div>
+                                <div class="shop-coins"><i></i><span id="shop-coins-val">0</span>&nbsp;IMPULSE</div>
+                            </div>
+                            <div class="shop-grid" id="shop-grid"></div>
+                            <button class="radar-cta ghost" onclick="showScreen('screen-doctrine')">ÖFFNE STRATEGIE-BAUM (TAKTIK)</button>
                         </div>
                     </div>
-                    <div style="text-align:center; font-size:14px; font-weight:900; color:var(--accent); margin:6px 0;">
-                        <span id="live-home-name">Heim</span> <span id="live-score">0 : 0</span> <span id="live-away-name">Gast</span>
-                        <div style="font-size:10px; color:#aaa;" id="live-minute">0. Minute</div>
-                    </div>
-                    <div class="ticker-log" id="ticker-log"></div>
+                    <div class="ticker-log" id="ticker-log" style="display:none;"></div>
 
                     <!-- LIVE SHOUTS -->
                     <div class="panel" style="margin:4px 0; padding:6px; background:rgba(0,0,0,0.5);">
@@ -1424,6 +1684,26 @@
             osc.start();
             osc.stop(audioCtx.currentTime + duration);
         } catch (e) {}
+    }
+
+    // Zwei vollwertige Modi statt einer abgedunkelten Variante: Tagmodus
+    // fürs Büro und den Bus, Nachtmodus fürs Sofa und die Live-Ansicht.
+    function applyTheme(mode) {
+        document.documentElement.setAttribute('data-theme', mode);
+        const b = document.getElementById('btn-theme-toggle');
+        if (b) b.textContent = mode === 'light' ? '☀️' : '🌙';
+        try { localStorage.setItem('anstoss_theme', mode); } catch (e) {}
+    }
+    function toggleTheme() {
+        playSound('click');
+        const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        applyTheme(cur);
+    }
+    function initTheme() {
+        let saved = null;
+        try { saved = localStorage.getItem('anstoss_theme'); } catch (e) {}
+        if (!saved) saved = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        applyTheme(saved);
     }
 
     function toggleMasterSound() {
@@ -2345,6 +2625,7 @@
 
     function showScreen(screenId) {
         playSound('click');
+        if (screenId !== 'screen-matchday' && typeof radarStop === 'function') radarStop();
         toggleNavDrawer(false);
         syncTabbar(screenId);
         closeNodeSheet();
@@ -3755,7 +4036,7 @@
             let el = document.getElementById('shout-' + s);
             if (el) el.className = (s === shout) ? 'btn-action' : 'btn-secondary';
         });
-        document.getElementById('ticker-log').innerHTML += `<div style="color:var(--gold);">📣 Trainer-Anweisung: <strong>${shout.toUpperCase()}</strong> ausgegeben!</div>`;
+        tickerLog( `<div style="color:var(--gold);">📣 Trainer-Anweisung: <strong>${shout.toUpperCase()}</strong> ausgegeben!</div>`);
     }
 
     function calcTeamStrength(isHomeMatch = false) {
@@ -3823,11 +4104,12 @@
         };
         pendingRedCards = [];
         showScreen('screen-matchday');
-        document.getElementById('match-title').innerText = homeName + " vs " + awayName;
-        document.getElementById('live-home-name').innerText = homeName;
-        document.getElementById('live-away-name').innerText = awayName;
-        document.getElementById('live-score').innerText = "0 : 0";
-        document.getElementById('live-minute').innerText = "1. Minute";
+        radarInit();
+        setText('match-title', homeName + " vs " + awayName);
+        setText('live-home-name', clubCode(homeName));
+        setText('live-away-name', clubCode(awayName));
+        setText('live-minute', "1'");
+        radarSyncScore();
         
         let introNotes = "Anpfiff der Partie!";
         if (underworld.activeSabotages.pyroHotel) introNotes += " [🧨 Gegner wirkt müde]";
@@ -3836,10 +4118,12 @@
             let oppName = isHome ? awayName : homeName;
             introNotes += ` [🐀 Spitzelbericht: ${oppName} spielt mit Stärke ${isHome ? currentMatch.awayStr : currentMatch.homeStr}]`;
         }
-        document.getElementById('ticker-log').innerHTML = `<div>${introNotes}</div>`;
+        const tl = document.getElementById('ticker-log');
+        if (tl) tl.innerHTML = `<div>${introNotes}</div>`;
+        radarEvent(introNotes, '');
 
-        document.getElementById('btn-next-step').style.display = 'inline-block';
-        document.getElementById('btn-finish-match').style.display = 'none';
+        const bn = document.getElementById('btn-next-step'); if (bn) bn.style.display = 'inline-block';
+        const bf = document.getElementById('btn-finish-match'); if (bf) bf.style.display = 'none';
         renderLiveSubs();
     }
 
@@ -3867,7 +4151,7 @@
     function simulateMatchStep() {
         currentMatch.minute += Math.floor(Math.random() * 14) + 8;
         if (currentMatch.minute >= 90) { currentMatch.minute = 90; endMatchSimulation(); return; }
-        document.getElementById('live-minute').innerText = currentMatch.minute + ". Minute";
+        document.getElementById('live-minute').innerText = currentMatch.minute + "'";
         
         let diff = currentMatch.homeStr - currentMatch.awayStr;
         let goalChance = 0.35;
@@ -3901,15 +4185,21 @@
             if (Math.random() < userFavoredProb) {
                 currentMatch.homeGoals++;
                 playSound('goal');
+                if (currentMatch.isHome) { radarFlash('TOR!'); sfx8bitGoal(); } else { radarFlash('GEGENTOR'); sfx8bitConcede(); }
+                radarEvent(`⚽ ${currentMatch.homeName} trifft — ${currentMatch.homeGoals}:${currentMatch.awayGoals}`, currentMatch.isHome ? 'goal' : 'bad');
+                radarSyncScore();
                 let extra = (hasFkGod && Math.random() < 0.3) ? " (Traumhafter direkter Freistoß!)" : "";
-                document.getElementById('ticker-log').innerHTML += `<div style="color:var(--primary);">⚽ TOR für ${currentMatch.homeName}!${extra}</div>`;
+                tickerLog( `<div style="color:var(--primary);">⚽ TOR für ${currentMatch.homeName}!${extra}</div>`);
             } else {
                 if (hasPkKiller && Math.random() < 0.35 && !currentMatch.isHome) {
-                    document.getElementById('ticker-log').innerHTML += `<div style="color:var(--blue);">🧤 GLANZPARADE! Unser Elfmeter-Killer hält überragend!</div>`;
+                    tickerLog( `<div style="color:var(--blue);">🧤 GLANZPARADE! Unser Elfmeter-Killer hält überragend!</div>`);
                 } else {
                     currentMatch.awayGoals++;
                     playSound('goal');
-                    document.getElementById('ticker-log').innerHTML += `<div style="color:var(--danger);">⚽ TOR für ${currentMatch.awayName}!</div>`;
+                    if (!currentMatch.isHome) { radarFlash('TOR!'); sfx8bitGoal(); } else { radarFlash('GEGENTOR'); sfx8bitConcede(); }
+                    radarEvent(`⚽ ${currentMatch.awayName} trifft — ${currentMatch.homeGoals}:${currentMatch.awayGoals}`, currentMatch.isHome ? 'bad' : 'goal');
+                    radarSyncScore();
+                    tickerLog( `<div style="color:var(--danger);">⚽ TOR für ${currentMatch.awayName}!</div>`);
                 }
             }
         }
@@ -3922,11 +4212,12 @@
                 victim.suspended = bans;
                 lineup = lineup.filter(id => id !== victim.id);
                 pendingRedCards.push(`${victim.name} (${victim.pos}) — ${bans ? bans + ' Spiel(e) Sperre' : 'Sperre abgewendet'}`);
-                document.getElementById('ticker-log').innerHTML +=
-                    `<div style="color:var(--danger);">🟥 PLATZVERWEIS! ${victim.name} muss vom Feld.</div>`;
+                radarEvent(`🟥 PLATZVERWEIS — ${victim.name}`, 'bad');
+                radarFlash('ROT');
+                sfx8bitConcede();
             }
         }
-        document.getElementById('live-score').innerText = currentMatch.homeGoals + " : " + currentMatch.awayGoals;
+        radarSyncScore();
     }
 
     function simulateRestOfMatch() {
@@ -3937,6 +4228,7 @@
     }
 
     function endMatchSimulation() {
+        radarStop();
         playSound('whistle');
         document.getElementById('btn-next-step').style.display = 'none';
         document.getElementById('btn-finish-match').style.display = 'inline-block';
@@ -4452,6 +4744,348 @@
 
     // ==========================================
     // STORAGE & GETTER RESTORATION
+
+
+    // ==========================================================
+    // T-RADAR — Live-Spielansicht mit Eingriffsmöglichkeit
+    // Modelliert das Spiel als Funkbild: 22 Quadrate, ein Ball, ein
+    // Rasterfeld. Der Spieler verdient während der Partie Impulse und
+    // kauft damit taktische Verstärkungen, die SOFORT sichtbar wirken.
+    // Der sichtbare Effekt ist Absicht: ein Upgrade ohne erkennbare
+    // Wirkung ist im Inkrementalgenre der häufigste Konstruktionsfehler.
+    // ==========================================================
+    const RAD = { W: 240, H: 148, SCALE: 3 };   // Feldraster in Pixeln, dann hochskaliert
+
+    let radar = {
+        on: false, raf: null, t: 0,
+        home: [], away: [], ball: { x: 120, y: 74, vx: 0, vy: 0, owner: null },
+        coins: 0, boosts: { tempo: 0, praezision: 0, mauer: 0, pressing: 0 },
+        events: [], flash: null, lastGoalT: -999
+    };
+
+    // Kosten steigen je Stufe: der zweite Kauf muss sich verdient anfühlen.
+    const BOOSTS = {
+        tempo:      { name:'TEMPO BOOST', icon:'⚡', base: 50, max: 5, desc:'Deine Quadrate bewegen sich schneller' },
+        praezision: { name:'PRÄZISION',   icon:'🎯', base: 75, max: 5, desc:'Höhere Trefferquote bei Abschlüssen' },
+        mauer:      { name:'MAUER',       icon:'🛡️', base: 60, max: 5, desc:'Abwehr steht enger, Gegner kommt schwerer durch' },
+        pressing:   { name:'PRESSING',    icon:'🔥', base: 40, max: 5, desc:'Ballgewinne in der gegnerischen Hälfte' }
+    };
+    function boostCost(k) { return Math.round(BOOSTS[k].base * Math.pow(1.6, radar.boosts[k])); }
+
+    /** Der Ticker läuft weiter im Hintergrund - das Radar ist die sichtbare Ebene. */
+    function tickerLog(html) {
+        const el = document.getElementById('ticker-log');
+        if (el) el.innerHTML += html;
+    }
+
+    function setText(id, txt) { const e = document.getElementById(id); if (e) e.innerText = txt; }
+
+    /** Drei Buchstaben für die Anzeigetafel - Vereinsnamen sprengen das Raster. */
+    function clubCode(name) {
+        const stop = /^(FC|SV|SC|SG|TSV|VfB|VfL|SpVgg|1\.|Borussia|Fortuna|Dynamo|Eintracht|Viktoria|Rot-Weiß|Blau-Weiß)$/i;
+        const words = String(name).split(/\s+/).filter(w => !stop.test(w));
+        const base = (words[0] || name).replace(/[^A-Za-zÄÖÜäöüß]/g, '');
+        return (base.slice(0, 3) || 'TBD').toUpperCase();
+    }
+
+    function radarInit() {
+        const ourStr = currentMatch ? (currentMatch.isHome ? currentMatch.homeStr : currentMatch.awayStr) : 60;
+        const oppStr = currentMatch ? (currentMatch.isHome ? currentMatch.awayStr : currentMatch.homeStr) : 60;
+        const starting = squad.filter(p => lineup.includes(p.id)).slice(0, 11);
+
+        // 4-4-2-artige Grundordnung als Rasterpunkte; y gespiegelt für den Gegner.
+        const form = [[18,74],[52,32],[52,60],[52,88],[52,116],[96,28],[96,58],[96,90],[96,120],[150,54],[150,94]];
+        const roleOf = i => i === 0 ? 'gk' : (i <= 4 ? 'def' : (i <= 8 ? 'mid' : 'att'));
+        const DRIFT = { gk: 0.03, def: 0.10, mid: 0.20, att: 0.16 };
+        radar.home = form.map((f, i) => {
+            const p = starting[i];
+            return { x: f[0], y: f[1], hx: f[0], hy: f[1], n: i + 1, role: roleOf(i), drift: DRIFT[roleOf(i)],
+                     str: p ? p.strength : ourStr, name: p ? p.name : 'Spieler' };
+        });
+        radar.away = form.map((f, i) => ({ x: RAD.W - f[0], y: f[1], hx: RAD.W - f[0], hy: f[1],
+                     n: i + 1, role: roleOf(i), drift: DRIFT[roleOf(i)], str: oppStr, name: 'Gegner' }));
+        radar.ball = { x: RAD.W / 2, y: RAD.H / 2, vx: 0, vy: 0, owner: null };
+        radar.coins = 0;
+        radar.boosts = { tempo: 0, praezision: 0, mauer: 0, pressing: 0 };
+        radar.events = []; radar.t = 0; radar.flash = null; radar.lastGoalT = -999;
+        radarRenderShop();
+        radarStart();
+    }
+
+    function radarStart() {
+        if (radar.on) return;
+        radar.on = true;
+        const step = () => {
+            if (!radar.on) return;
+            radarTick();
+            radarDraw();
+            radar.raf = requestAnimationFrame(step);
+        };
+        radar.raf = requestAnimationFrame(step);
+    }
+    function radarStop() {
+        radar.on = false;
+        if (radar.raf) cancelAnimationFrame(radar.raf);
+        radar.raf = null;
+    }
+
+    function radarEvent(text, cls) {
+        radar.events.unshift({ text, cls: cls || '' });
+        if (radar.events.length > 4) radar.events.length = 4;
+        const el = document.getElementById('radar-events');
+        if (el) el.innerHTML = radar.events.map(e =>
+            `<div class="${e.cls}">${escapeXml(e.text)}</div>`).join('');
+    }
+
+    /** Ein Simulationsschritt. Bewegung ist bewusst simpel - lesbar schlägt realistisch. */
+    function radarTick() {
+        radar.t++;
+        const B = radar.boosts;
+        const spd = 0.55 + B.tempo * 0.16;
+        const press = 0.5 + B.pressing * 0.22;
+        const wall = B.mauer * 0.9;
+
+        // Ballträger bestimmen: nächstes Quadrat gewinnt, Pressing zieht mit.
+        let best = null, bestD = 1e9, bestSide = null;
+        radar.home.forEach(p => {
+            const d = Math.hypot(p.x - radar.ball.x, p.y - radar.ball.y) / (1 + press * 0.35);
+            if (d < bestD) { bestD = d; best = p; bestSide = 'home'; }
+        });
+        radar.away.forEach(p => {
+            const d = Math.hypot(p.x - radar.ball.x, p.y - radar.ball.y) * (1 + wall * 0.03);
+            if (d < bestD) { bestD = d; best = p; bestSide = 'away'; }
+        });
+        radar.ball.owner = bestD < 9 ? bestSide : null;
+
+        // Die Mannschaft verschiebt sich als Block, jede Linie unterschiedlich weit.
+        // Der Torwart bleibt praktisch stehen, das Mittelfeld pendelt am weitesten.
+        const homeShift = radar.ball.owner === 'home' ? 30 : (radar.ball.owner === 'away' ? -14 : 6);
+        radar.home.forEach(p => {
+            const d = p.role === 'gk' ? 0.03 : p.drift;
+            const tx = p.hx + (radar.ball.x - p.hx) * d + (p.role === 'gk' ? 0 : homeShift * (p.role === 'att' ? 1.1 : 0.7));
+            const ty = p.hy + (radar.ball.y - p.hy) * (p.role === 'gk' ? 0.10 : d * 1.15);
+            p.x += (Math.max(8, Math.min(RAD.W - 8, tx)) - p.x) * 0.05 * spd;
+            p.y += (Math.max(10, Math.min(RAD.H - 10, ty)) - p.y) * 0.05 * spd;
+        });
+        const awayShift = radar.ball.owner === 'away' ? -30 : (radar.ball.owner === 'home' ? (14 + wall * 1.6) : -6);
+        radar.away.forEach(p => {
+            const d = p.role === 'gk' ? 0.03 : p.drift;
+            const tx = p.hx + (radar.ball.x - p.hx) * d + (p.role === 'gk' ? 0 : awayShift * (p.role === 'att' ? 1.1 : 0.7));
+            const ty = p.hy + (radar.ball.y - p.hy) * (p.role === 'gk' ? 0.10 : d * 1.15);
+            p.x += (Math.max(8, Math.min(RAD.W - 8, tx)) - p.x) * 0.046;
+            p.y += (Math.max(10, Math.min(RAD.H - 10, ty)) - p.y) * 0.046;
+        });
+
+        // Ball folgt dem Träger, sonst rollt er aus.
+        if (radar.ball.owner && best) {
+            // Träger trägt den Ball Richtung gegnerisches Tor, statt ihn nur zu halten.
+            const dir = radar.ball.owner === 'home' ? 1 : -1;
+            best.x += dir * (0.35 + B.tempo * 0.10);
+            radar.ball.x += (best.x + dir * 4 - radar.ball.x) * 0.4;
+            radar.ball.y += (best.y - radar.ball.y) * 0.4;
+            radar.ball.vx *= 0.6; radar.ball.vy *= 0.6;
+        } else {
+            radar.ball.x += radar.ball.vx; radar.ball.y += radar.ball.vy;
+            radar.ball.vx *= 0.94; radar.ball.vy *= 0.94;
+        }
+        radar.ball.x = Math.max(4, Math.min(RAD.W - 4, radar.ball.x));
+        radar.ball.y = Math.max(4, Math.min(RAD.H - 4, radar.ball.y));
+
+        // Impulse verdienen: Ballbesitz in der gegnerischen Hälfte zahlt sich aus.
+        if (radar.t % 14 === 0 && radar.ball.owner === 'home') {
+            const deep = radar.ball.x > RAD.W * 0.6 ? 2 : 1;
+            radarAddCoins(deep + Math.floor(B.pressing / 2));
+        }
+
+        // Abschluss: nur aus dem letzten Felddrittel, mit Abklingzeit.
+        if (radar.ball.owner === 'home' && radar.ball.x > RAD.W * 0.72 && radar.t - radar.lastGoalT > 90) {
+            if (Math.random() < 0.012 + B.praezision * 0.004) radarShot();
+        }
+        if (radar.ball.owner === 'away' && radar.ball.x < RAD.W * 0.28 && radar.t - radar.lastGoalT > 90) {
+            if (Math.random() < Math.max(0.002, 0.010 - B.mauer * 0.0016)) radarConcede();
+        }
+    }
+
+    function radarAddCoins(n) {
+        radar.coins += n;
+        const el = document.getElementById('shop-coins-val');
+        if (el) el.textContent = radar.coins;
+        radarRenderShop();
+    }
+
+    function radarShot() {
+        radar.lastGoalT = radar.t;
+        const B = radar.boosts;
+        const chance = 0.34 + B.praezision * 0.07 + (dx('goalChance') || 0);
+        radar.ball.vx = 6; radar.ball.vy = (Math.random() - 0.5) * 2;
+        if (Math.random() < chance) {
+            currentMatch.isHome ? currentMatch.homeGoals++ : currentMatch.awayGoals++;
+            radarFlash('TOR!');
+            radarEvent(`⚽ TOR! ${radarScoreText()}`, 'goal');
+            radarAddCoins(35);
+            sfx8bitGoal();
+            radarSyncScore();
+        } else {
+            radarEvent('◦ Abschluss pariert', '');
+            radarAddCoins(6);
+            sfx8bitBlip(320, 0.06);
+        }
+    }
+
+    function radarConcede() {
+        radar.lastGoalT = radar.t;
+        currentMatch.isHome ? currentMatch.awayGoals++ : currentMatch.homeGoals++;
+        radarFlash('GEGENTOR');
+        radarEvent(`⚽ Gegentor. ${radarScoreText()}`, 'bad');
+        sfx8bitConcede();
+        radarSyncScore();
+    }
+
+    function radarScoreText() {
+        return `${currentMatch.homeGoals} : ${currentMatch.awayGoals}`;
+    }
+    function radarSyncScore() {
+        const el = document.getElementById('radar-score-val');
+        if (el) el.innerHTML = `<b>${currentMatch.homeGoals}</b> - <b>${currentMatch.awayGoals}</b>`;
+        const s = document.getElementById('live-score');
+        if (s) s.innerText = radarScoreText();
+        const hs = document.getElementById('radar-home-goals');
+        if (hs) hs.textContent = currentMatch.homeGoals;
+    }
+    function radarFlash(text) {
+        const el = document.getElementById('radar-flash');
+        if (!el) return;
+        el.textContent = text;
+        el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+    }
+
+    // ---------- Zeichnen ----------
+    function radarDraw() {
+        const cv = document.getElementById('radar-canvas');
+        if (!cv) return;
+        const ctx = cv.getContext('2d');
+        const S = RAD.SCALE;
+        if (cv.width !== RAD.W * S) { cv.width = RAD.W * S; cv.height = RAD.H * S; }
+        ctx.setTransform(S, 0, 0, S, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+
+        ctx.fillStyle = '#061009';
+        ctx.fillRect(0, 0, RAD.W, RAD.H);
+
+        // Punktraster
+        ctx.fillStyle = 'rgba(0,255,136,0.10)';
+        for (let x = 10; x < RAD.W; x += 16)
+            for (let y = 10; y < RAD.H; y += 16) ctx.fillRect(x, y, 1, 1);
+
+        // Feldlinien
+        ctx.strokeStyle = 'rgba(0,255,136,0.30)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(4.5, 4.5, RAD.W - 9, RAD.H - 9);
+        ctx.beginPath(); ctx.moveTo(RAD.W / 2, 5); ctx.lineTo(RAD.W / 2, RAD.H - 5); ctx.stroke();
+        ctx.beginPath(); ctx.arc(RAD.W / 2, RAD.H / 2, 20, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeRect(4.5, RAD.H / 2 - 26, 30, 52);
+        ctx.strokeRect(RAD.W - 34.5, RAD.H / 2 - 26, 30, 52);
+
+        // Funkwelle: läuft vom Ballträger aus
+        const w = (radar.t % 60) / 60;
+        if (radar.ball.owner) {
+            ctx.strokeStyle = `rgba(0,255,136,${0.30 * (1 - w)})`;
+            ctx.beginPath(); ctx.arc(radar.ball.x, radar.ball.y, 6 + w * 34, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        // Passlinie zum nächsten eigenen Quadrat
+        if (radar.ball.owner === 'home') {
+            let near = null, nd = 1e9;
+            radar.home.forEach(p => {
+                const d = Math.hypot(p.x - radar.ball.x, p.y - radar.ball.y);
+                if (d > 12 && d < nd) { nd = d; near = p; }
+            });
+            if (near) {
+                ctx.strokeStyle = 'rgba(0,255,136,0.45)';
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath(); ctx.moveTo(radar.ball.x, radar.ball.y); ctx.lineTo(near.x, near.y); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        // Quadrate. Größe trägt Stärke, damit Kaderqualität sichtbar wird.
+        radar.away.forEach(p => radarSquare(ctx, p, '#FBBF24', '#7A5300'));
+        radar.home.forEach(p => radarSquare(ctx, p, '#00FF88', '#00522C'));
+
+        // Ball
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(Math.round(radar.ball.x) - 1, Math.round(radar.ball.y) - 1, 3, 3);
+    }
+
+    function radarSquare(ctx, p, fill, dim) {
+        const s = 7 + Math.round((p.str - 50) / 14);
+        const x = Math.round(p.x - s / 2), y = Math.round(p.y - s / 2);
+        ctx.fillStyle = dim;
+        ctx.fillRect(x + 1, y + 1, s, s);
+        ctx.fillStyle = fill;
+        ctx.fillRect(x, y, s, s);
+        ctx.fillStyle = '#04160C';
+        ctx.font = '6px ui-monospace, monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(p.n), x + s / 2, y + s / 2 + 0.5);
+    }
+
+    // ---------- Shop ----------
+    function radarRenderShop() {
+        const box = document.getElementById('shop-grid');
+        if (!box) return;
+        const el = document.getElementById('shop-coins-val');
+        if (el) el.textContent = radar.coins;
+        box.innerHTML = Object.keys(BOOSTS).map(k => {
+            const b = BOOSTS[k], lvl = radar.boosts[k], maxed = lvl >= b.max;
+            const cost = boostCost(k);
+            return `<button class="shop-item${maxed ? ' maxed' : ''}" ${maxed || radar.coins < cost ? 'disabled' : ''}
+                        onclick="radarBuy('${k}')" title="${escapeXml(b.desc)}">
+                <span class="si-top"><span>${b.icon}</span><span class="si-name">${b.name}</span></span>
+                ${maxed ? '<span class="si-cost">MAX</span>'
+                        : `<span class="si-cost"><i></i>${cost}</span>`}
+                <span class="si-lvl">${'▪'.repeat(lvl)}${'▫'.repeat(b.max - lvl)} STUFE ${lvl}</span>
+            </button>`;
+        }).join('');
+    }
+
+    function radarBuy(k) {
+        const cost = boostCost(k);
+        if (radar.boosts[k] >= BOOSTS[k].max || radar.coins < cost) return;
+        radar.coins -= cost;
+        radar.boosts[k]++;
+        sfx8bitBuy();
+        radarEvent(`▲ ${BOOSTS[k].name} Stufe ${radar.boosts[k]} aktiv — ${BOOSTS[k].desc}`, '');
+        radarFlash(BOOSTS[k].name.split(' ')[0]);
+        radarRenderShop();
+    }
+
+    // ---------- 8-Bit-Sound ----------
+    // Rechteckwellen ohne Filter: bewusst hart, damit es nach Automat klingt.
+    function sfx8bit(freq, dur, type, vol) {
+        if (!audioCtx || !isMasterSoundOn) return;
+        try {
+            const t0 = audioCtx.currentTime;
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = type || 'square';
+            o.frequency.setValueAtTime(freq, t0);
+            g.gain.setValueAtTime(vol || 0.07, t0);
+            g.gain.setValueAtTime(vol || 0.07, t0 + dur * 0.8);
+            g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(t0); o.stop(t0 + dur + 0.01);
+        } catch (e) {}
+    }
+    function sfx8bitBlip(f, d) { sfx8bit(f || 440, d || 0.05, 'square', 0.05); }
+    function sfx8bitBuy() {
+        [523, 659, 784].forEach((f, i) => setTimeout(() => sfx8bitBlip(f, 0.06), i * 45));
+    }
+    function sfx8bitGoal() {
+        [392, 523, 659, 784, 1046].forEach((f, i) => setTimeout(() => sfx8bit(f, 0.1, 'square', 0.08), i * 70));
+    }
+    function sfx8bitConcede() {
+        [330, 262, 196, 147].forEach((f, i) => setTimeout(() => sfx8bit(f, 0.13, 'sawtooth', 0.06), i * 90));
+    }
 
     // ==========================================================
     // MARKENUNIVERSUM
@@ -6469,6 +7103,7 @@
 
     window.onload = function() {
         restoreGetters();
+        initTheme();
         syncTabbar('screen-dashboard');
         if (!loadGame(true)) {
             knowledge.wp = 3; // Startkapital an Wissen: eine erste Doktrin-Entscheidung
