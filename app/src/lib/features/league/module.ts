@@ -29,7 +29,7 @@ export default defineModule({
      */
     matchday: {
       phase: 'sim',
-      consumes: ['squad.strength'],
+      consumes: ['squad.strength', 'matchday.goalChance'],
       provides: [
         'league.isHome', 'league.opponent', 'league.opponentStrength',
         'league.level', 'league.result'
@@ -56,7 +56,8 @@ export default defineModule({
           league,
           matchday,
           rng,
-          published > 0 ? published : undefined
+          published > 0 ? published : undefined,
+          query<number>('matchday.goalChance', 1)
         );
 
         const us = report.player;

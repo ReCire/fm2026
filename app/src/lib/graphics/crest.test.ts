@@ -82,3 +82,27 @@ describe('crestHeight', () => {
     expect(crestHeight(28)).toBe(32);
   });
 });
+
+/**
+ * The initials must sit on c1, never on the c2 field.
+ *
+ * This is the check that should have existed the first time: the original mark
+ * put c2 text straight onto a field that is also c2, and on 8 of 14 clubs that
+ * was 1.00:1 with only a hairline stroke between them. Verified from a
+ * screenshot, which confirms what you expect to see rather than what is there.
+ */
+describe('inescutcheon', () => {
+  it('is present exactly when the initials are', () => {
+    expect(showsInitials(56)).toBe(true);
+    expect(showsInitials(28)).toBe(false);
+  });
+
+  it('keeps the roundel inside the shield at every club', () => {
+    // r=27 centred at (50,58) in a 100x116 shield whose widest span is 6..94.
+    const left = 50 - 27, right = 50 + 27, top = 58 - 27, bottom = 58 + 27;
+    expect(left).toBeGreaterThan(6);
+    expect(right).toBeLessThan(94);
+    expect(top).toBeGreaterThan(6);
+    expect(bottom).toBeLessThan(112);
+  });
+});

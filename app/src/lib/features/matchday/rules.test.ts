@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  modifiers, effectiveStrength, fitnessMultiplier, moraleDelta,
+  modifiers, effectiveStrength, fitnessMultiplier, goalChance, moraleDelta,
   readiness, outcomeOf, scoreline, recordResult, form, formLetters
 } from './rules';
 import { createMatchday, FORMATIONS, STYLES, TALKS, type MatchdayState, type Report } from './state';
@@ -76,12 +76,25 @@ describe('effectiveStrength', () => {
 });
 
 describe('costs land later, not now', () => {
-  it('offensive football costs fitness rather than in-match risk', () => {
+  it('offensive football costs fitness, but fitness is no longer the main price', () => {
     const m = fresh();
     m.style = 'offensiv';
     expect(fitnessMultiplier(m)).toBeGreaterThan(1);
+    // defensiv buys nothing in fitness: the real price of a style is VARIANCE,
+    // and giving defensive play a fitness bonus too would put both styles back
+    // on a single axis where one of them has to dominate.
     m.style = 'defensiv';
-    expect(fitnessMultiplier(m)).toBeLessThan(1);
+    expect(fitnessMultiplier(m)).toBe(1);
+  });
+
+  it('opens or closes the game for BOTH sides, which is where the trade lives', () => {
+    const m = fresh();
+    m.style = 'offensiv';
+    expect(goalChance(m)).toBeGreaterThan(1);
+    m.style = 'defensiv';
+    expect(goalChance(m)).toBeLessThan(1);
+    m.style = 'ausgeglichen';
+    expect(goalChance(m)).toBe(1);
   });
 
   it('a demanding team talk buys strength and costs morale', () => {

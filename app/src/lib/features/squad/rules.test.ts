@@ -4,6 +4,7 @@ import {
   wageBill, applyPostMatch, isAvailable, rating
 } from './rules';
 import { createSquad, type SquadState } from './state';
+import { squadContent } from './content';
 import { createRng } from '$lib/engine/rng';
 
 const fresh = (seed = 42) => createSquad(createRng(seed));
@@ -128,8 +129,8 @@ describe('applyPostMatch', () => {
 
     applyPostMatch(s, createRng(11));
 
-    expect(starter.fitness).toBe(78);
-    expect(bench.fitness).toBe(65);
+    expect(starter.fitness).toBe(90 - squadContent.fitnessLossPerMatch);
+    expect(bench.fitness).toBe(50 + squadContent.fitnessRecoveryPerMatch);
   });
 
   it('never drops a starter below 10 fitness', () => {

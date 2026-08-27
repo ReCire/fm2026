@@ -1,6 +1,6 @@
 import { defineModule } from '$lib/engine/module';
 import { MatchdaySchema, createMatchday, MATCHDAY_VERSION, type Report } from './state';
-import { effectiveStrength, modifiers, recordResult, moraleDelta, fitnessMultiplier } from './rules';
+import { effectiveStrength, modifiers, recordResult, moraleDelta, fitnessMultiplier, goalChance } from './rules';
 import { matchdayDocs } from './docs';
 import { autoLineup, teamStrength, isAvailable } from '../squad/rules';
 
@@ -31,7 +31,7 @@ export default defineModule({
          */
         phase: 'pre',
         order: 10,
-        provides: ['squad.strength', 'matchday.modifiers', 'matchday.fitnessCost'],
+        provides: ['squad.strength', 'matchday.modifiers', 'matchday.fitnessCost', 'matchday.goalChance'],
         run({ state, emit, provide }) {
           const squad = state.modules.squad;
           const m = state.modules.matchday;
@@ -57,6 +57,7 @@ export default defineModule({
           // The price of the chosen style. squad applies it after the match, so
           // an attacking week is paid for in the next one.
           provide('matchday.fitnessCost', fitnessMultiplier(m));
+          provide('matchday.goalChance', goalChance(m));
 
           const available = squad.players.filter(isAvailable).length;
           if (available < 11) {

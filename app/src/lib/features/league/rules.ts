@@ -211,13 +211,29 @@ export interface MatchResult {
  * the table around it. Here every home side gets `homeAdvantage`, so the whole
  * pyramid is simulated by the same rule.
  */
-export function simulateFixture(rng: Rng, homeStrength: number, awayStrength: number): MatchResult {
+/**
+ * `goalChance` scales how open the game is, for BOTH sides equally.
+ *
+ * It moves variance, not expectation — which is what makes an attacking style a
+ * trade rather than a strictly better option. Raising only the player's scoring
+ * would put both styles on one axis, and on one axis one of them must dominate:
+ * the only choice left would be which. More goals at both ends means offensive
+ * football is right when a draw is worthless and wrong when a point is worth
+ * having, which is a decision rather than a calculation.
+ */
+export function simulateFixture(
+  rng: Rng,
+  homeStrength: number,
+  awayStrength: number,
+  goalChance = 1
+): MatchResult {
   const edge = homeStrength + C.homeAdvantage - awayStrength;
   const homeBoost = edge > 0 ? edge * C.strengthGoalFactor : 0;
   const awayBoost = edge < 0 ? -edge * C.strengthGoalFactor : 0;
+  const base = C.goalBase * goalChance;
   return {
-    homeGoals: Math.max(0, Math.floor(rng.next() * C.goalBase + homeBoost)),
-    awayGoals: Math.max(0, Math.floor(rng.next() * C.goalBase + awayBoost))
+    homeGoals: Math.max(0, Math.floor(rng.next() * base + homeBoost * goalChance)),
+    awayGoals: Math.max(0, Math.floor(rng.next() * base + awayBoost * goalChance))
   };
 }
 
@@ -274,7 +290,8 @@ export function playMatchday(
   league: LeagueState,
   matchday: number,
   rng: Rng,
-  playerStrength?: number
+  playerStrength?: number,
+  goalChance = 1
 ): MatchdayReport {
   const report: MatchdayReport = { played: 0 };
 
@@ -288,7 +305,14 @@ export function playMatchday(
       const away = teams[fixture.away];
       if (!home || !away) continue;
 
-      const result = simulateFixture(rng, strengthOf(home, playerStrength), strengthOf(away, playerStrength));
+      // Our own style only opens up OUR fixture. Two AI clubs play a normal game.
+      const isOurs = home.name === C.playerClubName || away.name === C.playerClubName;
+      const result = simulateFixture(
+        rng,
+        strengthOf(home, playerStrength),
+        strengthOf(away, playerStrength),
+        isOurs ? goalChance : 1
+      );
       fixture.homeGoals = result.homeGoals;
       fixture.awayGoals = result.awayGoals;
       fixture.played = true;

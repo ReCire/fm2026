@@ -368,15 +368,37 @@ export const designIntent = defineIntent([
     source: 'architecture'
   },
   {
-    id: 'matchday.styleIsCurrentlyDominated',
-    constant: 'style strength vs fitnessCost',
-    value: 'MEASURED: defensiv 22.3 pts/season, offensiv 16.8, over 60 seasons',
+    id: 'matchday.styleTradesMeanForVariance',
+    constant: 'style.goalChance',
+    value: 'offensiv 1.35, ausgeglichen 1.0, defensiv 0.75 — applied to BOTH sides',
     rationale:
-      'Once the fitness cost was wired, the tactical choice became visible in 50 of 60 seasons — the observability requirement is met.',
+      'Openness moves variance, not expectation. Offensiv is correct when a draw is worthless — chasing promotion in May, behind in a cup tie — and wrong when a point is worth having. That is a decision rather than a calculation.',
     failureMode:
-      'But the balance is currently backwards: offensiv buys +2 strength (~0.1 goals a match) and pays 1.25x fitness, which compounds across 34 matchdays and grinds the eleven to the floor. It is a strictly worse option with no upside, which is a trap rather than a trade. NEEDS A DESIGN DECISION — either raise the strength gain or soften the cost. Both numbers live in matchday/content.ts.',
+      'Strength alone put both styles on ONE axis, points per season, and on one axis one option must dominate: measured at defensiv 22.3 vs offensiv 16.8, offensiv was strictly worse and nobody would ever pick it. Raising its strength or cutting its cost only moves which one dominates; tuning them equal makes the choice meaningless instead of wrong. The fix had to change what the option DOES, not what it is worth.',
     module: 'matchday',
-    source: 'architecture (measured) — NEEDS A DESIGN DECISION'
+    source: 'fm-03-design (Creative Director) — rejected both levers offered'
+  },
+  {
+    id: 'squad.fitnessIsADeviation',
+    constant: 'fitnessWeight + fitnessBaseline',
+    value: '0.35 around a baseline of 70; recovery raised 15 → 21',
+    rationale:
+      'A squad at the baseline rates at face value and meets the league on equal terms. Keeping it fresher is a genuine edge; letting it collapse is a genuine penalty.',
+    failureMode:
+      'The original `strength * fitness/100` taxed the player and nobody else, because AI clubs carry a static strength and never tire. MEASURED: the eleven read 23 points below its own league, and a squad at exactly the table strength finished 15th of 18 — so transfers, youth, training and scouting were all decoration, since none of them could move a result. After the fix: +10 finishes top three in 21 of 24 seasons, level finishes 9.7th of 18, -10 averages 16th. Pinned by a balance canary in CI.',
+    module: 'squad',
+    source: 'architecture (measured), target set by fm-03-design'
+  },
+  {
+    id: 'league.relegationPlacesEvidence',
+    constant: 'relegationPlaces',
+    value: '2 — and the measurement says that is why -10 sides survive',
+    rationale:
+      'A side ten points below its league now averages 16th of 18 and is in the bottom four in 20 of 24 seasons. The strength mapping does its job.',
+    failureMode:
+      'But it is actually relegated in only 11 of 24, short of the "clear majority" target — because there are only two places. This is evidence for the open relegationPlaces decision (3 in the prototype, cut to 2 to satisfy a promotion/relegation symmetry invariant), not a separate mapping problem.',
+    module: 'league',
+    source: 'architecture (measured) — evidence for an open decision'
   },
 
   // ---------------------------------------------------------------- design --

@@ -17,6 +17,16 @@ const FormationEntry = z.object({
 });
 const StyleEntry = z.object({
   strength: z.number(),
+  /**
+   * How open the game becomes, for BOTH sides.
+   *
+   * This is the axis that makes the choice a trade. Strength alone put both
+   * styles on one line — points per season — and on one line one option must
+   * dominate; tuning them equal only makes the choice meaningless instead.
+   * Openness moves VARIANCE: offensiv is right when a draw is worthless, and
+   * wrong when a point is worth having.
+   */
+  goalChance: z.number().min(0.5).max(2),
   /** Multiplies the fitness a starter loses. Attacking football is tiring. */
   fitnessCost: z.number().min(0.5).max(2),
   label: z.string()
@@ -58,9 +68,9 @@ export const matchdayContent: MatchdayContent = MatchdayContentSchema.parse({
     '3-5-2': { home: 1, away: 0,  label: 'Das Mittelfeld überladen, die Kette ausgedünnt.' }
   },
   style: {
-    defensiv:      { strength: -1, fitnessCost: 0.85, label: 'Weniger Risiko, weniger Ertrag.' },
-    ausgeglichen:  { strength: 0,  fitnessCost: 1,    label: 'Kein Vorteil, kein Preis.' },
-    offensiv:      { strength: 2,  fitnessCost: 1.25, label: 'Mehr Zugriff, teurer bezahlt.' }
+    defensiv:      { strength: -1, goalChance: 0.75, fitnessCost: 1,    label: 'Wenige Tore, an beiden Enden. Ein Punkt ist wahrscheinlicher als drei.' },
+    ausgeglichen:  { strength: 0,  goalChance: 1,    fitnessCost: 1,    label: 'Kein Vorteil, kein Preis.' },
+    offensiv:      { strength: 2,  goalChance: 1.35, fitnessCost: 1.15, label: 'Offenes Spiel. Mehr Siege und mehr Niederlagen, weniger Remis.' }
   },
   talk: {
     ruhig:        { strength: 0, morale: 0,  label: 'Nichts gesagt, nichts verdorben.' },

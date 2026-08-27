@@ -28,9 +28,32 @@ export const SquadContentSchema = z.object({
     perPoint: z.number().min(0)
   })).min(1),
   startingSquad: z.array(z.tuple([z.enum(POSITIONS), z.number().int(), z.number().int(), z.number().int()])),
-  /** Fitness lost by a starter each matchday, and regained by a substitute. */
+  /**
+   * Fitness lost by a starter each matchday, and regained by a substitute.
+   *
+   * Recovery is deliberately larger than loss: with 19 players and 11 starting,
+   * a rotated squad settles near `fitnessBaseline` and meets the league at face
+   * value. Tuned by measurement, not feel — at 15 a squad at exactly its
+   * league's table strength finished 11th of 18; at 21 it finishes 9.7th, which
+   * is the middle.
+   */
   fitnessLossPerMatch: z.number().int().min(0),
   fitnessRecoveryPerMatch: z.number().int().min(0),
+  /**
+   * How far fitness can swing a rating, 0..1, measured AGAINST A BASELINE.
+   *
+   * AI clubs carry a static strength and never tire, so any formula that only
+   * subtracts for tiredness taxes the player and nobody else. Measured: it made
+   * the eleven read 23 points below its own league, and a squad at exactly the
+   * table's strength finished 15th of 18.
+   *
+   * So fitness is a DEVIATION. A squad at `fitnessBaseline` rates at face value
+   * and meets the league on equal terms; keeping it fresher is a real edge,
+   * letting it collapse is a real penalty, and neither is a hidden tax.
+   */
+  fitnessWeight: z.number().min(0).max(1),
+  /** The fitness a normally-rotated squad sits at. The zero point. */
+  fitnessBaseline: z.number().min(0).max(100),
   /** Base chance a starter picks up an injury. */
   injuryBaseRisk: z.number().min(0).max(1),
   /** Multiplier applied when a player starts below this fitness. */
@@ -68,8 +91,10 @@ export const squadContent: SquadContent = SquadContentSchema.parse({
     ['ST', 4, 47, 62]
   ],
 
+  fitnessWeight: 0.35,
+  fitnessBaseline: 70,
   fitnessLossPerMatch: 12,
-  fitnessRecoveryPerMatch: 15,
+  fitnessRecoveryPerMatch: 21,
   injuryBaseRisk: 0.055,
   tiredFitnessThreshold: 55,
   tiredInjuryMultiplier: 1.8

@@ -88,9 +88,24 @@ export function autoLineup(squad: SquadState): string[] {
   return picked.map((p) => p.id);
 }
 
-/** Effective quality right now: raw strength scaled by how fresh the player is. */
+/**
+ * Effective quality right now.
+ *
+ * Fitness is a DEVIATION FROM NORMAL, not a multiplier.
+ *
+ * `strength * fitness/100` meant a squad at 58% fitness — which is simply what
+ * mid-season looks like — rated 40% below its own paper strength, while every
+ * AI club carried a static number and never tired. The player alone paid a
+ * fitness tax. Measured symptom: a squad at exactly its league's table strength
+ * finished 15th of 18.
+ *
+ * Rating against a baseline fixes the asymmetry without removing the mechanic:
+ * a normally-rotated squad meets the league at face value, a fresh one has a
+ * genuine edge, and an exhausted one is genuinely worse.
+ */
 export function rating(p: Player): number {
-  return p.strength * (p.fitness / 100);
+  const { fitnessWeight: w, fitnessBaseline: base } = squadContent;
+  return p.strength * (1 + (w * (p.fitness - base)) / 100);
 }
 
 /**

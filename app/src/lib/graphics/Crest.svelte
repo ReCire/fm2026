@@ -52,12 +52,22 @@
   <path d={SHIELD_PATH} fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.5" />
 
   {#if showInitials}
+    <!--
+      Inescutcheon: a c1 roundel with a c2 ring, carrying c2 initials.
+
+      The initials used to sit straight on the field, and the field is also c2 —
+      so on 8 of 14 clubs the text was c2 on c2 at 1.00:1, separated only by a
+      0.6px stroke. A roundel guarantees c1-behind-c2 across all six divisions
+      without a per-division anchor, and it is heraldically regular rather than
+      a patch.
+    -->
+    <circle cx="50" cy="58" r="27" fill={colours[0]} />
+    <circle cx="50" cy="58" r="27" fill="none" stroke={colours[1]} stroke-width="2.5" />
     <text
-      x="50" y="60"
+      x="50" y="59"
       text-anchor="middle" dominant-baseline="central"
-      font-size="34" font-weight="800"
+      font-size="30" font-weight="800"
       fill={colours[1]}
-      stroke="rgba(0,0,0,.35)" stroke-width="0.6" paint-order="stroke"
     >{crestInitials(name)}</text>
   {/if}
 </svg>

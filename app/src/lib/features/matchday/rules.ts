@@ -38,6 +38,11 @@ export function fitnessMultiplier(m: MatchdayState): number {
   return C.style[m.style].fitnessCost;
 }
 
+/** How open the chosen style makes the game — for both sides. */
+export function goalChance(m: MatchdayState): number {
+  return C.style[m.style].goalChance;
+}
+
 export function moraleDelta(m: MatchdayState): number {
   return C.talk[m.talk].morale;
 }
