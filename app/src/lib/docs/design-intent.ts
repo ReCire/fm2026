@@ -401,6 +401,40 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (ruling), architecture (measured)'
   },
 
+  {
+    id: 'design.sharedSelectorReach',
+    constant: 'component class prefixes',
+    value: 'card classes are prefixed; never reuse a name the shell already owns',
+    rationale:
+      'A club card styled with `.club-name` reformatted the header, which had used that class since the original file — and `querySelector(\'.club-name\')` could return a card instead of the header.',
+    failureMode:
+      'Svelte scoped styles make this WORSE, not better: they would have prevented the visual half, so the CSS would look correct while a query still crossed the boundary — the same bug with its most visible symptom removed. Scoping protects rendering, not lookup.',
+    module: 'design',
+    source: 'fm-03-design'
+  },
+  {
+    id: 'onboarding.marksNotNumbers',
+    constant: 'unlockedAtStart presentation',
+    value: 'filled/unfilled marks, count as caption — never a bare number',
+    rationale:
+      'A number invites ranking: 4 is less than 8, therefore worse. Marks read as a CUT. That is what stops four of five starting narratives looking like consolation prizes beside the recommended one.',
+    failureMode:
+      'Showing the figure raw makes every start except the most permissive read as a deficiency, so the narrative choice collapses into a difficulty slider — which is exactly what narratives exist not to be.',
+    module: 'onboarding',
+    source: 'fm-03-design (Creative Director)'
+  },
+  {
+    id: 'design.flakyBandsErodeSocially',
+    constant: 'balance canary sample size',
+    value: '20 seasons, bands set from a 4-family measurement before the first red run',
+    rationale:
+      'The sample has to be large enough that the bands can stay honest.',
+    failureMode:
+      'The erosion is social, not technical: nobody widens a band in bad faith. They widen it because the build is fine and the test is annoying, and each individual widening is defensible. The end state asserts nothing. So the sample size has to be decided BEFORE the first red run, not after — once you are staring at a failure on a good build, every argument points one way.',
+    module: 'league',
+    source: 'fm-03-design (the mechanism), architecture (the rule)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',
