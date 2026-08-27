@@ -51,6 +51,29 @@ export interface Hook {
   phase: Phase;
   /** Lower runs first inside the same phase. Default 0. */
   order?: number;
+
+  /**
+   * Context keys this hook publishes via `ctx.provide`.
+   *
+   * Declared so the registry can check the wiring at boot instead of the game
+   * failing silently at runtime. See `consumes`.
+   */
+  provides?: readonly string[];
+
+  /**
+   * Context keys this hook reads via `ctx.query`.
+   *
+   * `query` returns a FALLBACK when the key has not been provided yet, and a
+   * fallback is indistinguishable from a real answer — no error, no event, no
+   * log. This shipped: squad published `squad.strength` in `post`, league read
+   * it in `sim`, so league always got the fallback and the player's lineup had
+   * no effect whatsoever on their own results.
+   *
+   * Declaring both sides lets `Registry` prove at boot that every consumer runs
+   * after its provider, and refuse to start if it does not.
+   */
+  consumes?: readonly string[];
+
   run(ctx: TickContext): void;
 }
 

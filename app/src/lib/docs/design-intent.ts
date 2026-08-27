@@ -344,6 +344,41 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (Creative Director)'
   },
 
+  // ------------------------------------------------------------- matchday --
+  {
+    id: 'matchday.lineupMustReachTheSim',
+    constant: 'squad.strength published in `pre`',
+    value: 'pre/10, consumed by league in `sim`',
+    rationale:
+      'league resolves our fixture in `sim` and needs to know how strong we actually are. Publishing the eleven\'s strength before the match is the only ordering that works.',
+    failureMode:
+      'It shipped the other way round: squad published in `post`, AFTER the match had been played, so league silently took its fallback and the player\'s team selection had no effect on their own results at all. Nothing errored. Proven by a test that fielded a 95-rated eleven and a 25-rated one on the same seed and got the identical scoreline. The registry now refuses to boot on a consumer-before-provider pair.',
+    module: 'matchday',
+    source: 'architecture (found while scoping the module)'
+  },
+  {
+    id: 'matchday.styleIsPaidLater',
+    constant: 'style.fitnessCost',
+    value: 'offensiv 1.25, ausgeglichen 1.0, defensiv 0.85',
+    rationale:
+      'The price of a style is fitness, not in-match risk, so the decision is felt the FOLLOWING week. That makes rotation a consequence of a choice rather than a chore.',
+    failureMode:
+      'The multiplier was documented and computed but never wired — squad hardcoded 1. Attacking football was free, which is the same invisible-stat failure as an executive whose competence resolves nowhere. Now provided by matchday and consumed by squad, with the ordering enforced at boot.',
+    module: 'matchday',
+    source: 'architecture'
+  },
+  {
+    id: 'matchday.styleIsCurrentlyDominated',
+    constant: 'style strength vs fitnessCost',
+    value: 'MEASURED: defensiv 22.3 pts/season, offensiv 16.8, over 60 seasons',
+    rationale:
+      'Once the fitness cost was wired, the tactical choice became visible in 50 of 60 seasons — the observability requirement is met.',
+    failureMode:
+      'But the balance is currently backwards: offensiv buys +2 strength (~0.1 goals a match) and pays 1.25x fitness, which compounds across 34 matchdays and grinds the eleven to the floor. It is a strictly worse option with no upside, which is a trap rather than a trade. NEEDS A DESIGN DECISION — either raise the strength gain or soften the cost. Both numbers live in matchday/content.ts.',
+    module: 'matchday',
+    source: 'architecture (measured) — NEEDS A DESIGN DECISION'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

@@ -29,6 +29,11 @@ export default defineModule({
      */
     matchday: {
       phase: 'sim',
+      consumes: ['squad.strength'],
+      provides: [
+        'league.isHome', 'league.opponent', 'league.opponentStrength',
+        'league.level', 'league.result'
+      ],
       run({ state, rng, emit, query, provide }) {
         const league = state.modules.league;
         const matchday = state.meta.matchday;
@@ -56,6 +61,17 @@ export default defineModule({
 
         const us = report.player;
         if (!us) return;
+
+        // Publish the result rather than leaving consumers to derive it from
+        // the cumulative table. Subtracting stored history to recover one
+        // matchday's goals breaks the moment that history is capped or spans a
+        // season boundary — and it would break silently, as a wrong scoreline.
+        provide('league.result', {
+          goalsFor: us.goalsFor,
+          goalsAgainst: us.goalsAgainst,
+          isHome: us.isHome,
+          opponent: us.opponent
+        });
 
         const rank = rankOf(league.levels[league.playerLevel] ?? [], leagueContent.playerClubName);
         emit({

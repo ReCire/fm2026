@@ -30,6 +30,48 @@ export class Registry {
 
     this.all = enabled;
     this.byId = new Map(enabled.map((d) => [d.id, d]));
+
+    this.assertContextWiring();
+  }
+
+  /**
+   * Every consumed context key must be provided by a hook that runs EARLIER in
+   * the same tick.
+   *
+   * Without this the failure is silent: `ctx.query` hands back the caller's
+   * fallback, which is indistinguishable from a real answer. The bug that
+   * prompted this check made the player's lineup irrelevant to their own match
+   * results for the entire life of the module, with nothing in the logs.
+   */
+  private assertContextWiring(): void {
+    for (const kind of ['matchday', 'week', 'seasonStart', 'seasonEnd'] as const) {
+      const ordered = this.hooks(kind);
+
+      ordered.forEach((entry, index) => {
+        for (const key of entry.hook.consumes ?? []) {
+          const producedEarlier = ordered
+            .slice(0, index)
+            .some((earlier) => (earlier.hook.provides ?? []).includes(key));
+          if (producedEarlier) continue;
+
+          const producedLater = ordered
+            .slice(index + 1)
+            .find((later) => (later.hook.provides ?? []).includes(key));
+
+          throw new Error(
+            producedLater
+              ? `Context key "${key}" is consumed by "${entry.module.id}" ` +
+                `(${entry.phase}/${entry.hook.order ?? 0}) but provided by ` +
+                `"${producedLater.module.id}" (${producedLater.phase}/` +
+                `${producedLater.hook.order ?? 0}), which runs LATER on "${kind}". ` +
+                `The consumer would silently receive its fallback. ` +
+                `Move the provider earlier, or the consumer later.`
+              : `Context key "${key}" is consumed by "${entry.module.id}" on ` +
+                `"${kind}" but no enabled module declares that it provides it.`
+          );
+        }
+      });
+    }
   }
 
   /** Nav entries, grouped and ordered, for the sidebar. */

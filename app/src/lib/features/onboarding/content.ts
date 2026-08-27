@@ -59,7 +59,7 @@ export const onboardingContent: OnboardingContent = OnboardingContentSchema.pars
     // Liga 2
     { id: 'ostwall',    name: '1. FC Ostwall',      short: 'OWL', city: 'Leipzig-Ost',        leagueLevel: 1, colours: ['#1D2B5C', '#C9A227'], flavour: 'Zweimal aufgestiegen, zweimal abgestiegen, einmal insolvent.' },
     { id: 'rothenbach', name: 'SV Rothenbach',      short: 'RTB', city: 'Kaiserslautern',     leagueLevel: 1, colours: ['#7A1220', '#E5DCC5'], flavour: 'Der Betzenberg ist nicht weit. Man hört ihn an guten Tagen.' },
-    { id: 'kupferberg', name: 'FC Kupferberg',      short: 'KPB', city: 'Bochum-Süd',         leagueLevel: 1, colours: ['#1F6F78', '#E8D5B8'], flavour: 'Die Zeche ist zu, der Verein nicht.' },
+    { id: 'kupferberg', name: 'FC Kupferberg',      short: 'KPB', city: 'Bochum-Süd',         leagueLevel: 1, colours: ['#1F6F78', '#EFE3CF'], flavour: 'Die Zeche ist zu, der Verein nicht.' },
 
     // Liga 3
     { id: 'lindenau',   name: 'SpVgg Lindenau',     short: 'LIN', city: 'Leipzig-Lindenau',   leagueLevel: 2, colours: ['#2E5B34', '#EFE3C2'], flavour: 'Gegründet von Setzern und Druckern. Die Kurve textet bis heute selbst.' },

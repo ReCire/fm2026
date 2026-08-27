@@ -12,6 +12,7 @@ import onboarding from './features/onboarding/module';
 import progression from './features/progression/module';
 import finance from './features/finance/module';
 import league from './features/league/module';
+import matchday from './features/matchday/module';
 import squad from './features/squad/module';
 import transfer from './features/transfer/module';
 import stadium from './features/stadium/module';
@@ -24,5 +25,6 @@ export const modules: readonly ModuleDef[] = [
   squad,
   stadium,
   league,
+  matchday,
   transfer
 ];
