@@ -147,8 +147,8 @@
     border-radius: var(--r-sm);
     font-size: var(--fs-caption);
   }
-  .fixtures li.us { border-color: var(--primary); }
+  .fixtures li.us { border-color: var(--primary-ink); }
   .fixtures .home { text-align: right; }
   .fixtures .away { text-align: left; color: var(--text-muted); }
-  .fixtures strong { color: var(--accent); }
+  .fixtures strong { color: var(--accent-ink); }
 </style>

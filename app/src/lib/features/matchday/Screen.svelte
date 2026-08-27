@@ -117,7 +117,7 @@
   .fixture { margin-bottom: var(--s3); font-size: var(--fs-body); }
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); margin-bottom: var(--s3); }
   .problems { list-style: none; margin: 0 0 var(--s3); padding: 0; }
-  .problems li { color: var(--accent); font-size: var(--fs-caption); padding: 2px 0; }
+  .problems li { color: var(--accent-ink); font-size: var(--fs-caption); padding: 2px 0; }
 
   fieldset { border: 0; margin: 0 0 var(--s4); padding: 0; }
   legend { font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s2); }
@@ -126,7 +126,7 @@
     border: 1px solid var(--border); border-radius: var(--r-sm);
     background: var(--bg-inset); cursor: pointer; min-height: var(--tap);
   }
-  .opt.on { border-color: var(--primary); background: var(--primary-glow); }
+  .opt.on { border-color: var(--primary-ink); background: var(--primary-glow); }
   .opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
   .opt input:focus-visible ~ span { outline: 2px solid var(--primary); outline-offset: 3px; }
   .opt b { display: block; font-size: var(--fs-body); text-transform: capitalize; }

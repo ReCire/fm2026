@@ -232,7 +232,7 @@
     background: var(--bg-sunken); border: 2px solid var(--border);
     font-weight: 800; color: var(--text-muted);
   }
-  .avatar.on .face { border-color: var(--primary); color: var(--primary); }
+  .avatar.on .face { border-color: var(--primary-ink); color: var(--primary-ink); }
   .avatar input:focus-visible + .face { outline: 2px solid var(--primary); outline-offset: 2px; }
 
   .bg, .club, .narr {
@@ -241,18 +241,18 @@
     border: 1px solid var(--border); border-radius: var(--r-sm);
     background: var(--bg-inset); cursor: pointer; min-height: 44px;
   }
-  .bg.on, .club.on, .narr.on { border-color: var(--primary); background: var(--primary-glow); }
+  .bg.on, .club.on, .narr.on { border-color: var(--primary-ink); background: var(--primary-glow); }
   .bg input:focus-visible ~ *, .club input:focus-visible ~ *, .narr input:focus-visible ~ * { outline: 2px solid var(--primary); outline-offset: 2px; }
 
   .bg strong, .club strong, .narr strong { display: block; font-size: var(--fs-body); }
   .bg small, .club small, .narr small { display: block; color: var(--text-muted); font-size: var(--fs-caption); }
-  .narr em { display: block; font-style: normal; color: var(--accent); font-size: var(--fs-caption); margin: 2px 0; }
+  .narr em { display: block; font-style: normal; color: var(--accent-ink); font-size: var(--fs-caption); margin: 2px 0; }
   .narr .diff, .club .flav { margin-top: var(--s1); }
 
   .clubs { display: grid; gap: var(--s2); }
   .meta { min-width: 0; }
 
-  .problems { color: var(--accent); font-size: var(--fs-caption); margin: var(--s2) 0; }
+  .problems { color: var(--accent-ink); font-size: var(--fs-caption); margin: var(--s2) 0; }
   .nav { display: flex; gap: var(--s2); margin-top: var(--s3); }
   .nav :global(.wrap) { flex: 1; }
 </style>

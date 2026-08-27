@@ -76,16 +76,16 @@
     border-radius: 0 var(--r-sm) var(--r-sm) 0;
     display: grid;
   }
-  .events .good { border-left-color: var(--primary); }
-  .events .warn { border-left-color: var(--accent); }
-  .events .bad { border-left-color: var(--danger); }
-  .events .info { border-left-color: var(--blue); }
+  .events .good { border-left-color: var(--primary-ink); }
+  .events .warn { border-left-color: var(--accent-ink); }
+  .events .bad { border-left-color: var(--danger-ink); }
+  .events .info { border-left-color: var(--blue-ink); }
   .events strong { font-size: var(--fs-body); }
   .events span { font-size: var(--fs-caption); color: var(--text-muted); }
   .events em { font-style: normal; font-size: var(--fs-caption); color: var(--text-muted); }
   h4 { font-size: var(--fs-caption); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin: var(--s3) 0 var(--s2); }
   .sources { list-style: none; display: flex; flex-direction: column; gap: 2px; }
   .sources li { display: flex; justify-content: space-between; padding: var(--s1) 0; border-bottom: 1px solid var(--border); }
-  .sources em { font-style: normal; color: var(--primary); }
-  .sources .neg { color: var(--danger); }
+  .sources em { font-style: normal; color: var(--primary-ink); }
+  .sources .neg { color: var(--danger-ink); }
 </style>

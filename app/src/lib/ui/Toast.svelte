@@ -44,8 +44,8 @@
   @keyframes slide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   .toast strong { display: block; font-size: var(--fs-body); }
   .toast span { display: block; font-size: var(--fs-caption); color: var(--text-muted); margin-top: 2px; }
-  .good { border-left-color: var(--primary); }
-  .warn { border-left-color: var(--accent); }
-  .bad { border-left-color: var(--danger); }
-  .info { border-left-color: var(--blue); }
+  .good { border-left-color: var(--primary-ink); }
+  .warn { border-left-color: var(--accent-ink); }
+  .bad { border-left-color: var(--danger-ink); }
+  .info { border-left-color: var(--blue-ink); }
 </style>

@@ -97,7 +97,7 @@
   .btn.blocked { opacity: 0.45; }
 
   .primary { background: var(--primary); color: var(--on-fill); }
-  .secondary { background: #1e293b; color: var(--accent); border: 1px solid var(--border-strong); }
+  .secondary { background: #1e293b; color: var(--accent-ink); border: 1px solid var(--border-strong); }
   .ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
   .danger { background: var(--danger); color: #fff; }
 </style>

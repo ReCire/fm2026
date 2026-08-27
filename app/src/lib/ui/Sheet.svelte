@@ -126,7 +126,7 @@
   }
   @keyframes rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
   header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s3); }
-  h3 { font-size: var(--fs-title); color: var(--accent); font-weight: 800; }
+  h3 { font-size: var(--fs-title); color: var(--accent-ink); font-weight: 800; }
   h3:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
   header button {
     background: none; border: none; color: var(--text-muted);

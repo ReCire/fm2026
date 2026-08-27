@@ -57,7 +57,7 @@
     width: var(--tap); height: var(--tap);
     transform: translate(-50%, -50%);
   }
-  .doc-btn:hover, .doc-btn:focus-visible { color: var(--primary); }
+  .doc-btn:hover, .doc-btn:focus-visible { color: var(--primary-ink); }
   .tip { margin: 0 0 10px; color: var(--text-main); }
   .why { margin: 0 0 10px; color: var(--text-muted); font-style: italic; }
   h4 {

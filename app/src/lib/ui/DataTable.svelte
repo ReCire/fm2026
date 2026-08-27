@@ -140,7 +140,7 @@
   dd { text-align: right; }
   .close {
     width: 100%; min-height: var(--tap);
-    background: #1e293b; color: var(--accent);
+    background: #1e293b; color: var(--accent-ink);
     border: 1px solid var(--border-strong); border-radius: var(--r-sm); cursor: pointer;
   }
 

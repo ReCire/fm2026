@@ -25,8 +25,33 @@ const PRIMITIVE_OPEN = /<(Button|StatChip)\b/g;
 const HAS_DOC = /\bdoc\s*=/;
 const MATH_RANDOM = /Math\.random\s*\(/;
 
+/**
+ * Fills on `background`, ink on `color`.
+ *
+ * A domain colour is two tokens: `--x` fills a field, `--x-ink` sets type on
+ * one. They are not interchangeable — a saturated green reads both ways on a
+ * dark ground and neither way on parchment, which is why the split exists.
+ *
+ * This is worth a mechanical rule because it has recurred three times, and each
+ * time in code written by someone who knew the rule: it survives because
+ * `var(--primary)` is the obvious name to reach for and nothing objects. The
+ * pairs are discovered from tokens.css rather than listed here, so adding a
+ * domain colour puts it under the rule automatically.
+ */
+const COLOUR_PROP = /(^|[;{\s])color\s*:\s*var\(\s*--([a-z0-9-]+)\s*[,)]/gi;
+
 const problems = [];
-const stats = { files: 0, controls: 0, docIds: 0 };
+const stats = { files: 0, controls: 0, docIds: 0, inkPairs: 0 };
+
+/** Roles that define an `--x-ink` companion, read from the token file itself. */
+async function inkRoles() {
+  const tokens = await readFile(join(SRC, 'lib/design/tokens.css'), 'utf8');
+  const roles = new Set();
+  for (const m of tokens.matchAll(/--([a-z0-9-]+)-ink\s*:/gi)) roles.add(m[1]);
+  return roles;
+}
+const INK_ROLES = await inkRoles();
+stats.inkPairs = INK_ROLES.size;
 
 async function* walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -121,6 +146,21 @@ for await (const file of walk(SRC)) {
       rule: 'determinism',
       message: 'Math.random() in a rules file. Take an `rng: Rng` argument instead — a season must replay from its seed.'
     });
+  }
+
+  // Rule 5: a role with an ink companion must not be used as a text colour.
+  if (file.endsWith('.svelte') || file.endsWith('.css')) {
+    for (const m of code.matchAll(COLOUR_PROP)) {
+      const role = m[2];
+      if (!INK_ROLES.has(role)) continue;
+      if (precededByIgnore(text, m.index)) continue;
+      problems.push({
+        file: rel,
+        line: lineOf(code, m.index),
+        rule: 'fill-used-as-ink',
+        message: `color: var(--${role}) sets type in a fill colour. Use var(--${role}-ink) — a fill and its ink are two different values, and on a light ground the fill is not legible as text.`
+      });
+    }
   }
 
   if (!file.endsWith('.svelte')) continue;

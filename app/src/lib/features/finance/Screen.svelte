@@ -60,5 +60,5 @@
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); }
   .sources { list-style: none; }
   .sources li { display: flex; justify-content: space-between; padding: var(--s2) 0; border-bottom: 1px solid var(--border); }
-  .sources em { font-style: normal; color: var(--primary); }
+  .sources em { font-style: normal; color: var(--primary-ink); }
 </style>

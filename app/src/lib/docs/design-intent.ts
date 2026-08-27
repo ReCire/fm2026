@@ -435,6 +435,29 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (the mechanism), architecture (the rule)'
   },
 
+  {
+    id: 'design.fillIsNotInk',
+    constant: 'color: var(--role) — now a build failure',
+    value: 'fills go on `background`, ink goes on `color`; the pairs are read from tokens.css',
+    rationale:
+      'A domain colour is two tokens. A saturated green reads both ways on a dark ground and neither way on parchment, so the value that fills a field and the value that sets type on the page cannot be the same one.',
+    failureMode:
+      'It recurred three times, each time in code written by someone who knew the rule — including a sweep of lib/ that missed the shell. It survives because `var(--primary)` is the obvious name to reach for and nothing objects. Now mechanical: the gate discovers every role with an `-ink` companion from the token file, so adding a domain colour puts it under the rule automatically. Found 14 live instances across 12 files on its first run.',
+    module: 'design',
+    source: 'fm-03-design (proposed the rule), architecture (built it)'
+  },
+  {
+    id: 'design.claimsAboutStateMustBeGenerated',
+    constant: 'anything asserting the contents of a file',
+    value: 'generate it from the file, never type it',
+    rationale:
+      'Three of our worst mistakes were the same shape: a commit message describing work not in its diff, a test whose name no longer matched what it tested, and a message claiming a documentation edit that was never made. In each case the artifact said one thing and contained another, and nothing in the tooling objected.',
+    failureMode:
+      'The root is a claim about state made at the moment of INTENDING it rather than after observing it — the same error as verifying from a screenshot, one level up: what gets confirmed is your own intention, not the artifact. Narrow but real defence: `git show --stat` before describing a commit, re-read a file before describing its contents.',
+    module: 'design',
+    source: 'fm-03-design and architecture (three instances between us)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

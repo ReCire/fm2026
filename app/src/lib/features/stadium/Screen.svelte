@@ -71,6 +71,6 @@
   .block { background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--s2); }
   .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s1); }
   .head strong { font-size: var(--fs-body); }
-  .head span { color: var(--primary); font-weight: 800; }
+  .head span { color: var(--primary-ink); font-weight: 800; }
   .comfort { display: flex; gap: var(--s2); font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s2); }
 </style>
