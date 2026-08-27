@@ -94,3 +94,51 @@ export const STAFF_ROLES: StaffRole[] = StaffRolesSchema.parse([
 export function roleById(id: string): StaffRole | undefined {
   return STAFF_ROLES.find((r) => r.id === id);
 }
+
+/**
+ * Effects, in the player's words.
+ *
+ * `{ key: 'squad.fitnessLoss', factor: 0.7 }` is what the engine needs and is
+ * unreadable as a claim about the club. A hire card that says "squad.fitnessLoss
+ * × 0.7" is asking the player to do the translation, and most will not — they
+ * will hire on wage alone and never learn what the money bought.
+ *
+ * So every key that staff can touch has a phrasing here, and the phrasing takes
+ * the VALUE, because "×0.7" and "×1.6" are opposite kinds of news and the same
+ * sentence cannot carry both. A key with no phrasing renders as nothing rather
+ * than as jargon — and `contentEffectsAreLabelled` fails the build instead, so
+ * a silent effect cannot ship.
+ */
+type Phrase = (v: number) => string;
+const pct = (v: number) => `${Math.round(Math.abs(v) * 100)} %`;
+const less = (f: number) => `−${pct(1 - f)}`;
+const more = (f: number) => `+${pct(f - 1)}`;
+
+export const EFFECT_LABELS: Record<string, { factor?: Phrase; add?: Phrase }> = {
+  'squad.strengthBonus':  { add: (v) => `+${v} Teamstärke in jedem Spiel` },
+  'squad.fitnessLoss':    { factor: (f) => `${less(f)} Fitnessverlust nach Spielen` },
+  'squad.injuryDuration': { factor: (f) => `${less(f)} Ausfallzeit bei Verletzungen` },
+  'squad.injuryRisk':     { factor: (f) => `${less(f)} Verletzungsrisiko` },
+  'transfer.fee':         { factor: (f) => `${less(f)} Ablöse beim Einkauf` },
+  'matchday.homeStrength':{ add: (v) => `+${v} Heimstärke` },
+  'stadium.fans':         { add: (v) => `+${v} Fan-Zufriedenheit je Spieltag` },
+  'contracts.demand':     { factor: (f) => `${less(f)} Gehaltsforderungen bei Verlängerungen` },
+  'merch.online':         { factor: (f) => `${more(f)} Online-Absatz im Fanshop` },
+  'sponsors.income':      { factor: (f) => `${more(f)} Sponsoring-Einnahmen` }
+};
+
+/** One effect as a sentence, or null if the key has no phrasing. */
+export function describeEffect(e: Effect): string | null {
+  const l = EFFECT_LABELS[e.key];
+  if (!l) return null;
+  if (e.factor !== undefined && l.factor) return l.factor(e.factor);
+  if (e.add !== undefined && l.add) return l.add(e.add);
+  return null;
+}
+
+/** Build gate: no role may carry an effect the player cannot read. */
+export function unlabelledEffects(): string[] {
+  return STAFF_ROLES.flatMap((r) =>
+    r.effects.filter((e) => describeEffect(e) === null).map((e) => `${r.id}: ${e.key}`)
+  );
+}
