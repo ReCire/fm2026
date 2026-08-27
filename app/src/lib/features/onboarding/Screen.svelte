@@ -13,6 +13,7 @@
   import { STEPS } from './state';
   import { onboardingContent, clubById } from './content';
   import Crest from '$lib/graphics/Crest.svelte';
+  import Portrait from '$lib/graphics/Portrait.svelte';
   import { narratives } from '../progression/content';
   import { applyNarrative } from '../progression/rules';
   import {
@@ -28,6 +29,19 @@
   const availableClubs = $derived(clubsForNarrative(narrative, onboardingContent.clubs));
   const problems = $derived(blockers(o));
   const position = $derived(stepIndex(o.step));
+
+  /*
+   * The whole must be the SAME for every narrative, or the marks cannot be
+   * compared — which is the entire reason they exist instead of a number.
+   *
+   * Deriving it per narrative from its own lists gave "5 von 13" beside
+   * "8 von 15": two different wholes, two different proportions, no way to
+   * read one against the other at a glance. The denominator is a fact about
+   * the game, not about the start, so it is the union across all of them.
+   */
+  const gateableCount = new Set(
+    narratives.flatMap((n) => [...n.unlockedAtStart, ...n.unlockOrder])
+  ).size;
 
   function start() {
     const setup = finish(o);
@@ -102,8 +116,7 @@
                 <label class="avatar" class:on={o.manager.avatarId === a.id}>
             <!-- docs-check-ignore: the documented control is the group (onboarding.avatar); the hidden radio is its mechanism -->
             <input type="radio" name="avatar" value={a.id} bind:group={o.manager.avatarId} />
-            <span class="face" aria-hidden="true">{a.label.slice(0, 1)}</span>
-            <span class="vh">{a.label}</span>
+            <Portrait seed={a.id} size={52} label={a.label} />
           </label>
         {/each}
       </div>
@@ -128,9 +141,9 @@
         <!-- docs-check-ignore: documented as a group (progression.narrative) -->
         <input type="radio" name="narr" value={n.id} bind:group={o.narrativeId} data-first-field={i === 0 ? '' : undefined} />
         <span>
-          <strong>{n.name}{#if n.recommended}<span class="rec">Empfohlen</span>{/if}</strong>
+          <strong>{n.name}{#if n.recommended}<span class="rec">Empfohlener Einstieg</span>{/if}</strong>
           <em>{n.pitch}</em>
-          <small>{n.premise}</small>
+          <small class="premise">{n.premise}</small>
           <small class="diff">Schwierigkeit: {n.difficulty}</small>
           <!-- The honest axis between the five starts is not harder/easier, it
                is how much is open at the beginning. Shown as marks rather than
@@ -139,8 +152,8 @@
                recommended one. -->
           <Marks
             value={n.unlockedAtStart.length}
-            total={n.unlockedAtStart.length + n.unlockOrder.length}
-            label="{n.unlockedAtStart.length} von {n.unlockedAtStart.length + n.unlockOrder.length} Bereichen von Beginn an offen"
+            total={gateableCount}
+            label="{n.unlockedAtStart.length} von {gateableCount} Bereichen von Beginn an offen"
           />
         </span>
       </label>
@@ -161,7 +174,7 @@
           <Crest name={c.name} colours={c.colours} size={56} />
           <span class="meta">
             <strong>{c.name}</strong>
-            <small>{c.city} · Liga {c.leagueLevel + 1}</small>
+            <small class="where">{c.city} · Liga {c.leagueLevel + 1}</small>
             <small class="flav">{c.flavour}</small>
           </span>
         </label>
@@ -222,34 +235,54 @@
   .avatar input, .bg input, .club input, .narr input {
     position: absolute; opacity: 0; width: 1px; height: 1px;
   }
-  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 
   .avatars { display: flex; gap: var(--s2); flex-wrap: wrap; }
   .avatar { cursor: pointer; }
-  .avatar .face {
-    display: grid; place-items: center;
-    width: 46px; height: 46px; border-radius: var(--r-sm);
-    background: var(--bg-sunken); border: 2px solid var(--border);
-    font-weight: 800; color: var(--text-muted);
-  }
-  .avatar.on .face { border-color: var(--primary-ink); color: var(--primary-ink); }
-  .avatar input:focus-visible + .face { outline: 2px solid var(--primary); outline-offset: 2px; }
+  /* The selected portrait is RINGED, not tinted. Tinting a face changes the
+     face; the ring sits outside the mark so the artwork stays itself. */
+  .avatar :global(.portrait) { box-shadow: 0 0 0 2px var(--border); }
+  .avatar.on :global(.portrait) { box-shadow: 0 0 0 3px var(--primary); }
+  .avatar input:focus-visible + :global(.portrait) { outline: 2px solid var(--primary); outline-offset: 3px; }
 
   .bg, .club, .narr {
     display: flex; gap: var(--s2); align-items: flex-start;
-    padding: var(--s2); margin-bottom: var(--s2);
+    padding: var(--s3); margin-bottom: var(--s2);
     border: 1px solid var(--border); border-radius: var(--r-sm);
-    background: var(--bg-inset); cursor: pointer; min-height: 44px;
+    background: var(--bg-inset); cursor: pointer; min-height: var(--tap);
   }
+  /* Label above blurb, not beside it. As flex siblings a two-word label wraps
+     mid-word while the blurb runs long next to it — "Ex-Profi" broke across
+     two lines while there was room to spare on the right. */
+  .bg, .narr { flex-direction: column; gap: 2px; }
   .bg.on, .club.on, .narr.on { border-color: var(--primary-ink); background: var(--primary-glow); }
   .bg input:focus-visible ~ *, .club input:focus-visible ~ *, .narr input:focus-visible ~ * { outline: 2px solid var(--primary); outline-offset: 2px; }
 
   .bg strong, .club strong, .narr strong { display: block; font-size: var(--fs-body); }
   .bg small, .club small, .narr small { display: block; color: var(--text-muted); font-size: var(--fs-caption); }
-  .narr em { display: block; font-style: normal; color: var(--accent-ink); font-size: var(--fs-caption); margin: 2px 0; }
+  /* The pitch is the line the player decides on, so it gets the size and the
+     space. Everything else on the card supports it. */
+  .narr em {
+    display: block; font-style: normal;
+    color: var(--accent-ink); font-size: var(--fs-body); font-weight: 600;
+    line-height: var(--lh-tight); margin: var(--s2) 0;
+  }
+  /* The premise is a paragraph, not a caption, so it needs a measure. Past
+     roughly 70 characters the eye starts losing the line return. */
+  .premise { max-width: 62ch; line-height: var(--lh-body); }
   .narr .diff, .club .flav { margin-top: var(--s1); }
+  .club .flav { color: var(--text-dim); font-style: italic; }
+
+  /* "Recommended" is a word at full contrast, not a coloured dot the player
+     has to interpret. */
+  .rec {
+    margin-left: var(--s2); vertical-align: 2px;
+    font-size: var(--fs-caption); font-weight: 700;
+    padding: 2px var(--s2); border-radius: 99px;
+    background: var(--primary); color: var(--on-fill);
+  }
 
   .clubs { display: grid; gap: var(--s2); }
+  .club { align-items: center; gap: var(--s3); }
   .meta { min-width: 0; }
 
   .problems { color: var(--accent-ink); font-size: var(--fs-caption); margin: var(--s2) 0; }

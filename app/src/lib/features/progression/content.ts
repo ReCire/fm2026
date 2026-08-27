@@ -105,11 +105,19 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     id: 'absturz',
     name: 'Der freie Fall',
     pitch:
-      'Minus 180.000 €. Die Lizenz hängt an der nächsten Überweisung.',
+      'Minus 1,8 Millionen. Die Lizenz hängt an der nächsten Überweisung.',
     premise:
       'Zwei Insolvenzverfahren, ein gepfändeter Mannschaftsbus, ein Zeugwart, der seit elf Wochen kein Gehalt gesehen hat und trotzdem jeden Morgen aufschließt. Der Verband prüft die Lizenz für die kommende Spielzeit. Ist am Fünfzehnten nichts auf dem Konto, spielt hier nächste Saison die A-Jugend. Du hast keinen Kader zu führen. Du hast eine Zahlung zu leisten.',
     leagueLevel: 1,
-    startingMoney: -180_000,
+    /*
+     * The figure has to be true for the division. A second-division licence
+     * does not hang on 180.000 € — that is a Regionalliga sum, and a player who
+     * knows the game reads it as a mistake rather than as jeopardy. 1,8 Mio is
+     * the scale at which a 2. Bundesliga club actually loses its licence, and
+     * the seized team bus and the unpaid kit man are all plausible at that
+     * level. Kaiserslautern and Duisburg have both been here.
+     */
+    startingMoney: -1_800_000,
     startingTransferBudget: 0,
     unlockedAtStart: [...CORE],
     unlockOrder: ['transfer', 'sponsors', 'stadium', 'staff', 'merch', 'training', 'youth', 'fans'],
