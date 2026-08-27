@@ -1111,9 +1111,102 @@
         .lo-btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
         .lo-btn.pro { background: var(--c-industry); color: #0B1410; }
         .lo-empty { padding: var(--s4) var(--s3); font-size: var(--fs-caption); color: var(--text-3); line-height: 1.6; }
+    
+        /* ==========================================================
+           KARRIERESTART
+           Fünf Einstiege nebeneinander, ohne dass vier davon wie Trostpreise
+           wirken. Die Achse ist deshalb nicht "stark/schwach", sondern
+           "wie viel steht dir offen" — ein Zuschnitt, keine Wertung.
+           ========================================================== */
+        #screen-start { max-width: 720px; margin: 0 auto; padding: var(--s4) var(--s3) var(--s8); }
+        .start-head { padding: var(--s6) 0 var(--s4); }
+        .start-kicker { font-size: var(--fs-caption); font-weight: 700; letter-spacing: 1.8px;
+            text-transform: uppercase; color: var(--text-3); }
+        .start-title { font-size: var(--fs-display); font-weight: 800; color: var(--text-1);
+            letter-spacing: -.6px; line-height: var(--lh-tight); margin-top: var(--s2); }
+        .start-sub { font-size: var(--fs-body); color: var(--text-2); line-height: var(--lh-body);
+            margin-top: var(--s2); max-width: 54ch; }
+
+        .nar-card {
+            display: block; width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: var(--s4); margin-bottom: var(--s2); position: relative;
+        }
+        .nar-card.sel { border-color: var(--c-finance); box-shadow: inset 0 0 0 1px var(--c-finance); }
+        .nar-card.sel::before {
+            content: ''; position: absolute; left: 0; top: var(--s4); bottom: var(--s4);
+            width: 3px; background: var(--c-finance); border-radius: 0 2px 2px 0;
+        }
+        .nar-head { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
+        .nar-name { font-size: var(--fs-title); font-weight: 800; color: var(--text-1); letter-spacing: -.2px; }
+        .nar-rec {
+            font-size: 10px; font-weight: 700; letter-spacing: .6px; padding: 2px var(--s2);
+            border-radius: 99px; background: var(--c-finance); color: var(--on-fill);
+        }
+        .nar-diff { margin-left: auto; font-size: var(--fs-caption); font-weight: 700; color: var(--text-3); }
+        .nar-diff[data-d="hart"]   { color: var(--c-industry-ink); }
+        .nar-diff[data-d="brutal"] { color: var(--c-matchday-ink); }
+        .nar-pitch { font-size: var(--fs-body); font-weight: 600; color: var(--c-finance-ink);
+            margin-top: var(--s2); font-style: italic; }
+        .nar-premise { font-size: var(--fs-caption); color: var(--text-2); line-height: 1.65; margin-top: var(--s2); }
+        .nar-foot { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s3); }
+        .nar-fact { font-size: var(--fs-caption); font-weight: 700; color: var(--text-2);
+            background: var(--bg-inset); padding: 3px var(--s2); border-radius: 5px;
+            font-variant-numeric: tabular-nums; }
+        .nar-fact.warn { color: var(--c-matchday-ink); }
+
+        .om { display: flex; align-items: center; gap: 3px; margin-top: var(--s3); flex-wrap: wrap; }
+        .om i { width: 12px; height: 4px; border-radius: 1px; background: var(--bg-inset);
+            box-shadow: inset 0 0 0 1px var(--border); }
+        .om i.on { background: var(--c-finance); box-shadow: none; }
+        .om b { font-size: var(--fs-caption); font-weight: 600; color: var(--text-3);
+            margin-left: var(--s2); font-variant-numeric: tabular-nums; }
+
+        .club-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s2); }
+        .club-card {
+            display: flex; flex-direction: column; align-items: center; gap: var(--s1);
+            cursor: pointer; font-family: inherit; text-align: center;
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: var(--s4) var(--s3); min-height: var(--tap);
+        }
+        .club-card.sel { border-color: var(--c-finance); box-shadow: inset 0 0 0 1px var(--c-finance); }
+        .cc-name { font-size: var(--fs-body); font-weight: 700; color: var(--text-1); margin-top: var(--s2); }
+        .cc-city { font-size: var(--fs-caption); color: var(--text-3); }
+        .cc-line { font-size: var(--fs-caption); color: var(--text-2); line-height: 1.5; margin-top: var(--s1); }
+
+        .start-foot { position: sticky; bottom: 0; background: var(--bg); padding: var(--s3) 0 var(--s4);
+            border-top: 1px solid var(--divider); margin-top: var(--s4); }
+        #start-blockers { font-size: var(--fs-caption); color: var(--c-matchday-ink);
+            margin-bottom: var(--s2); min-height: 1em; }
+        .start-actions { display: flex; gap: var(--s2); }
+        #start-next {
+            flex: 1; min-height: var(--tap); border: 0; border-radius: 10px; cursor: pointer;
+            font-family: inherit; font-size: var(--fs-body); font-weight: 700;
+            background: var(--c-finance); color: var(--on-fill);
+        }
+        #start-next.off { background: var(--bg-inset); color: var(--text-3); }
+        #start-back { min-height: var(--tap); padding: 0 var(--s4); border: 1px solid var(--border);
+            border-radius: 10px; cursor: pointer; font-family: inherit; font-size: var(--fs-body);
+            background: transparent; color: var(--text-2); }
     </style>
 </head>
 <body>
+
+<div id="screen-start" style="display:none;">
+    <div class="start-head">
+        <div class="start-kicker" id="start-kicker">Schritt 1 von 2</div>
+        <h1 class="start-title" id="start-title">Wie fängst du an?</h1>
+        <p class="start-sub" id="start-sub"></p>
+    </div>
+    <div id="start-body"></div>
+    <div class="start-foot">
+        <div id="start-blockers" role="status"></div>
+        <div class="start-actions">
+            <button id="start-back" onclick="startBack()" style="display:none;">Zurück</button>
+            <button id="start-next" class="off" onclick="startNext()" aria-describedby="start-blockers">Weiter</button>
+        </div>
+    </div>
+</div>
 
 <div class="app-layout">
     <!-- HEADER -->
@@ -3058,10 +3151,15 @@
     /** Zeichnet das eigene Wappen in die Kopfzeile. */
     function renderClubCrest() {
         const el = document.getElementById('club-crest');
-        if (el && !el.dataset.for) {
-            el.innerHTML = crestFor('FC Anstoß Pro', 30);
-            el.dataset.for = 'FC Anstoß Pro';
+        const name = clubIdentity ? clubIdentity.name : 'FC Anstoß Pro';
+        if (el && el.dataset.for !== name) {
+            el.innerHTML = clubIdentity
+                ? crestSVG(name, clubIdentity.c1, clubIdentity.c2, 30)
+                : crestFor(name, 30);
+            el.dataset.for = name;
         }
+        const nm = document.querySelector('.club-brand .club-name');
+        if (nm && clubIdentity) nm.textContent = clubIdentity.name;
     }
 
     function updateUI() {
@@ -4734,6 +4832,12 @@
         if (game.fans < 40 && Math.random() < 0.3) mailPressJab('Die Kurve pfeift — steht der Trainer vor dem Aus?');
         if (Math.random() < 0.12) mailAgentSpam(squad[Math.floor(Math.random() * squad.length)]);
         loAutopilotTick();
+        // Bereiche öffnen sich schrittweise, damit niemand am ersten Spieltag
+        // vor 28 Menüpunkten sitzt und die falschen drei anfasst.
+        if (career.narrative && game.matchday % 3 === 0) {
+            const opened = unlockNext();
+            if (opened) announceUnlock(opened);
+        }
         invalidateAttention();
         mailPendingDecisions();
         checkBadges();
@@ -5140,6 +5244,263 @@
 
 
 
+
+
+    // ==========================================================
+    // KARRIERESTART — Erzählung, dann Verein
+    // Die Reihenfolge ist keine Vorliebe: wer erst den Verein wählt, kann
+    // sich einen Start zusammenstellen, über den der Text lügen müsste
+    // (Bundesliga-Wappen zur Geschichte vom Viertligisten). Erzählung
+    // zuerst schließt das aus, statt es nur zu verstecken.
+    //
+    // `openAt` bestimmt, was von Beginn an zugänglich ist. Das ist der
+    // ehrliche Unterschied zwischen den Starts: nicht schwerer oder
+    // leichter, sondern ENGER oder weiter. Ein Start mit vier offenen
+    // Bereichen ist nicht ärmer — er ist fokussierter.
+    // ==========================================================
+    const CORE_SCREENS = ['screen-dashboard', 'screen-squad', 'screen-mail', 'screen-league', 'screen-calendar'];
+
+    const ALL_UNLOCKABLE = [
+        'screen-training', 'screen-transfer', 'screen-contracts', 'screen-finances',
+        'screen-stadium', 'screen-youth', 'screen-staff', 'screen-fans',
+        'screen-sponsors', 'screen-doctrine', 'screen-campus', 'screen-merch',
+        'screen-industry', 'screen-raw-materials', 'screen-holding', 'screen-stocks',
+        'screen-linkedout', 'screen-scouting-global', 'screen-underworld'
+    ];
+
+    const NARRATIVES = [
+        {
+            id:'aufsteiger', name:'Der Aufsteiger', recommended:true,
+            pitch:'Vierte Liga. Ein Hauptsponsor, der Brötchen backt.',
+            premise:'Der Aufstieg letzte Saison war ein Betriebsunfall, den niemand eingeplant hat — am wenigsten der Schatzmeister. Du erbst einen Kader, der eine Liga zu tief zusammengekauft wurde, ein Flutlicht auf Bewährung und einen Vorstand, der das Wort „Konsolidierung" in jedem zweiten Satz unterbringt. Halte die Klasse. Danach reden wir weiter.',
+            level:3, money:150000, transfer:100000, difficulty:'normal',
+            openAt:['screen-training','screen-transfer','screen-contracts','screen-finances','screen-fans'],
+            order:['screen-stadium','screen-youth','screen-staff','screen-sponsors','screen-doctrine',
+                   'screen-merch','screen-campus','screen-linkedout','screen-industry','screen-raw-materials',
+                   'screen-holding','screen-stocks','screen-scouting-global','screen-underworld']
+        },
+        {
+            id:'erbe', name:'Das Erbe',
+            pitch:'Erstklassig, hochverschuldet, und der Präsident wollte einen anderen.',
+            premise:'Dein Vorgänger hat drei Jahre lang Ablösen gezahlt, die der Verein nicht hatte, und ist mit einer Abfindung gegangen, die er auch nicht hatte. Du übernimmst seinen Kader, seine Verträge und seine Presse. Der Präsident hat öffentlich erklärt, du seist „nicht die erste Wahl" gewesen. Er wird das nicht vergessen. Die BLÖD auch nicht.',
+            level:0, money:900000, transfer:400000, debt:2600000, difficulty:'hart',
+            openAt:['screen-training','screen-transfer','screen-contracts','screen-finances','screen-stadium',
+                    'screen-staff','screen-sponsors','screen-fans'],
+            order:['screen-doctrine','screen-youth','screen-merch','screen-linkedout','screen-campus',
+                   'screen-stocks','screen-industry','screen-holding','screen-raw-materials',
+                   'screen-scouting-global','screen-underworld']
+        },
+        {
+            id:'investor', name:'Der Investor',
+            pitch:'Der Verein ist nicht das Produkt. Der Verein ist der Kanal.',
+            premise:'Ein Fonds hält 51 Prozent und dich dazu. In der Präsentation heißt der Verein „Asset", die Kurve heißt „Community" und der Aufstieg heißt „Roadmap". Du bekommst Geld, wie es sonst niemand in dieser Liga bekommt. Dafür lernst du die Holding kennen, bevor du die Mannschaft kennenlernst — und am dritten Spieltag hängt das erste Banner.',
+            level:2, money:4200000, transfer:3000000, fans:52, difficulty:'ruhig',
+            openAt:['screen-finances','screen-holding','screen-stocks','screen-transfer',
+                    'screen-linkedout','screen-sponsors','screen-merch'],
+            order:['screen-training','screen-contracts','screen-stadium','screen-industry',
+                   'screen-raw-materials','screen-fans','screen-doctrine','screen-staff',
+                   'screen-campus','screen-youth','screen-scouting-global','screen-underworld']
+        },
+        {
+            id:'schmiede', name:'Die Talentschmiede',
+            pitch:'Kein Transferbudget. Dafür vierzig Betten im Internat.',
+            premise:'Die Satzung deckelt Ablösen bei 50.000 €. Das war 1974 als Vorsichtsmaßnahme gemeint und ist seither Identität. Du kaufst niemanden. Du baust. Der erste eigene Jahrgang braucht vier Jahre, der Vorstand gibt dir drei, und die Kurve singt Namen, die sie aus der Schule kennt.',
+            level:2, money:380000, transfer:50000, difficulty:'hart',
+            openAt:['screen-training','screen-youth','screen-contracts','screen-campus','screen-finances','screen-fans'],
+            order:['screen-staff','screen-scouting-global','screen-doctrine','screen-stadium',
+                   'screen-transfer','screen-sponsors','screen-merch','screen-linkedout',
+                   'screen-industry','screen-raw-materials','screen-holding','screen-stocks','screen-underworld']
+        },
+        {
+            id:'freierfall', name:'Der freie Fall',
+            pitch:'Minus 180.000 €. Die Lizenz hängt an der nächsten Überweisung.',
+            premise:'Zwei Insolvenzverfahren, ein gepfändeter Mannschaftsbus, ein Zeugwart, der seit elf Wochen kein Gehalt gesehen hat und trotzdem jeden Morgen aufschließt. Der Verband prüft die Lizenz für die kommende Spielzeit. Ist am Fünfzehnten nichts auf dem Konto, spielt hier nächste Saison die A-Jugend. Du hast keinen Kader zu führen. Du hast eine Zahlung zu leisten.',
+            level:3, money:-180000, transfer:0, fans:44, difficulty:'brutal',
+            openAt:['screen-finances','screen-contracts','screen-training'],
+            order:['screen-fans','screen-transfer','screen-sponsors','screen-staff','screen-stadium',
+                   'screen-youth','screen-merch','screen-doctrine','screen-linkedout','screen-campus',
+                   'screen-industry','screen-raw-materials','screen-holding','screen-stocks',
+                   'screen-scouting-global','screen-underworld']
+        }
+    ];
+
+    const DIFFICULTY_LABEL = { ruhig:'Ruhig', normal:'Normal', hart:'Hart', brutal:'Brutal' };
+
+    /** Vereine, die zu einer Erzählung passen. Exakte Liga zuerst; erst wenn
+     *  das zu wenig ergäbe, um eine Wahl zu sein, wird um eine Stufe geweitet. */
+    function clubsForNarrative(n) {
+        let exact = CLUBS.filter(c => c.lv === n.level);
+        if (exact.length >= 3) return exact;
+        return CLUBS.filter(c => Math.abs(c.lv - n.level) <= 1);
+    }
+
+    let career = { narrative: null, club: null, unlocked: [], step: 'narrative', pick: null };
+
+    function isUnlocked(screen) {
+        if (!career.narrative) return true;                 // Altstände ohne Karrierewahl
+        if (CORE_SCREENS.indexOf(screen) !== -1) return true;
+        return career.unlocked.indexOf(screen) !== -1;
+    }
+
+    /** Öffnet den nächsten Bereich in der Reihenfolge der Erzählung. */
+    function unlockNext() {
+        const n = NARRATIVES.find(x => x.id === career.narrative);
+        if (!n) return null;
+        const next = n.order.find(s => career.unlocked.indexOf(s) === -1);
+        if (!next) return null;
+        career.unlocked.push(next);
+        return next;
+    }
+
+    // ---------- Startbildschirm ----------
+    /** Wie viel dir offensteht — als gefüllte und leere Marken, nicht als Zahl.
+     *  Eine Zahl lädt zum Vergleichen ein („4 ist weniger als 8"). Marken
+     *  zeigen einen Zuschnitt: eng ist nicht weniger wert, sondern enger. */
+    function openMarks(n) {
+        const total = CORE_SCREENS.length + ALL_UNLOCKABLE.length;
+        const open = CORE_SCREENS.length + n.openAt.length;
+        return `<span class="om" role="img" aria-label="${open} von ${total} Bereichen von Beginn an offen">` +
+            Array.from({ length: 12 }, (_, i) =>
+                `<i class="${i < Math.round((open / total) * 12) ? 'on' : ''}"></i>`).join('') +
+            `<b>${open} von ${total} Bereichen offen</b></span>`;
+    }
+
+    function renderStartScreen() {
+        const wrap = document.getElementById('start-body');
+        if (career.step === 'narrative') {
+            document.getElementById('start-kicker').textContent = 'Schritt 1 von 2';
+            document.getElementById('start-title').textContent = 'Wie fängst du an?';
+            document.getElementById('start-sub').textContent =
+                'Die Wahl bestimmt Liga, Kapital und vor allem, welche Bereiche dir von Beginn an offenstehen. Die übrigen öffnen sich im Lauf der Karriere.';
+            wrap.innerHTML = NARRATIVES.map(n => `
+                <button class="nar-card${career.pick === n.id ? ' sel' : ''}" onclick="pickNarrative('${n.id}')" aria-pressed="${career.pick === n.id}">
+                    <div class="nar-head">
+                        <span class="nar-name">${escapeXml(n.name)}</span>
+                        ${n.recommended ? '<span class="nar-rec">Empfohlener Einstieg</span>' : ''}
+                        <span class="nar-diff" data-d="${n.difficulty}">${DIFFICULTY_LABEL[n.difficulty]}</span>
+                    </div>
+                    <div class="nar-pitch">${escapeXml(n.pitch)}</div>
+                    <div class="nar-premise">${escapeXml(n.premise)}</div>
+                    <div class="nar-foot">
+                        <span class="nar-fact">${leagueNames[n.level]}</span>
+                        <span class="nar-fact">${n.money < 0 ? '−' : ''}${formatVal(Math.abs(n.money))}</span>
+                        ${n.debt ? `<span class="nar-fact warn">${formatVal(n.debt)} Schulden</span>` : ''}
+                    </div>
+                    ${openMarks(n)}
+                </button>`).join('');
+        } else {
+            const n = NARRATIVES.find(x => x.id === career.pick);
+            document.getElementById('start-kicker').textContent = 'Schritt 2 von 2';
+            document.getElementById('start-title').textContent = 'Welcher Verein?';
+            document.getElementById('start-sub').textContent =
+                `Vereine, die zu „${n.name}" passen. Die Auswahl ist auf die Liga der Erzählung beschränkt, damit die Geschichte stimmt.`;
+            wrap.innerHTML = `<div class="club-row">` + clubsForNarrative(n).map(c => `
+                <button class="club-card${career.club === c.n ? ' sel' : ''}" onclick="pickClub('${c.n.replace(/'/g, "\\'")}')" aria-pressed="${career.club === c.n}">
+                    ${crestSVG(c.n, c.c1, c.c2, 56)}
+                    <span class="cc-name">${escapeXml(c.n)}</span>
+                    <span class="cc-city">${escapeXml(c.city)}</span>
+                    <span class="cc-line">${escapeXml(c.line)}</span>
+                </button>`).join('') + `</div>`;
+        }
+        renderStartFoot();
+    }
+
+    /** Ein gesperrter Knopf muss trotzdem erklären und trotzdem weiterführen.
+     *  Deshalb aria-disabled statt disabled: erreichbar, vorlesbar, und der
+     *  Druck springt zur offenen Entscheidung statt ins Leere zu laufen. */
+    function startBlockers() {
+        if (career.step === 'narrative' && !career.pick) return ['Wähle einen Einstieg.'];
+        if (career.step === 'club' && !career.club) return ['Wähle einen Verein.'];
+        return [];
+    }
+
+    function renderStartFoot() {
+        const b = startBlockers();
+        document.getElementById('start-blockers').innerHTML =
+            b.length ? b.map(x => escapeXml(x)).join('<br>') : '';
+        const btn = document.getElementById('start-next');
+        btn.textContent = career.step === 'narrative' ? 'Weiter zum Verein' : 'Karriere beginnen';
+        btn.setAttribute('aria-disabled', b.length ? 'true' : 'false');
+        btn.classList.toggle('off', b.length > 0);
+        document.getElementById('start-back').style.display = career.step === 'club' ? '' : 'none';
+    }
+
+    function pickNarrative(id) { playSound('click'); career.pick = id; renderStartScreen(); }
+    function pickClub(n) { playSound('click'); career.club = n; renderStartScreen(); }
+    function startBack() { playSound('click'); career.step = 'narrative'; career.club = null; renderStartScreen(); }
+
+    function startNext() {
+        const b = startBlockers();
+        if (b.length) {
+            // Der blockierte Druck führt zur Entscheidung, statt nichts zu tun.
+            const first = document.querySelector('#start-body button');
+            if (first) first.focus();
+            return;
+        }
+        playSound('click');
+        if (career.step === 'narrative') { career.step = 'club'; renderStartScreen(); return; }
+        beginCareer();
+    }
+
+    function beginCareer() {
+        const n = NARRATIVES.find(x => x.id === career.pick);
+        const c = CLUB_BY_NAME[career.club];
+        career.narrative = n.id;
+        career.unlocked = n.openAt.slice();
+
+        game.leagueLevel = n.level;
+        game.money = n.money;
+        game.transferBudget = n.transfer;
+        if (n.debt) game.loanDebt = n.debt;
+        if (n.fans) game.fans = n.fans;
+        clubIdentity = { name: c.n, city: c.city, c1: c.c1, c2: c.c2 };
+
+        initDefaultSquad();
+        initLeagues();
+        refreshTransferMarket();
+        mailWelcome();
+        sendMail({
+            from: CAST.president.name, role: CAST.president.role, color: CAST.president.color, cat: 'primary',
+            subject: `${c.n} — Ihre Ausgangslage`,
+            body: `<p>${escapeXml(n.premise)}</p><p><b>${escapeXml(c.line)}</b></p>`,
+            tagline: `${c.n} · ${c.city}`
+        });
+
+        document.getElementById('screen-start').style.display = 'none';
+        document.querySelector('.main-wrapper').style.display = '';
+        document.getElementById('tabbar').style.display = '';
+        applyCareerLocks();
+        updateUI();
+        showScreen('screen-dashboard');
+    }
+
+    /** Gesperrte Bereiche verschwinden aus der Navigation, statt dort zu
+     *  stehen und beim Antippen nichts zu tun. */
+    function applyCareerLocks() {
+        document.querySelectorAll('.nav-btn[data-screen]').forEach(btn => {
+            btn.style.display = isUnlocked(btn.dataset.screen) ? '' : 'none';
+        });
+        document.querySelectorAll('#tabbar button[data-target]').forEach(btn => {
+            btn.style.display = isUnlocked(btn.dataset.target) ? '' : 'none';
+        });
+    }
+
+    /** Ein neuer Bereich öffnet sich — und meldet sich, sonst bemerkt ihn niemand. */
+    function announceUnlock(screen) {
+        const btn = document.querySelector(`.nav-btn[data-screen="${screen}"]`);
+        const label = btn ? btn.textContent.trim() : screen;
+        applyCareerLocks();
+        sendMail({
+            from: CAST.president.name, role: CAST.president.role, color: CAST.president.color, cat: 'primary',
+            subject: `Neuer Bereich freigeschaltet: ${label}`,
+            body: `<p>Der Verein ist so weit. <b>${escapeXml(label)}</b> steht dir ab sofort offen.</p>
+                   <p>Wir hätten es dir früher gegeben, aber du hattest genug zu tun.</p>`,
+            tagline: 'Vereinsführung'
+        });
+        toastWP(`Freigeschaltet: ${label}`);
+    }
+
+    let clubIdentity = null;
 
     // ==========================================================
     // WAPPEN
@@ -5698,6 +6059,7 @@
         if (attentionCache) return attentionCache;
         const map = {};
         for (const screen in DEPTS) {
+            if (typeof career !== 'undefined' && !isUnlocked(screen)) continue;         // noch verschlossen
             if (typeof linkedout !== 'undefined' && linkedout.hired[screen]) continue;  // delegiert
             let items = [];
             try { items = DEPTS[screen].check() || []; } catch (e) { items = []; }
@@ -8192,7 +8554,7 @@
     // ==========================================
     // ---------- Gemeinsame Serialisierung (von saveGame, loadGame und dem Admin-JSON genutzt) ----------
     function buildSaveState() {
-        return { game, managerRPG, knowledge, mailbox, badges, linkedout, youthTalents, incomingOffers, holdingCompany, rawMaterials,
+        return { game, managerRPG, knowledge, mailbox, badges, linkedout, career, clubIdentity, youthTalents, incomingOffers, holdingCompany, rawMaterials,
                  factories, merchandise, stockMarket, underworld, stadium, campusBuildings, staffMembers,
                  fanGroups, privateLife, bandenSponsors, squad, lineup, leaguesData, fixturesData,
                  cupTournament, europeTournament };
@@ -8214,6 +8576,8 @@
         if (p.mailbox) Object.assign(mailbox, p.mailbox);
         if (p.badges) Object.assign(badges, p.badges);
         if (p.linkedout) Object.assign(linkedout, p.linkedout);
+        if (p.career) Object.assign(career, p.career);
+        if (p.clubIdentity) clubIdentity = p.clubIdentity;
         invalidateAttention();
         if (p.youthTalents) youthTalents = p.youthTalents;
         if (p.incomingOffers) incomingOffers = p.incomingOffers;
@@ -8298,12 +8662,12 @@
         syncTabbar('screen-dashboard');
         if (!loadGame(true)) {
             knowledge.wp = 3; // Startkapital an Wissen: eine erste Doktrin-Entscheidung
-            initDefaultSquad();
-            mailWelcome();
-            initLeagues();
-            refreshTransferMarket();
-            updateUI();
-            showScreen('screen-dashboard');
+            document.querySelector('.main-wrapper').style.display = 'none';
+            document.getElementById('tabbar').style.display = 'none';
+            document.getElementById('screen-start').style.display = '';
+            renderStartScreen();
+        } else {
+            applyCareerLocks();
         }
     };
 </script>
