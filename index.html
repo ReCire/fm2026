@@ -387,7 +387,8 @@
         /* HEADER */
         .app-header { background: var(--bg-header); border-bottom: 2px solid var(--border); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
         .club-brand { display: flex; align-items: center; gap: 10px; }
-        .club-logo { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle, #ffc107 20%, #ff8f00 80%); display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: 900; color: #000; box-shadow: 0 0 12px var(--accent-glow); border: 2px solid #fff; }
+        .club-logo { width: 30px; height: 35px; display: flex; align-items: center; justify-content: center; flex: 0 0 30px; }
+        .crest { display: block; }
         .club-name { font-size: 15px; font-weight: 900; letter-spacing: 0.5px; color: #fff; }
         .club-league { font-size: 10px; color: var(--accent); font-weight: 700; }
         
@@ -1119,7 +1120,7 @@
     <header class="app-header">
         <button class="burger" onclick="toggleNavDrawer()" aria-label="Navigation öffnen">☰</button>
         <div class="club-brand">
-            <div class="club-logo">AP</div>
+            <div class="club-logo" id="club-crest"></div>
             <div>
                 <div class="club-name">FC Anstoß Pro</div>
                 <div class="club-league"><span id="head-league-name">4. Liga (Regionalliga)</span> • <span id="head-season">Saison 1</span></div>
@@ -3054,7 +3055,17 @@
         updateUI();
     }
 
+    /** Zeichnet das eigene Wappen in die Kopfzeile. */
+    function renderClubCrest() {
+        const el = document.getElementById('club-crest');
+        if (el && !el.dataset.for) {
+            el.innerHTML = crestFor('FC Anstoß Pro', 30);
+            el.dataset.for = 'FC Anstoß Pro';
+        }
+    }
+
     function updateUI() {
+        renderClubCrest();
         document.getElementById('top-money').innerText = formatVal(game.money);
         document.getElementById('top-holding-money').innerText = formatVal(holdingCompany.money);
         document.getElementById('top-fans').innerText = game.fans + '%';
@@ -5128,6 +5139,119 @@
 
 
 
+
+
+    // ==========================================================
+    // WAPPEN
+    // Aus zwei Farben und einem Namen ein unterscheidbares Zeichen, ohne
+    // eine einzige Bilddatei. Die Teilungen stammen aus der Heraldik, weil
+    // sie genau dafür erfunden wurden: bei geringer Größe und aus der
+    // Entfernung auseinanderzuhalten sein.
+    //
+    // Randbedingung, die die Form bestimmt: das Wappen erscheint bei 28px
+    // in der Kopfzeile. Alles Feingliedrige verschwindet dort. Deshalb
+    // grobe Flächen, harte Kanten, kein Verlauf, kein Schlagschatten.
+    // ==========================================================
+    const CREST_DIVISIONS = ['pale', 'fess', 'bend', 'chevron', 'quarter', 'pile'];
+
+    /** Stabiler Hash: derselbe Verein bekommt immer dasselbe Wappen. */
+    function crestHash(s) {
+        let h = 2166136261;
+        for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+        return Math.abs(h);
+    }
+
+    function crestInitials(name) {
+        const stop = /^(FC|SV|SC|SG|TSV|VfB|VfL|SpVgg|1\.|Borussia|Fortuna|Dynamo|Eintracht|Viktoria)$/i;
+        const words = String(name).split(/\s+/).filter(w => w && !stop.test(w));
+        if (!words.length) return String(name).slice(0, 2).toUpperCase();
+        if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+        return (words[0][0] + words[1][0]).toUpperCase();
+    }
+
+    /**
+     * Erzeugt ein Wappen als SVG-Zeichenkette.
+     * @param name   bestimmt Teilung und Initialen
+     * @param c1/c2  die beiden Vereinsfarben (auf Kontrast geprüft)
+     * @param size   Kantenlänge in Pixeln
+     * @param plain  true = ohne Initialen (für sehr kleine Größen)
+     */
+    function crestSVG(name, c1, c2, size, plain) {
+        if (plain === undefined) plain = size < 34;
+        const h = crestHash(name);
+        const div = CREST_DIVISIONS[h % CREST_DIVISIONS.length];
+        const id = 'cr' + (h % 100000);
+        const W = 100, H = 116;
+
+        // Schildform: eine einzige, damit Vereine sich durch Teilung und
+        // Farbe unterscheiden, nicht durch zehn konkurrierende Umrisse.
+        const shield = `M6 6 H94 V62 C94 88 74 104 50 112 C26 104 6 88 6 62 Z`;
+
+        let cut;
+        switch (div) {
+            case 'pale':    cut = `M50 0 H100 V116 H50 Z`; break;
+            case 'fess':    cut = `M0 58 H100 V116 H0 Z`; break;
+            case 'bend':    cut = `M0 116 L100 0 V116 Z`; break;
+            case 'chevron': cut = `M0 116 L50 52 L100 116 Z`; break;
+            case 'quarter': cut = `M50 0 H100 V58 H50 Z M0 58 H50 V116 H0 Z`; break;
+            default:        cut = `M50 116 L14 0 H86 Z`; break;   // pile
+        }
+
+        return `<svg viewBox="0 0 ${W} ${H}" width="${size}" height="${Math.round(size*H/W)}"
+                     role="img" aria-label="Wappen ${escapeXml(name)}" class="crest">
+            <defs><clipPath id="${id}"><path d="${shield}"/></clipPath></defs>
+            <g clip-path="url(#${id})">
+                <rect x="0" y="0" width="${W}" height="${H}" fill="${c1}"/>
+                <path d="${cut}" fill="${c2}"/>
+            </g>
+            <path d="${shield}" fill="none" stroke="${c2}" stroke-width="4"/>
+            <path d="${shield}" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1.5"/>
+            ${plain ? '' : `<text x="50" y="60" text-anchor="middle" dominant-baseline="central"
+                  font-size="34" font-weight="800" fill="${c2}"
+                  stroke="rgba(0,0,0,.35)" stroke-width="0.6" paint-order="stroke"
+                  font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif"
+                >${escapeXml(crestInitials(name))}</text>`}
+        </svg>`;
+    }
+
+    // ---- Vereinsverzeichnis ----
+    // Namen, Städte, Ligastufen und Farben sind gestaltet, nicht gewürfelt.
+    // Jedes Farbpaar ist geprüft: Kontrast der beiden Farben zueinander und
+    // jede gegen beide Hintergründe. Der niedrigste Wert liegt bei 4,06.
+    const CLUBS = [
+        { n:'SC Hafenkrone',      city:'Bremerhaven',        lv:0, c1:'#0E3F6B', c2:'#E8B923', line:'Seit 1904 am Wasser. Der Wind kommt immer von vorn.' },
+        { n:'VfB Marktstadt',     city:'Stuttgart-Nord',     lv:0, c1:'#B3121A', c2:'#F2EFE7', line:'Drei Meisterschaften, alle vor 1988. Man erinnert dich täglich daran.' },
+        { n:'Borussia Steinfeld', city:'Mönchen-Steinfeld',  lv:0, c1:'#0B6E3A', c2:'#F2EFE7', line:'Ein Werksverein, der sich seit vierzig Jahren als Traditionsverein bezeichnet.' },
+        { n:'1. FC Ostwall',      city:'Leipzig-Ost',        lv:1, c1:'#1D2B5C', c2:'#C9A227', line:'Zweimal aufgestiegen, zweimal abgestiegen, einmal insolvent.' },
+        { n:'SV Rothenbach',      city:'Kaiserslautern',     lv:1, c1:'#7A1220', c2:'#E5DCC5', line:'Der Betzenberg ist nicht weit. Man hört ihn an guten Tagen.' },
+        { n:'FC Kupferberg',      city:'Bochum-Süd',         lv:1, c1:'#1F6F78', c2:'#E8D5B8', line:'Die Zeche ist zu, der Verein nicht.' },
+        { n:'SpVgg Lindenau',     city:'Leipzig-Lindenau',   lv:2, c1:'#2E5B34', c2:'#EFE3C2', line:'Gegründet von Setzern und Druckern. Die Kurve textet bis heute selbst.' },
+        { n:'TSV Bergheide',      city:'Wuppertal',          lv:2, c1:'#4A2D5E', c2:'#D9C68A', line:'Der steilste Rasen der Liga. Auswärtsteams beschweren sich seit 1961.' },
+        { n:'SV Alte Saline',     city:'Lüneburg',           lv:2, c1:'#8A4B1E', c2:'#EDE0C8', line:'Salz, Solebäder, ein Stadion neben dem Kurpark.' },
+        { n:'FC Deichtor',        city:'Emden',              lv:2, c1:'#123C56', c2:'#9BC4D8', line:'Bei Sturmflut fällt das Training aus. Das steht so in der Satzung.' },
+        { n:'SC Ziegelhütte',     city:'Fürth-West',         lv:3, c1:'#5C1F2E', c2:'#D8C9A8', line:'Vereinsheim größer als die Haupttribüne. Beides original.' },
+        { n:'SV Grubenrand',      city:'Gelsenkirchen-Nord', lv:3, c1:'#2B4A6F', c2:'#E3D7B8', line:'Zwölfhundert Mitglieder, achthundert davon im selben Fanclub.' },
+        { n:'FC Auenpark',        city:'Magdeburg',          lv:3, c1:'#3E6B2A', c2:'#EAE0C4', line:'Der Platz gehört der Stadt, der Rest gehört den Mitgliedern.' },
+        { n:'TSV Blechhalle',     city:'Ingolstadt',         lv:3, c1:'#6B4A1E', c2:'#E8DCC0', line:'Die Halle steht noch. Der Sponsor, der sie gebaut hat, nicht.' }
+    ];
+    const CLUB_BY_NAME = CLUBS.reduce((m, c) => { m[c.n] = c; return m; }, {});
+
+    /** Farben für einen beliebigen Vereinsnamen — auch für erzeugte Gegner. */
+    function clubColors(name) {
+        const known = CLUB_BY_NAME[name];
+        if (known) return [known.c1, known.c2];
+        // Gegner ohne Eintrag bekommen ein stabiles Paar aus dem Verzeichnis,
+        // damit auch sie ein wiedererkennbares Wappen tragen.
+        const base = CLUBS[crestHash(name) % CLUBS.length];
+        return [base.c1, base.c2];
+    }
+    const CREST_INITIALS_MIN = 34;   // darunter trägt nur noch Fläche
+
+    function crestFor(name, size, plain) {
+        const [a, b] = clubColors(name);
+        const s = size || 32;
+        return crestSVG(name, a, b, s, plain === undefined ? s < CREST_INITIALS_MIN : plain);
+    }
 
     // ==========================================================
     // LINKEDOUT
