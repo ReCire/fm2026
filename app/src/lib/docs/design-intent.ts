@@ -458,6 +458,18 @@ export const designIntent = defineIntent([
     source: 'fm-03-design and architecture (three instances between us)'
   },
 
+  {
+    id: 'design.statusIsNotDomain',
+    constant: '--pos-ink / --neg-ink',
+    value: 'status has its own pair, separate from every domain colour',
+    rationale:
+      'Finance-the-department being green is an IDENTITY. Money going up is a STATUS. They are different kinds of fact and had been sharing tokens, so a correct change to the domain ink dragged the status along with it.',
+    failureMode:
+      'MEASURED: after the fill/ink sweep, dark mode had positive and negative sitting 23 degrees apart in hue — cream against near-white. Light mode was fine at 129 degrees, so the loss existed in one theme only and only if you measured it. The redundancy principle underneath: WCAG 1.4.1 forbids colour as the ONLY channel, not colour. Red/green is exactly the pair that collapses under deuteranopia, which is why the glyph is load-bearing and must stay — but removing hue as a REDUNDANT channel buys no accessibility for anyone and costs every player who can use it a fast read. Belt and braces, not braces instead of belt.',
+    module: 'design',
+    source: 'fm-03-design (measured, and overruled architecture\'s call to leave it)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

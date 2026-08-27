@@ -43,12 +43,23 @@ const COLOUR_PROP = /(^|[;{\s])color\s*:\s*var\(\s*--([a-z0-9-]+)\s*[,)]/gi;
 const problems = [];
 const stats = { files: 0, controls: 0, docIds: 0, inkPairs: 0 };
 
-/** Roles that define an `--x-ink` companion, read from the token file itself. */
+/**
+ * Roles that have BOTH a fill and an ink, read from the token file itself.
+ *
+ * Requiring both matters: some inks are deliberately ink-only. `--pos-ink` and
+ * `--neg-ink` are STATUS colours — money going up is not a department — and
+ * `--c-under-ink` likewise has no field to fill. Treating those as fills would
+ * inflate the count and, worse, produce a message telling someone to stop using
+ * a token that does not exist. The rule guards the fill/ink split; a token with
+ * no fill has no split to get wrong.
+ */
 async function inkRoles() {
   const tokens = await readFile(join(SRC, 'lib/design/tokens.css'), 'utf8');
-  const roles = new Set();
-  for (const m of tokens.matchAll(/--([a-z0-9-]+)-ink\s*:/gi)) roles.add(m[1]);
-  return roles;
+  const inks = new Set();
+  const fills = new Set();
+  for (const m of tokens.matchAll(/--([a-z0-9-]+)-ink\s*:/gi)) inks.add(m[1]);
+  for (const m of tokens.matchAll(/^\s+--([a-z0-9-]+)\s*:/gim)) fills.add(m[1]);
+  return new Set([...inks].filter((role) => fills.has(role)));
 }
 const INK_ROLES = await inkRoles();
 stats.inkPairs = INK_ROLES.size;
@@ -228,7 +239,7 @@ const RED = '\x1b[31m', DIM = '\x1b[2m', GREEN = '\x1b[32m', RESET = '\x1b[0m';
 if (problems.length === 0) {
   console.log(
     `${GREEN}✓${RESET} docs gate: ${stats.controls} controls documented, ` +
-    `${docIds.size} entries across ${stats.files} files.`
+    `${docIds.size} entries across ${stats.files} files, ${stats.inkPairs} fill/ink pairs.`
   );
   process.exit(0);
 }
