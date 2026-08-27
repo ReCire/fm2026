@@ -494,6 +494,18 @@ export const designIntent = defineIntent([
     source: 'architecture (found by its own effect test)'
   },
 
+  {
+    id: 'design.diskMustMatchRegistry',
+    constant: 'wiring.test.ts',
+    value: 'a feature on disk must be wired into the live registry',
+    rationale:
+      'A Screen.svelte that exists must be registered as a screen; a docs.ts that exists must reach the live doc lookup — not merely be non-empty, but actually resolve, because that is what a tooltip reads. Generated from the filesystem and checked against the real registry, never from a list someone maintains: a list needs the same discipline that failed.',
+    failureMode:
+      'verify went green with a finished screen unreachable and finished tooltips uninstalled. The docs gate scans docs.ts files STATICALLY so the entries counted, while the route resolves `mod.screen?.()` and `docs: {}` meant installDocs never saw them — so the gate certified UI that did not ship and tooltips that resolved to nothing. Verified by reproducing the gap: the docs gate still prints a green tick while this test fails on both counts.',
+    module: 'design',
+    source: 'fm-03-design (found it by opening the route instead of trusting the green)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

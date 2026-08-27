@@ -4,7 +4,7 @@ import {
   contributions, combinedFactor, combinedAdd, touchedKeys
 } from './rules';
 import { createStaff, type StaffState } from './state';
-import { STAFF_ROLES, roleById } from './content';
+import { STAFF_ROLES, roleById, describeEffect, unlabelledEffects } from './content';
 import { createRng } from '$lib/engine/rng';
 
 const fresh = (): StaffState => createStaff(createRng(1));
@@ -150,5 +150,32 @@ describe('contributions', () => {
     dismiss(s, 'physio');
     expect(touchedKeys(s).length).toBeLessThanOrEqual(before);
     expect(contributions(s).every((c) => c.from !== roleById('physio')!.name)).toBe(true);
+  });
+});
+
+describe('every effect is readable by the player', () => {
+  /**
+   * An effect with no phrasing renders as an empty string: the role is hired,
+   * the number moves, and the card says nothing about what changed. That is the
+   * invisible-stat failure at the presentation layer rather than the wiring
+   * layer, so it fails the build the same way.
+   *
+   * fm-03-design added `unlabelledEffects()` for exactly this; wiring it into a
+   * test is what makes it a gate rather than a helper nobody calls.
+   */
+  it('has phrasing for every effect any role declares', () => {
+    expect(unlabelledEffects(), 'effects the player would see as a blank line').toEqual([]);
+  });
+
+  it('phrases a reduction and an increase as different kinds of news', () => {
+    const reduce = describeEffect({ key: 'squad.fitnessLoss', factor: 0.7 });
+    const raise = describeEffect({ key: 'squad.fitnessLoss', factor: 1.6 });
+    expect(reduce).toBeTruthy();
+    expect(raise).toBeTruthy();
+    expect(reduce).not.toBe(raise);
+  });
+
+  it('returns null for a key nobody has phrased, rather than an empty string', () => {
+    expect(describeEffect({ key: 'nothing.phrased.here', factor: 0.5 })).toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import { StaffSchema, createStaff, STAFF_VERSION } from './state';
 import { contributions, wageBill, employed } from './rules';
 import { postToLedger } from '../finance/module';
 import { gatedBy } from '../progression/rules';
+import { staffDocs } from './docs';
 
 export default defineModule({
   id: 'staff',
@@ -71,7 +72,8 @@ export default defineModule({
     ]
   },
 
-  docs: {}
+  screen: () => import('./Screen.svelte'),
+  docs: staffDocs
 });
 
 export { isEmployed, employed, available, wageBill, canHire, hire, dismiss, contributions, combinedFactor, combinedAdd, touchedKeys } from './rules';
