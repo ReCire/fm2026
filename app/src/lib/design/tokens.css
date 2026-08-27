@@ -1,53 +1,160 @@
 /*
  * Design tokens.
  *
- * Lifted almost verbatim from the prototype's :root block — the palette was
- * already a token system, it just had no name. This is now the only file that
- * defines a colour. Change it and the whole game reskins; no screen ever
- * hard-codes a hex value.
+ * The colour language is Sanzo Wada: ten domain triads that stay constant
+ * across both modes, while the ROLE each member plays switches. On parchment
+ * the darkest member carries text; in the forest the lightest does.
+ *
+ * The rule that generates everything below: TOKENS CARRY MEANING, MODES CARRY
+ * VALUES. A role must be free to resolve to an unrelated value per mode.
+ * Deriving a light palette by dimming the dark one produces tokens that are
+ * consistent in code and wrong on screen.
+ *
+ * And its corollary, which is why every accent has two tokens: a colour asked
+ * to both glow as a FIELD and stay legible as TYPE is being asked two
+ * contradictory things. `--x` fills, `--x-ink` sets type. Where a single token
+ * served both, the mid-tones failed at both.
+ *
+ * This is the only file that defines a colour.
  */
 :root {
-  /* Surfaces */
-  --bg-body: #07090e;
-  --bg-sidebar: #0e1422;
-  --bg-header: #131b2e;
-  --bg-card: rgba(20, 29, 48, 0.85);
-  --bg-card-hover: rgba(28, 41, 68, 0.95);
-  --bg-sunken: #0d1322;
+  /* ---- Wada triads. Mode-independent: these ten never change. ---- */
+  --wada-finance-1:  #6B8F71;  --wada-finance-2:  #F0E8D4;  --wada-finance-3:  #3D5C44;
+  --wada-squad-1:    #3D4F7A;  --wada-squad-2:    #8896AB;  --wada-squad-3:    #E8E4F0;
+  --wada-industry-1: #C4913E;  --wada-industry-2: #9B5B3A;  --wada-industry-3: #E8D5B8;
+  --wada-under-1:    #4A2D4E;  --wada-under-2:    #2A2030;  --wada-under-3:    #8B6B8F;
+  --wada-europe-1:   #B8963E;  --wada-europe-2:   #2B3654;  --wada-europe-3:   #F5F0E0;
+  --wada-youth-1:    #4A9B8E;  --wada-youth-2:    #C4E8DF;  --wada-youth-3:    #2D6B62;
+  --wada-match-1:    #C84032;  --wada-match-2:    #FFF5F0;  --wada-match-3:    #8B3028;
+  --wada-stocks-1:   #5B7A8F;  --wada-stocks-2:   #E8EEF2;  --wada-stocks-3:   #3A5668;
+  --wada-doctrine-1: #BF6B30;  --wada-doctrine-2: #A8998A;  --wada-doctrine-3: #7A4420;
+  --wada-transfer-1: #9B6B7A;  --wada-transfer-2: #F0E0E4;  --wada-transfer-3: #6B3B4A;
 
-  /* Brand + feature accents. Each subsystem owns one, which is how the
-     prototype signalled "you are in the industry part of the game". */
-  --primary: #00e676;
-  --primary-glow: rgba(0, 230, 118, 0.25);
-  --accent: #ffc107;
-  --accent-glow: rgba(255, 193, 7, 0.25);
-  --danger: #ff1744;
-  --blue: #00b0ff;
-  --purple: #b388ff;
-  --industry: #ff7043;
-  --gold: #ffd700;
-  --europe: #3d5afe;
+  /* ---- Night mode: Dark Forest ----
+     A green-undertoned near-black rather than a neutral grey, so the live
+     view's phosphor greens sit in the same family instead of glaring. */
+  --bg-body:       #0B1410;
+  --bg-sidebar:    #141F1A;
+  --bg-header:     #141F1A;
+  --bg-sunken:     #141F1A;
+  --bg-card:       #1C2B24;
+  --bg-card-hover: #22342B;
+  /* Recessed surface. A tint of the ground, so it darkens on the forest
+     and lightens on parchment instead of always painting black. */
+  --bg-inset:      rgba(0, 0, 0, 0.28);
 
-  /* Text.
-     --text-2 and --text-3 are the audited values: the previous tertiary tone
-     cleared no contrast floor in either mode, and the secondary sat at 4.36:1,
-     just under AA. Do not "tidy" these back towards the original greys. */
-  --text-main: #f1f5f9;
-  --text-muted: #8A9B90;   /* --text-2, dark mode */
-  --text-dim:   #708079;   /* --text-3, dark mode */
+  --text-main:  #F2F0EB;
+  --text-muted: #8A9B90;   /* 6.39:1 — audited */
+  --text-dim:   #708079;   /* spec said #5E7068 at 3.56:1, which carries no text */
 
-  /* Live signal. Two tokens, not one: the phosphor green works as a FILL but
-     cannot be type. A colour asked to both glow as a field and stay legible as
-     type is being asked two contradictory things. */
-  --c-live:     #00FF7F;
-  --c-live-ink: #00FF88;
-  --c-under-ink: #917295;
+  --border:           #2D3F36;
+  --border-strong:    #3A4D44;
+  --border-highlight: var(--wada-finance-1);
 
-  /* Lines */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: #334155;
-  --border-highlight: rgba(0, 230, 118, 0.35);
+  /* Fills: the saturated triad member. These paint fields, bars and marks. */
+  --primary:  var(--wada-finance-1);
+  --accent:   var(--wada-industry-1);
+  --danger:   var(--wada-match-1);
+  --blue:     var(--wada-squad-1);
+  --purple:   var(--wada-doctrine-1);
+  --industry: var(--wada-industry-1);
+  --gold:     var(--wada-europe-1);
+  --europe:   var(--wada-squad-1);
+  --youth:    var(--wada-youth-1);
+  --stocks:   var(--wada-stocks-1);
+  --transfer: var(--wada-transfer-1);
+  --under:    var(--wada-under-3);
 
+  /* Ink: what the same role becomes when it has to be READ.
+     On the forest ground that is the lightest member of the triad. */
+  --primary-ink:  var(--wada-finance-2);
+  --accent-ink:   var(--wada-industry-3);
+  --danger-ink:   var(--wada-match-2);
+  --blue-ink:     var(--wada-squad-3);
+  --purple-ink:   var(--wada-doctrine-2);
+  --industry-ink: var(--wada-industry-3);
+  --gold-ink:     var(--wada-europe-3);
+  --europe-ink:   var(--wada-squad-3);
+  --youth-ink:    var(--wada-youth-2);
+  --stocks-ink:   var(--wada-stocks-2);
+  --transfer-ink: var(--wada-transfer-2);
+  --c-under-ink:  #917295;   /* spec's #8B6B8F reached only 4.10:1 here */
+
+  /* Label colour ON a filled accent. Computed per fill, never assumed:
+     finance/industry/europe/youth/doctrine take dark type, match/squad/under
+     take light. stocks and transfer clear 4.5:1 with NEITHER, so as a filled
+     control they must use their dark triad member instead. */
+  --on-fill:      #0B1410;
+  --on-fill-alt:  #FFFDF7;
+
+  --primary-glow: rgba(107, 143, 113, 0.22);
+  --accent-glow:  rgba(196, 145, 62, 0.20);
+
+  /* Live signal. Two tokens, not one. */
+  --c-live:     #00FF88;
+  --c-live-ink: #00FF88;   /* 13.96:1 on the forest — carries type here */
+
+  --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.50);
+}
+
+/* ---- Day mode: warm parchment ----
+   Never white. Lower glare, and it carries the eco-conscious register the
+   brand is built on. */
+[data-theme='light'] {
+  --bg-body:       #F5F1EB;
+  --bg-sidebar:    #FFFDF7;
+  --bg-header:     #FFFDF7;
+  --bg-sunken:     #EFEAE1;
+  --bg-card:       #FFFFFF;
+  --bg-card-hover: #FBF8F2;
+  --bg-inset:      rgba(44, 36, 22, 0.055);
+
+  --text-main:  #2C2416;
+  --text-muted: #776C60;   /* spec's #7A6F62 was 4.36:1, just under AA */
+  --text-dim:   #746D65;   /* spec's #A89E92 was 2.34:1 — carries no text */
+
+  --border:           #E5E0D8;
+  --border-strong:    #D4CCC2;
+  --border-highlight: var(--wada-finance-3);
+
+  /* Fills stay saturated — a chart should still sing on paper. */
+  --under: var(--wada-under-1);
+
+  /* Ink flips to the DARKEST member. Verified against #F5F1EB, the darker of
+     the two light grounds, so each also passes on #FFFDF7. */
+  --primary-ink:  var(--wada-finance-3);
+  --accent-ink:   var(--wada-industry-2);
+  --danger-ink:   var(--wada-match-3);
+  --blue-ink:     var(--wada-squad-1);
+  --purple-ink:   var(--wada-doctrine-3);
+  --industry-ink: var(--wada-industry-2);
+  --gold-ink:     var(--wada-europe-2);
+  --europe-ink:   var(--wada-squad-1);
+  --youth-ink:    var(--wada-youth-3);
+  --stocks-ink:   var(--wada-stocks-3);
+  --transfer-ink: var(--wada-transfer-3);
+  --c-under-ink:  var(--wada-under-2);
+
+  --on-fill:      #0B1410;
+  --on-fill-alt:  #FFFDF7;
+
+  --primary-glow: rgba(61, 92, 68, 0.12);
+  --accent-glow:  rgba(155, 91, 58, 0.12);
+
+  /* The one value from the design board that simply breaks on paper: the
+     daylight live signal #00CC6A scores 1.90:1 on parchment, despite being
+     captioned as an accessibility adjustment. It survives as a FILL (7.18:1
+     with dark type, so the LIVE pill still works) and needs a separate,
+     darkened value to be type at all. */
+  --c-live:     #00CC6A;
+  --c-live-ink: #007F42;
+
+  --shadow-card: 0 1px 3px rgba(44, 36, 22, 0.08);
+  --shadow-lift: 0 6px 20px rgba(44, 36, 22, 0.10);
+}
+
+:root {
   /* ------------------------------------------------------------------
      Type scale — Creative Director's values, taken verbatim.
 
@@ -116,6 +223,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { color-scheme: dark; }
+html[data-theme='light'] { color-scheme: light; }
 
 body {
   font-family: var(--font-ui);
@@ -176,19 +284,19 @@ button { font-family: inherit; touch-action: manipulation; }
  * rather than a workaround.
  */
 .dim { color: var(--text-muted); }
-.neg { color: var(--danger); }
-.pos { color: var(--primary); }
+.neg { color: var(--danger-ink); }
+.pos { color: var(--primary-ink); }
 
 .badge {
   font-size: var(--fs-caption);
   background: var(--primary-glow);
-  color: var(--primary);
+  color: var(--primary-ink);
   padding: 1px 4px;
   border-radius: 3px;
   margin-left: 4px;
   white-space: nowrap;
 }
-.badge.hurt { background: rgba(255, 23, 68, 0.18); color: var(--danger); }
+.badge.hurt { background: rgba(200, 64, 50, 0.16); color: var(--danger-ink); }
 
 /* A player who cannot be selected. Dimmed AND struck, never dimmed alone —
    opacity on its own is a colour-only signal. */

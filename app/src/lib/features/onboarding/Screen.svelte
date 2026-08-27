@@ -9,7 +9,7 @@
    * replaced without touching a single rule.
    */
   import { game } from '$lib/state/game.svelte';
-  import { Panel, Button, toast } from '$lib/ui';
+  import { Panel, Button, Marks, toast } from '$lib/ui';
   import { STEPS } from './state';
   import { onboardingContent, clubById } from './content';
   import Crest from '$lib/graphics/Crest.svelte';
@@ -131,7 +131,17 @@
           <strong>{n.name}{#if n.recommended}<span class="rec">Empfohlen</span>{/if}</strong>
           <em>{n.pitch}</em>
           <small>{n.premise}</small>
-          <small class="diff">Schwierigkeit: {n.difficulty} · {n.unlockedAtStart.length} Bereiche zu Beginn</small>
+          <small class="diff">Schwierigkeit: {n.difficulty}</small>
+          <!-- The honest axis between the five starts is not harder/easier, it
+               is how much is open at the beginning. Shown as marks rather than
+               a count so a narrow start reads as focused rather than poorer —
+               otherwise four of five look like consolation prizes beside the
+               recommended one. -->
+          <Marks
+            value={n.unlockedAtStart.length}
+            total={n.unlockedAtStart.length + n.unlockOrder.length}
+            label="{n.unlockedAtStart.length} von {n.unlockedAtStart.length + n.unlockOrder.length} Bereichen von Beginn an offen"
+          />
         </span>
       </label>
     {/each}
@@ -199,7 +209,7 @@
 
   input[type='text'] {
     width: 100%; padding: var(--sp-3); min-height: 40px;
-    background: rgba(0,0,0,0.3); color: var(--text-main);
+    background: var(--bg-inset); color: var(--text-main);
     border: 1px solid var(--border-strong); border-radius: var(--r-sm);
     font-family: inherit; font-size: var(--fs-body);
   }
@@ -229,7 +239,7 @@
     display: flex; gap: var(--sp-3); align-items: flex-start;
     padding: var(--sp-3); margin-bottom: var(--sp-2);
     border: 1px solid var(--border); border-radius: var(--r-sm);
-    background: rgba(0,0,0,0.2); cursor: pointer; min-height: 44px;
+    background: var(--bg-inset); cursor: pointer; min-height: 44px;
   }
   .bg.on, .club.on, .narr.on { border-color: var(--primary); background: var(--primary-glow); }
   .bg input:focus-visible ~ *, .club input:focus-visible ~ *, .narr input:focus-visible ~ * { outline: 2px solid var(--primary); outline-offset: 2px; }

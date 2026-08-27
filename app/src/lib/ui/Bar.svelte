@@ -42,7 +42,7 @@
 </div>
 
 <style>
-  .bar { position: relative; height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 99px; overflow: hidden; }
+  .bar { position: relative; height: 6px; background: var(--bg-inset); border-radius: 99px; overflow: hidden; }
   .fill { display: block; height: 100%; border-radius: 99px; transition: width 0.3s ease; }
   .tick {
     position: absolute; top: 0; bottom: 0; width: 1px;

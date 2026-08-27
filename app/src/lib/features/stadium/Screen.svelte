@@ -68,7 +68,7 @@
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--sp-2); }
   .fans { margin-top: var(--sp-4); font-size: var(--fs-small); color: var(--text-muted); display: grid; gap: var(--sp-2); }
   .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--sp-3); }
-  .block { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-3); }
+  .block { background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-3); }
   .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--sp-1); }
   .head strong { font-size: var(--fs-base); }
   .head span { color: var(--primary); font-weight: 800; }

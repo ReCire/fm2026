@@ -304,7 +304,7 @@
   .head, .who, .bid { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); }
   .head { font-size: var(--fs-small); }
   .who { font-size: var(--fs-base); }
-  .bid strong { font-size: var(--fs-title); color: var(--primary); }
+  .bid strong { font-size: var(--fs-title); color: var(--primary-ink); }
   .status { font-size: var(--fs-small); color: var(--text-muted); }
 
   .row { display: grid; gap: var(--sp-2); }

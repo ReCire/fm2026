@@ -35,7 +35,7 @@
 
 <style>
   .chip {
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--bg-inset);
     border: 1px solid var(--border);
     padding: var(--sp-2) var(--sp-3);
     border-radius: var(--r-sm);
@@ -49,8 +49,8 @@
     gap: 2px;
   }
   strong { font-size: var(--fs-base); color: var(--text-main); display: block; }
-  .good strong { color: var(--primary); }
-  .bad strong { color: var(--danger); }
-  .warn strong { color: var(--accent); }
+  .good strong { color: var(--primary-ink); }
+  .bad strong { color: var(--danger-ink); }
+  .warn strong { color: var(--accent-ink); }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>

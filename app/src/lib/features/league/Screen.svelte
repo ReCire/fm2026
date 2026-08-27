@@ -142,7 +142,7 @@
     align-items: center;
     gap: var(--sp-2);
     padding: var(--sp-2) var(--sp-3);
-    background: rgba(0, 0, 0, 0.25);
+    background: var(--bg-inset);
     border: 1px solid var(--border);
     border-radius: var(--r-sm);
     font-size: var(--fs-small);

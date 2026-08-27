@@ -124,7 +124,7 @@
   .opt {
     display: block; padding: var(--s2) var(--s3); margin-bottom: var(--s1);
     border: 1px solid var(--border); border-radius: var(--r-sm);
-    background: rgba(0,0,0,0.2); cursor: pointer; min-height: var(--tap);
+    background: var(--bg-inset); cursor: pointer; min-height: var(--tap);
   }
   .opt.on { border-color: var(--primary); background: var(--primary-glow); }
   .opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
