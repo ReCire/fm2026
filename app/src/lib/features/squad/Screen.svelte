@@ -47,7 +47,7 @@
         {#if p.suspended > 0}<span class="badge hurt">🟥 {p.suspended}</span>{/if}
       {:else if key === 'pos'}<span class="dim">{p.pos}</span>
       {:else if key === 'str'}{p.strength}
-      {:else if key === 'fit'}<span class="fitcell"><Bar value={p.fitness} label="Fitness {p.name}" /></span>
+      {:else if key === 'fit'}<span class="fitcell"><Bar value={p.fitness} showValue label="Fitness {p.name}" /></span>
       {:else if key === 'age'}{p.age}
       {:else}<span class="dim">{formatMoney(p.wage)}</span>{/if}
     {/snippet}
