@@ -87,6 +87,14 @@
   --on-fill:      #0B1410;
   --on-fill-alt:  #FFFDF7;
 
+  /* Status, not domain. WCAG 1.4.1 forbids colour as the ONLY channel; it does
+     not forbid colour. The glyph carries the meaning for anyone who cannot use
+     hue — red/green is exactly the pair that fails for deuteranopia — and hue
+     carries it faster for everyone else. Dropping hue bought no accessibility
+     and cost the most-scanned distinction in the game. 137 degrees apart. */
+  --pos-ink: #7FD1A0;   /* 8.12:1 on the card */
+  --neg-ink: #FF8A7A;   /* 6.45:1 on the card */
+
   --primary-glow: rgba(107, 143, 113, 0.22);
   --accent-glow:  rgba(196, 145, 62, 0.20);
 
@@ -138,6 +146,9 @@
 
   --on-fill:      #0B1410;
   --on-fill-alt:  #FFFDF7;
+
+  --pos-ink: #256B45;   /* 6.43:1 on white */
+  --neg-ink: #A32A1E;   /* 7.22:1 on white */
 
   --primary-glow: rgba(61, 92, 68, 0.12);
   --accent-glow:  rgba(155, 91, 58, 0.12);
@@ -269,8 +280,8 @@ button { font-family: inherit; touch-action: manipulation; }
  * rather than a workaround.
  */
 .dim { color: var(--text-muted); }
-.neg { color: var(--danger-ink); }
-.pos { color: var(--primary-ink); }
+.neg { color: var(--neg-ink); }
+.pos { color: var(--pos-ink); }
 
 .badge {
   font-size: var(--fs-caption);

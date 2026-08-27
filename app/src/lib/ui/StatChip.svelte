@@ -49,8 +49,8 @@
     gap: 2px;
   }
   strong { font-size: var(--fs-body); color: var(--text-main); display: block; }
-  .good strong { color: var(--primary-ink); }
-  .bad strong { color: var(--danger-ink); }
+  .good strong { color: var(--pos-ink); }
+  .bad strong { color: var(--neg-ink); }
   .warn strong { color: var(--accent-ink); }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 </style>
