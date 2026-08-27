@@ -5,7 +5,16 @@ import type { Rng } from '$lib/engine/rng';
  * Who you are and which club you took. Set once during the new-game flow, then
  * read by everything that addresses the player by name.
  */
-export const STEPS = ['welcome', 'manager', 'club', 'narrative', 'confirm'] as const;
+/*
+ * Narrative comes BEFORE club, deliberately.
+ *
+ * The premise text makes specific claims about the club's situation — Aufsteiger
+ * says the side just came up from the fourth division. Choosing a club first and
+ * then filtering the stories to fit lets the copy contradict the crest. The
+ * narrative is the stronger constraint, so it picks first and the club list
+ * narrows to what the story can honestly be told about.
+ */
+export const STEPS = ['welcome', 'manager', 'narrative', 'club', 'confirm'] as const;
 export type Step = (typeof STEPS)[number];
 
 export const ManagerSchema = z.object({

@@ -1,20 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import {
   blockers, canAdvance, advance, back, chooseClub,
-  narrativesForClub, suggestName, finish, skip, stepIndex
+  clubsForNarrative, suggestName, finish, skip, stepIndex
 } from './rules';
-import { createOnboarding, type OnboardingState } from './state';
+import { createOnboarding, STEPS, type OnboardingState } from './state';
 import { onboardingContent, clubById } from './content';
 import { narratives } from '../progression/content';
 import { createRng } from '$lib/engine/rng';
 
 const fresh = (): OnboardingState => createOnboarding(createRng(1));
 
+/** Walks the flow to the club step, which now sits after the narrative. */
 const readyAtClub = () => {
   const o = fresh();
   o.step = 'manager';
   o.manager.name = 'Uwe Berger';
-  advance(o);
+  advance(o);          // -> narrative
+  advance(o);          // -> club  (narrativeId defaults to aufsteiger)
   return o;
 };
 
@@ -52,7 +54,11 @@ describe('step gating', () => {
     o.step = 'manager';
     o.manager.name = 'Sabine Vogel';
     expect(canAdvance(o)).toBe(true);
-    expect(advance(o)).toBe('club');
+    expect(advance(o)).toBe('narrative');
+  });
+
+  it('puts the narrative before the club, so the copy cannot contradict the crest', () => {
+    expect(STEPS.indexOf('narrative')).toBeLessThan(STEPS.indexOf('club'));
   });
 
   it('rejects a whitespace-only name', () => {
@@ -82,7 +88,7 @@ describe('back', () => {
   it('preserves what was already entered', () => {
     const o = readyAtClub();
     chooseClub(o, 'fortuna95');
-    expect(back(o)).toBe('manager');
+    expect(back(o)).toBe('narrative');
     expect(o.manager.name).toBe('Uwe Berger');
     expect(o.clubId).toBe('fortuna95');
   });
@@ -109,23 +115,40 @@ describe('chooseClub', () => {
   });
 });
 
-describe('narrativesForClub', () => {
-  it('offers only stories within one division of the club', () => {
-    const topFlight = onboardingContent.clubs.find((c) => c.leagueLevel === 1)!;
-    const fitting = narrativesForClub(topFlight, narratives);
-    for (const n of fitting) {
-      expect(Math.abs(n.leagueLevel - topFlight.leagueLevel)).toBeLessThanOrEqual(1);
+describe('clubsForNarrative', () => {
+  it('offers only clubs in the narrative\'s own division', () => {
+    for (const n of narratives) {
+      const clubs = clubsForNarrative(n, onboardingContent.clubs);
+      const exact = onboardingContent.clubs.filter((c) => c.leagueLevel === n.leagueLevel);
+      if (exact.length > 0) {
+        expect(clubs.map((c) => c.leagueLevel), n.id).toEqual(exact.map((c) => c.leagueLevel));
+      }
     }
   });
 
-  it('never returns an empty list — an unfilterable club still gets choices', () => {
-    const odd = { ...onboardingContent.clubs[0]!, leagueLevel: 3 as const };
-    expect(narrativesForClub(odd, []).length).toBe(0);
-    expect(narrativesForClub(odd, narratives).length).toBeGreaterThan(0);
+  /**
+   * The invariant that makes the whole step worth having. If a narrative offers
+   * one club it is not a choice, and if it offers none the flow dead-ends —
+   * either way the content, not the code, is what is wrong, so it fails here.
+   */
+  it('gives every narrative at least three clubs to choose from', () => {
+    for (const n of narratives) {
+      const clubs = clubsForNarrative(n, onboardingContent.clubs);
+      expect(clubs.length, `narrative "${n.id}" (Liga ${n.leagueLevel + 1}) offers ${clubs.length}`)
+        .toBeGreaterThanOrEqual(3);
+    }
   });
 
-  it('returns everything when no club is chosen yet', () => {
-    expect(narrativesForClub(undefined, narratives)).toEqual(narratives);
+  it('widens by one division rather than dead-ending on a thin roster', () => {
+    const orphan = { ...narratives[0]!, leagueLevel: 0 as const };
+    const onlyLowerLeagues = onboardingContent.clubs.filter((c) => c.leagueLevel >= 1);
+    const clubs = clubsForNarrative(orphan, onlyLowerLeagues);
+    expect(clubs.length).toBeGreaterThan(0);
+    expect(clubs.every((c) => c.leagueLevel <= 1)).toBe(true);
+  });
+
+  it('returns everything when no narrative is chosen yet', () => {
+    expect(clubsForNarrative(undefined, onboardingContent.clubs)).toEqual(onboardingContent.clubs);
   });
 });
 

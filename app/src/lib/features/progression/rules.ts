@@ -102,11 +102,22 @@ export function delegationFor(
 }
 
 /**
- * Should this department's mail and open items be suppressed?
+ * Should this department's mail and open items be hidden FROM THE PLAYER?
  *
  * The player fantasy is not "a number goes up" — it is "this inbox stops asking
  * me things". Delegation has to actually silence the department, or hiring
  * someone changes nothing the player can feel.
+ *
+ * ⚠ PLAYER-FACING ONLY. Never filter machinery with this.
+ *
+ * An autopilot that reads a list already filtered by `isSilenced` sees an empty
+ * list — because it is, by construction, running for a department that has been
+ * hidden. Every decision it should be making becomes dead code, and it fails
+ * silently: no error, no event, just an executive who appears to do nothing.
+ * fm-03-design hit exactly this in the LinkedOut autopilot.
+ *
+ * The rule: silencing is for the player, not for the machinery. Machinery asks
+ * `delegationFor()` and reads the department's unfiltered state.
  */
 export function isSilenced(state: GameState, moduleId: string): boolean {
   return delegationFor(state, moduleId) !== undefined;

@@ -23,12 +23,12 @@ export function blockers(o: OnboardingState): string[] {
       if (o.manager.name.trim().length === 0) missing.push('Trag deinen Namen ein.');
       if (o.manager.name.trim().length > 28) missing.push('Der Name ist zu lang.');
       break;
+    case 'narrative':
+      if (!o.narrativeId) missing.push('Wähle eine Startgeschichte.');
+      break;
     case 'club':
       if (!o.clubId) missing.push('Wähle einen Verein.');
       else if (!clubById(o.clubId)) missing.push('Diesen Verein gibt es nicht mehr.');
-      break;
-    case 'narrative':
-      if (!o.narrativeId) missing.push('Wähle eine Startgeschichte.');
       break;
   }
   return missing;
@@ -60,20 +60,25 @@ export function chooseClub(o: OnboardingState, clubId: string): boolean {
 }
 
 /**
- * Narratives that make sense for a club.
+ * Clubs a narrative can honestly be told about.
  *
- * A relegation-scrap story does not fit a top-flight side, and offering it
- * anyway would let the player build a start the game cannot honour. Filtering
- * here rather than validating later means the bad combination is never
- * presented in the first place.
+ * Exact division first: a story that says "you just came up from the fourth
+ * division" should offer fourth-division sides, not something adjacent. Widens
+ * by one division only if that leaves nothing, so a thin roster degrades to a
+ * slightly-off choice rather than to no choice at all.
+ *
+ * Filtering here rather than validating at the end means the contradiction is
+ * never presented, so the player cannot build a start the copy has to lie about.
  */
-export function narrativesForClub(
-  club: StartClub | undefined,
-  all: Narrative[]
-): Narrative[] {
-  if (!club) return all;
-  const fits = all.filter((n) => Math.abs(n.leagueLevel - club.leagueLevel) <= 1);
-  return fits.length > 0 ? fits : all;
+export function clubsForNarrative(
+  narrative: Narrative | undefined,
+  all: StartClub[]
+): StartClub[] {
+  if (!narrative) return all;
+  const exact = all.filter((c) => c.leagueLevel === narrative.leagueLevel);
+  if (exact.length > 0) return exact;
+  const near = all.filter((c) => Math.abs(c.leagueLevel - narrative.leagueLevel) <= 1);
+  return near.length > 0 ? near : all;
 }
 
 /** A deterministic default manager name, so the field is never empty on arrival. */

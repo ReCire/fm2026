@@ -276,6 +276,40 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (Creative Director)'
   },
 
+  {
+    id: 'progression.invisibleStat',
+    constant: 'executive competence',
+    value: 'must resolve somewhere the player reads, not only in the balance sheet',
+    rationale:
+      'Competence working correctly is not the same as competence being observable. A weekly report from each delegated department carries the difference in TONE — high competence is terse ("2 Vorgänge erledigt. Keine Rückfragen."), low is deflection ("Bei 3 weiteren war die Lage schwieriger als zunächst angenommen…"). The player learns what they bought by reading it, and the parody does the teaching.',
+    failureMode:
+      'A stat that only resolves in aggregate financials is invisible: the player cannot attribute an outcome to a decision they made four hours ago. They pick between two numbers on a hire card and never find out whether they were right — the same "upgrade with no observable consequence" failure the whole radar layer was built to avoid.',
+    module: 'progression',
+    source: 'fm-03-design (found in their own feature, after specifying the rule)'
+  },
+  {
+    id: 'progression.silencingIsNotFiltering',
+    constant: 'isSilenced vs delegationFor',
+    value: 'the player-facing filter and the machinery view must not be shared',
+    rationale:
+      'Delegation hides a department from the player. Machinery must still see it in full — an autopilot exists precisely to act on the department that has been hidden.',
+    failureMode:
+      'An autopilot reading a list already filtered by the player-facing predicate sees an empty list by construction, so every decision it should make becomes dead code. It fails silently: no error, no event, just an executive who appears to do nothing. Hit in the LinkedOut autopilot; now pinned by a test here.',
+    module: 'progression',
+    source: 'fm-03-design'
+  },
+  {
+    id: 'onboarding.narrativeBeforeClub',
+    constant: 'STEPS order',
+    value: 'welcome → manager → narrative → club → confirm',
+    rationale:
+      'The premise text makes specific claims about the club — Aufsteiger says the side just came up from the fourth division. The narrative is the stronger constraint, so it picks first and the club list narrows to what the story can honestly be told about.',
+    failureMode:
+      'Club-first lets the copy contradict the crest: a fourth-division promotion story attached to a top-flight side. Filtering narratives after the fact hides it rather than preventing it, and the player can still build a start the game has to lie about. A test now requires every narrative to offer at least three clubs — one club is not a choice, and none dead-ends the flow.',
+    module: 'onboarding',
+    source: 'fm-03-design (question), architecture (implementation)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

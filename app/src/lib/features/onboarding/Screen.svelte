@@ -16,24 +16,27 @@
   import { applyNarrative } from '../progression/rules';
   import {
     blockers, canAdvance, advance, back, chooseClub,
-    narrativesForClub, suggestName, finish, skip, stepIndex
+    clubsForNarrative, suggestName, finish, skip, stepIndex
   } from './rules';
 
   const o = $derived(game.modules.onboarding);
   const club = $derived(clubById(o.clubId));
-  const available = $derived(narrativesForClub(club, narratives));
+  const narrative = $derived(narratives.find((n) => n.id === o.narrativeId));
+  // Clubs narrow to the story, not the other way round: the premise makes
+  // claims about the club's situation, so it has to pick first.
+  const availableClubs = $derived(clubsForNarrative(narrative, onboardingContent.clubs));
   const problems = $derived(blockers(o));
   const position = $derived(stepIndex(o.step));
 
   function start() {
     const setup = finish(o);
     if (!setup) return;
-    const narrative = narratives.find((n) => n.id === o.narrativeId) ?? narratives[0]!;
-    applyNarrative(game.modules.progression, narrative);
+    const chosen = narratives.find((n) => n.id === o.narrativeId) ?? narratives[0]!;
+    applyNarrative(game.modules.progression, chosen);
     game.modules.progression.started = true;
-    game.modules.finance.money = narrative.startingMoney;
-    game.modules.finance.transferBudget = narrative.startingTransferBudget;
-    toast(`Willkommen bei ${setup.club.name}`, narrative.pitch, 'good');
+    game.modules.finance.money = chosen.startingMoney;
+    game.modules.finance.transferBudget = chosen.startingTransferBudget;
+    toast(`Willkommen bei ${setup.club.name}`, chosen.pitch, 'good');
   }
 
   function quickStart() {
@@ -99,10 +102,26 @@
     </fieldset>
   </Panel>
 
+{:else if o.step === 'narrative'}
+  <Panel title="Wie fängt es an?" accent="accent">
+    {#each narratives as n (n.id)}
+      <label class="narr" class:on={o.narrativeId === n.id}>
+        <!-- docs-check-ignore: documented as a group (progression.narrative) -->
+        <input type="radio" name="narr" value={n.id} bind:group={o.narrativeId} />
+        <span>
+          <strong>{n.name}</strong>
+          <em>{n.pitch}</em>
+          <small>{n.premise}</small>
+          <small class="diff">Schwierigkeit: {n.difficulty} · {n.unlockedAtStart.length} Bereiche zu Beginn</small>
+        </span>
+      </label>
+    {/each}
+  </Panel>
+
 {:else if o.step === 'club'}
-  <Panel title="Welchen Verein übernimmst du?" accent="accent">
+  <Panel title="Welchen Verein übernimmst du?" accent="accent" meta={narrative?.name}>
     <div class="clubs">
-      {#each onboardingContent.clubs as c (c.id)}
+      {#each availableClubs as c (c.id)}
         <label class="club" class:on={o.clubId === c.id}>
           <!-- docs-check-ignore: documented as a group (onboarding.club) -->
           <input type="radio" name="club" value={c.id} onchange={() => chooseClub(o, c.id)} checked={o.clubId === c.id} />
@@ -115,22 +134,6 @@
         </label>
       {/each}
     </div>
-  </Panel>
-
-{:else if o.step === 'narrative'}
-  <Panel title="Wie fängt es an?" accent="accent" meta={club?.name}>
-    {#each available as n (n.id)}
-      <label class="narr" class:on={o.narrativeId === n.id}>
-        <!-- docs-check-ignore: documented as a group (progression.narrative) -->
-        <input type="radio" name="narr" value={n.id} bind:group={o.narrativeId} />
-        <span>
-          <strong>{n.name}</strong>
-          <em>{n.pitch}</em>
-          <small>{n.premise}</small>
-          <small class="diff">Schwierigkeit: {n.difficulty} · {n.unlockedAtStart.length} Bereiche zu Beginn</small>
-        </span>
-      </label>
-    {/each}
   </Panel>
 
 {:else}

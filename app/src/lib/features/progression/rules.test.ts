@@ -230,3 +230,40 @@ describe('migration to v2', () => {
     expect(migrateProgression(v2, 2).delegated.merch!.competence).toBe(0.9);
   });
 });
+
+describe('silencing is for the player, not the machinery', () => {
+  /**
+   * Pins the distinction that fm-03-design's autopilot bug turned on: an
+   * autopilot reading a view already filtered by `isSilenced` sees nothing to
+   * do, because it is by construction running for a hidden department. The two
+   * consumers must never share a filtered list.
+   */
+  it('reports a delegated department as silenced AND still delegated', () => {
+    const p = fresh();
+    delegate(p, 'industry', { executiveId: 'e1', competence: 0.4, hiredOnMatchday: 3 });
+    const s = asState(p);
+
+    // The player's view: hidden.
+    expect(isSilenced(s, 'industry')).toBe(true);
+    // The machinery's view: present, with everything it needs to act.
+    expect(delegationFor(s, 'industry')).toEqual({
+      executiveId: 'e1',
+      competence: 0.4,
+      hiredOnMatchday: 3
+    });
+  });
+
+  it('a department nobody runs is neither silenced nor delegated', () => {
+    const s = asState(fresh());
+    expect(isSilenced(s, 'stocks')).toBe(false);
+    expect(delegationFor(s, 'stocks')).toBeUndefined();
+  });
+
+  it('taking a department back restores it to both views at once', () => {
+    const p = fresh();
+    delegate(p, 'merch', { executiveId: 'e2', competence: 0.9, hiredOnMatchday: 1 });
+    revoke(p, 'merch');
+    expect(isSilenced(asState(p), 'merch')).toBe(false);
+    expect(delegationFor(asState(p), 'merch')).toBeUndefined();
+  });
+});
