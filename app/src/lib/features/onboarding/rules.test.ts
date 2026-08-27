@@ -10,6 +10,15 @@ import { createRng } from '$lib/engine/rng';
 
 const fresh = (): OnboardingState => createOnboarding(createRng(1));
 
+/*
+ * Club ids are read from content rather than written in. The roster is the
+ * Creative Director's to change, and a test that pins their ids would fail on
+ * a rename that broke nothing — noise that trains people to edit tests instead
+ * of reading them.
+ */
+const anyClub = () => onboardingContent.clubs[0]!;
+const otherClub = () => onboardingContent.clubs[1]!;
+
 /** Walks the flow to the club step, which now sits after the narrative. */
 const readyAtClub = () => {
   const o = fresh();
@@ -87,10 +96,10 @@ describe('step gating', () => {
 describe('back', () => {
   it('preserves what was already entered', () => {
     const o = readyAtClub();
-    chooseClub(o, 'fortuna95');
+    chooseClub(o, otherClub().id);
     expect(back(o)).toBe('narrative');
     expect(o.manager.name).toBe('Uwe Berger');
-    expect(o.clubId).toBe('fortuna95');
+    expect(o.clubId).toBe(otherClub().id);
   });
 
   it('does not run off the front', () => {
@@ -103,15 +112,16 @@ describe('back', () => {
 describe('chooseClub', () => {
   it('records id and display name together', () => {
     const o = fresh();
-    expect(chooseClub(o, 'anstoss')).toBe(true);
-    expect(o.clubName).toBe(clubById('anstoss')!.name);
+    const c = anyClub();
+    expect(chooseClub(o, c.id)).toBe(true);
+    expect(o.clubName).toBe(c.name);
   });
 
   it('refuses an unknown club and leaves state untouched', () => {
     const o = fresh();
-    chooseClub(o, 'anstoss');
+    chooseClub(o, anyClub().id);
     expect(chooseClub(o, 'nope')).toBe(false);
-    expect(o.clubId).toBe('anstoss');
+    expect(o.clubId).toBe(anyClub().id);
   });
 });
 
@@ -168,11 +178,11 @@ describe('suggestName', () => {
 describe('finish', () => {
   it('returns the full setup and marks the flow complete', () => {
     const o = readyAtClub();
-    chooseClub(o, 'fortuna95');
+    chooseClub(o, otherClub().id);
     const setup = finish(o);
     expect(setup).toBeDefined();
     expect(setup!.managerName).toBe('Uwe Berger');
-    expect(setup!.club.id).toBe('fortuna95');
+    expect(setup!.club.id).toBe(otherClub().id);
     expect(o.complete).toBe(true);
   });
 
@@ -186,7 +196,7 @@ describe('finish', () => {
   it('trims the name it stores', () => {
     const o = readyAtClub();
     o.manager.name = '  Andrea Brandt  ';
-    chooseClub(o, 'anstoss');
+    chooseClub(o, anyClub().id);
     expect(finish(o)!.managerName).toBe('Andrea Brandt');
   });
 });
@@ -203,9 +213,37 @@ describe('skip', () => {
   it('keeps whatever the player already chose', () => {
     const o = fresh();
     o.manager.name = 'Nils Sanders';
-    chooseClub(o, 'sgwacker');
+    chooseClub(o, otherClub().id);
     const setup = skip(o);
     expect(setup.managerName).toBe('Nils Sanders');
-    expect(setup.club.id).toBe('sgwacker');
+    expect(setup.club.id).toBe(otherClub().id);
+  });
+});
+
+describe('club roster', () => {
+  /** Distribution is load-bearing: the >=3 invariant must hold without widening. */
+  it('covers every division deeply enough that no narrative needs a fallback', () => {
+    const byLevel = new Map<number, number>();
+    for (const c of onboardingContent.clubs) {
+      byLevel.set(c.leagueLevel, (byLevel.get(c.leagueLevel) ?? 0) + 1);
+    }
+    for (const level of [0, 1, 2, 3]) {
+      expect(byLevel.get(level) ?? 0, `Liga ${level + 1}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('gives every crest two distinct colours', () => {
+    for (const c of onboardingContent.clubs) {
+      expect(c.colours[0].toLowerCase(), c.id).not.toBe(c.colours[1].toLowerCase());
+      expect(c.colours[0], c.id).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(c.colours[1], c.id).toMatch(/^#[0-9A-Fa-f]{6}$/);
+    }
+  });
+
+  it('gives every club a flavour line that says something specific', () => {
+    for (const c of onboardingContent.clubs) {
+      expect(c.flavour.length, c.id).toBeGreaterThan(24);
+      expect(c.flavour.trim().endsWith('.'), c.id).toBe(true);
+    }
   });
 });

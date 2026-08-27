@@ -26,7 +26,15 @@ export const NarrativeSchema = z.object({
    */
   unlockOrder: z.array(z.string()),
   /** Free-text flavour for the difficulty of this start. */
-  difficulty: z.enum(['ruhig', 'normal', 'hart', 'brutal'])
+  difficulty: z.enum(['ruhig', 'normal', 'hart', 'brutal']),
+  /**
+   * The start offered to a first-time player, and the one the tutorial runs on.
+   *
+   * A flag rather than "the first element": array position is not a contract.
+   * Someone reorders for a layout reason and the recommendation moves silently
+   * with no test failing. A test asserts exactly one narrative carries it.
+   */
+  recommended: z.boolean().optional()
 });
 export type Narrative = z.infer<typeof NarrativeSchema>;
 
@@ -44,6 +52,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     premise:
       'Der Aufstieg letzte Saison war ein Betriebsunfall, den niemand eingeplant hat — am wenigsten der Schatzmeister. Du erbst einen Kader, der eine Liga zu tief zusammengekauft wurde, ein Flutlicht auf Bewährung und einen Vorstand, der das Wort „Konsolidierung“ in jedem zweiten Satz unterbringt. Halte die Klasse. Danach reden wir weiter.',
     leagueLevel: 3,
+    recommended: true,
     startingMoney: 150_000,
     startingTransferBudget: 100_000,
     unlockedAtStart: [...CORE, 'stadium'],
@@ -107,6 +116,11 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     difficulty: 'brutal'
   }
 ]);
+
+/** The start a first-time player is pointed at. */
+export function recommendedNarrative(): Narrative {
+  return narratives.find((n) => n.recommended) ?? narratives[0]!;
+}
 
 export function narrativeById(id: string): Narrative | undefined {
   return narratives.find((n) => n.id === id);

@@ -310,6 +310,40 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (question), architecture (implementation)'
   },
 
+  {
+    id: 'design.unavailableStillLeads',
+    constant: 'Button blocked vs disabled',
+    value: 'aria-disabled + aria-describedby + a press that routes to the unmet field',
+    rationale:
+      'An unavailable control must still explain and still lead somewhere. Disabling is not an explanation. Three parts: aria-disabled keeps it in the tab order; aria-describedby associates the reasons rather than merely placing them nearby; and a blocked press moves focus to the first unmet field, which turns the blocker from a notice into a route.',
+    failureMode:
+      'The `disabled` attribute drops the control out of the tab order, so a keyboard user reaches the end of the step and finds nothing — no button, no explanation, no way to discover what is missing. Visual adjacency is a sighted-only relationship: without the association a screen reader announces "Weiter, dimmed" and stops.',
+    module: 'design',
+    source: 'fm-03-design (Creative Director)'
+  },
+  {
+    id: 'design.parodyTargetsInstitutions',
+    constant: 'club voice',
+    value: 'the club is not a joke',
+    rationale:
+      'The parody lives in the brands, the mail and LinkedOut — things done TO the player. The club is what they are asked to care about for twenty seasons, so each flavour line carries one specific true-sounding detail instead of a punchline. "Bei Sturmflut fällt das Training aus. Das steht so in der Satzung." is funny the way a real club minute is funny.',
+    failureMode:
+      'Parody aimed at the thing the player is meant to be attached to corrodes the attachment the rest of the game depends on. The rule: parody targets institutions, never the player\'s own attachment.',
+    module: 'design',
+    source: 'fm-03-design (Creative Director)'
+  },
+  {
+    id: 'progression.recommendedIsAFlag',
+    constant: 'Narrative.recommended',
+    value: 'a semantic flag, never "the first element"',
+    rationale:
+      'Array position is not a contract. A flag can be tested; a position cannot.',
+    failureMode:
+      'Someone reorders the list for a layout reason six weeks from now and the recommended start moves silently with nothing failing. A test asserts exactly one narrative carries the flag and that a reversed array still resolves to the same one.',
+    module: 'progression',
+    source: 'fm-03-design (Creative Director)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

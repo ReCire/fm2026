@@ -36,29 +36,42 @@ export const OnboardingContentSchema = z.object({
 export type OnboardingContent = z.infer<typeof OnboardingContentSchema>;
 
 export const onboardingContent: OnboardingContent = OnboardingContentSchema.parse({
+  /*
+   * Final roster from fm-03-design. Names, cities, levels, colours and flavour
+   * are theirs and verbatim; the three-letter short codes are derived here for
+   * the generated crest and are the only part open to change.
+   *
+   * Crest pairs were contrast-verified rather than picked by eye: lowest
+   * internal pair 4.06, lowest against either background 5.18, so no crest goes
+   * muddy in light or dark.
+   *
+   * On register: the club is NOT a joke. The parody lives in the brands, the
+   * mail and LinkedOut — things done TO the player. The club is what they are
+   * asked to care about for twenty seasons, so each line carries one specific
+   * true-sounding detail instead of a punchline.
+   */
   clubs: [
-    { id: 'anstoss',    name: 'FC Anstoß Pro',        short: 'ANS', city: 'Bochum',     leagueLevel: 3, colours: ['#1B7F4B', '#F2F0EA'], flavour: 'Der Klub, der schon immer da war.' },
-    { id: 'fortuna95',  name: 'SC Fortuna 95',        short: 'F95', city: 'Düsseldorf', leagueLevel: 2, colours: ['#C4342E', '#F2F0EA'], flavour: 'Zwei Aufstiege, drei Abstiege, ein Stadion voller Geduld.' },
-    { id: 'blauweiss',  name: 'Blau-Weiß Oberhausen', short: 'BWO', city: 'Oberhausen', leagueLevel: 3, colours: ['#2B5D9E', '#F2F0EA'], flavour: 'Mehr Tradition als Budget.' },
-    { id: 'sgwacker',   name: 'SG Wacker Halle',      short: 'SGW', city: 'Halle',      leagueLevel: 3, colours: ['#4A4A48', '#D8B14A'], flavour: 'Ein Verein, der sich selbst im Weg steht.' },
-    { id: 'eintracht',  name: 'Eintracht Kaltenkirchen', short: 'EKA', city: 'Kaltenkirchen', leagueLevel: 3, colours: ['#7A3E8F', '#F2F0EA'], flavour: 'Sechshundert Zuschauer, davon fünfzig laut.' },
-    { id: 'vflmagd',    name: 'VfL Magdeburg-Nord',   short: 'VFM', city: 'Magdeburg',  leagueLevel: 1, colours: ['#1E6E78', '#F2F0EA'], flavour: 'Einmal fast oben gewesen. Das reicht für zwanzig Jahre Erwartung.' },
+    // Liga 1
+    { id: 'hafenkrone', name: 'SC Hafenkrone',      short: 'HFK', city: 'Bremerhaven',        leagueLevel: 0, colours: ['#0E3F6B', '#E8B923'], flavour: 'Seit 1904 am Wasser. Der Wind kommt immer von vorn.' },
+    { id: 'marktstadt', name: 'VfB Marktstadt',     short: 'MKT', city: 'Stuttgart-Nord',     leagueLevel: 0, colours: ['#B3121A', '#F2EFE7'], flavour: 'Drei Meisterschaften, alle vor 1988. Man erinnert dich täglich daran.' },
+    { id: 'steinfeld',  name: 'Borussia Steinfeld', short: 'STF', city: 'Mönchen-Steinfeld',  leagueLevel: 0, colours: ['#0B6E3A', '#F2EFE7'], flavour: 'Ein Werksverein, der sich seit vierzig Jahren als Traditionsverein bezeichnet.' },
 
-    /*
-     * PLACEHOLDER NAMES — fm-03-design to replace.
-     *
-     * Added because a narrative offering one club is not a choice, and the test
-     * in rules.test.ts requires at least three per starting story. The league
-     * levels and the count are load-bearing; the names, cities, colours and
-     * flavour lines are not, and are written to be overwritten.
-     */
-    { id: 'hansekap',   name: 'FC Hanse Nordkap',     short: 'FHN', city: 'Kiel',       leagueLevel: 0, colours: ['#123C63', '#F2F0EA'], flavour: 'Vier Titel, alle vor 1981.' },
-    { id: 'rheinturm',  name: 'Rheinturm 04',         short: 'RT04', city: 'Köln',      leagueLevel: 0, colours: ['#8C2F39', '#F2F0EA'], flavour: 'Der teuerste Kader der Liga und der drittbeste.' },
-    { id: 'bergedorf',  name: 'SV Alemannia Bergedorf', short: 'SVA', city: 'Hamburg',  leagueLevel: 0, colours: ['#2F6B45', '#F2F0EA'], flavour: 'Seit dem Aufstieg fragt niemand mehr, wie lange das gutgeht.' },
-    { id: 'glueckauf',  name: 'Glückauf Wanne',       short: 'GAW', city: 'Herne',      leagueLevel: 1, colours: ['#4A3B2A', '#D8B14A'], flavour: 'Die Zeche ist zu, der Verein nicht.' },
-    { id: 'weserau',    name: 'TSV Weserau',          short: 'TWA', city: 'Bremen',     leagueLevel: 1, colours: ['#1E6E78', '#D8B14A'], flavour: 'Zweimal knapp gescheitert, einmal knapp gerettet.' },
-    { id: 'donaustadt', name: 'SpVgg Donaustadt',     short: 'DON', city: 'Regensburg', leagueLevel: 2, colours: ['#5B4B8A', '#F2F0EA'], flavour: 'Ein Sponsor, der Fenster verkauft, und große Pläne.' },
-    { id: 'lohmuehle',  name: 'FC Lohmühle',          short: 'FLM', city: 'Lübeck',     leagueLevel: 2, colours: ['#3F7A54', '#F2F0EA'], flavour: 'Ein Stadion am Wald und ein Vorstand mit Prinzipien.' }
+    // Liga 2
+    { id: 'ostwall',    name: '1. FC Ostwall',      short: 'OWL', city: 'Leipzig-Ost',        leagueLevel: 1, colours: ['#1D2B5C', '#C9A227'], flavour: 'Zweimal aufgestiegen, zweimal abgestiegen, einmal insolvent.' },
+    { id: 'rothenbach', name: 'SV Rothenbach',      short: 'RTB', city: 'Kaiserslautern',     leagueLevel: 1, colours: ['#7A1220', '#E5DCC5'], flavour: 'Der Betzenberg ist nicht weit. Man hört ihn an guten Tagen.' },
+    { id: 'kupferberg', name: 'FC Kupferberg',      short: 'KPB', city: 'Bochum-Süd',         leagueLevel: 1, colours: ['#1F6F78', '#E8D5B8'], flavour: 'Die Zeche ist zu, der Verein nicht.' },
+
+    // Liga 3
+    { id: 'lindenau',   name: 'SpVgg Lindenau',     short: 'LIN', city: 'Leipzig-Lindenau',   leagueLevel: 2, colours: ['#2E5B34', '#EFE3C2'], flavour: 'Gegründet von Setzern und Druckern. Die Kurve textet bis heute selbst.' },
+    { id: 'bergheide',  name: 'TSV Bergheide',      short: 'BGH', city: 'Wuppertal',          leagueLevel: 2, colours: ['#4A2D5E', '#D9C68A'], flavour: 'Der steilste Rasen der Liga. Auswärtsteams beschweren sich seit 1961.' },
+    { id: 'altesaline', name: 'SV Alte Saline',     short: 'SAL', city: 'Lüneburg',           leagueLevel: 2, colours: ['#8A4B1E', '#EDE0C8'], flavour: 'Salz, Solebäder, ein Stadion neben dem Kurpark.' },
+    { id: 'deichtor',   name: 'FC Deichtor',        short: 'DTR', city: 'Emden',              leagueLevel: 2, colours: ['#123C56', '#9BC4D8'], flavour: 'Bei Sturmflut fällt das Training aus. Das steht so in der Satzung.' },
+
+    // Liga 4
+    { id: 'ziegelhuette', name: 'SC Ziegelhütte',   short: 'ZGH', city: 'Fürth-West',         leagueLevel: 3, colours: ['#5C1F2E', '#D8C9A8'], flavour: 'Vereinsheim größer als die Haupttribüne. Beides original.' },
+    { id: 'grubenrand', name: 'SV Grubenrand',      short: 'GRB', city: 'Gelsenkirchen-Nord', leagueLevel: 3, colours: ['#2B4A6F', '#E3D7B8'], flavour: 'Zwölfhundert Mitglieder, achthundert davon im selben Fanclub.' },
+    { id: 'auenpark',   name: 'FC Auenpark',        short: 'AUE', city: 'Magdeburg',          leagueLevel: 3, colours: ['#3E6B2A', '#EAE0C4'], flavour: 'Der Platz gehört der Stadt, der Rest gehört den Mitgliedern.' },
+    { id: 'blechhalle', name: 'TSV Blechhalle',     short: 'BLH', city: 'Ingolstadt',         leagueLevel: 3, colours: ['#6B4A1E', '#E8DCC0'], flavour: 'Die Halle steht noch. Der Sponsor, der sie gebaut hat, nicht.' }
   ],
   avatars: [
     { id: 'av-01', label: 'Kurzer Bart, Trainingsjacke' },

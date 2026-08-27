@@ -5,7 +5,7 @@ import {
   progressRatio
 } from './rules';
 import { createProgression, migrateProgression, type ProgressionState } from './state';
-import { narratives, narrativeById } from './content';
+import { narratives, narrativeById, recommendedNarrative } from './content';
 import { createRng } from '$lib/engine/rng';
 import type { GameState } from '$lib/engine/state';
 
@@ -265,5 +265,27 @@ describe('silencing is for the player, not the machinery', () => {
     revoke(p, 'merch');
     expect(isSilenced(asState(p), 'merch')).toBe(false);
     expect(delegationFor(asState(p), 'merch')).toBeUndefined();
+  });
+});
+
+describe('recommended narrative', () => {
+  /**
+   * A flag, not "the first element". Array position is not a contract: someone
+   * reorders for a layout reason and the recommendation moves silently with
+   * nothing failing.
+   */
+  it('is marked semantically and there is exactly one', () => {
+    const flagged = narratives.filter((n) => n.recommended);
+    expect(flagged).toHaveLength(1);
+    expect(recommendedNarrative().id).toBe(flagged[0]!.id);
+  });
+
+  it('points at Aufsteiger, the start the tutorial runs on', () => {
+    expect(recommendedNarrative().id).toBe('aufsteiger');
+  });
+
+  it('survives a reorder — the recommendation follows the flag, not the index', () => {
+    const reordered = [...narratives].reverse();
+    expect(reordered.find((n) => n.recommended)!.id).toBe('aufsteiger');
   });
 });

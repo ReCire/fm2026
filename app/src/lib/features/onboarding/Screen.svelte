@@ -39,6 +39,23 @@
     toast(`Willkommen bei ${setup.club.name}`, chosen.pitch, 'good');
   }
 
+  /*
+   * A blocked press routes rather than no-ops.
+   *
+   * That is what makes keeping the button visible worth anything: an
+   * unavailable control must still explain AND still lead somewhere. The
+   * reasons are associated by aria-describedby, and pressing moves focus to
+   * whatever is unmet — so the blocker is a route, not a notice.
+   */
+  function next() {
+    if (canAdvance(o)) {
+      advance(o);
+      return;
+    }
+    const target = document.querySelector<HTMLElement>('[data-first-field]');
+    target?.focus();
+  }
+
   function quickStart() {
     skip(o);
     const narrative = narratives[0]!;
@@ -68,6 +85,7 @@
     <!-- docs-check-ignore: a text field is not a documented control; its label is -->
     <input
       id="mgr-name"
+      data-first-field
       type="text"
       maxlength="28"
       bind:value={o.manager.name}
@@ -104,12 +122,12 @@
 
 {:else if o.step === 'narrative'}
   <Panel title="Wie fängt es an?" accent="accent">
-    {#each narratives as n (n.id)}
+    {#each narratives as n, i (n.id)}
       <label class="narr" class:on={o.narrativeId === n.id}>
         <!-- docs-check-ignore: documented as a group (progression.narrative) -->
-        <input type="radio" name="narr" value={n.id} bind:group={o.narrativeId} />
+        <input type="radio" name="narr" value={n.id} bind:group={o.narrativeId} data-first-field={i === 0 ? '' : undefined} />
         <span>
-          <strong>{n.name}</strong>
+          <strong>{n.name}{#if n.recommended}<span class="rec">Empfohlen</span>{/if}</strong>
           <em>{n.pitch}</em>
           <small>{n.premise}</small>
           <small class="diff">Schwierigkeit: {n.difficulty} · {n.unlockedAtStart.length} Bereiche zu Beginn</small>
@@ -121,10 +139,10 @@
 {:else if o.step === 'club'}
   <Panel title="Welchen Verein übernimmst du?" accent="accent" meta={narrative?.name}>
     <div class="clubs">
-      {#each availableClubs as c (c.id)}
+      {#each availableClubs as c, i (c.id)}
         <label class="club" class:on={o.clubId === c.id}>
           <!-- docs-check-ignore: documented as a group (onboarding.club) -->
-          <input type="radio" name="club" value={c.id} onchange={() => chooseClub(o, c.id)} checked={o.clubId === c.id} />
+          <input type="radio" name="club" value={c.id} onchange={() => chooseClub(o, c.id)} checked={o.clubId === c.id} data-first-field={i === 0 ? '' : undefined} />
           <span class="crest" style="--a: {c.colours[0]}; --b: {c.colours[1]}" aria-hidden="true">{c.short}</span>
           <span class="meta">
             <strong>{c.name}</strong>
@@ -144,16 +162,23 @@
   </Panel>
 {/if}
 
-{#if problems.length > 0}
-  <p class="problems" role="status">{problems.join(' ')}</p>
-{/if}
+<p id="onboarding-blockers" class="problems" role="status">
+  {#if problems.length > 0}{problems.join(' ')}{/if}
+</p>
 
 <div class="nav">
   {#if position > 0}
     <Button doc="onboarding.back" variant="ghost" onclick={() => back(o)} />
   {/if}
   {#if o.step !== 'confirm'}
-    <Button doc="onboarding.next" onclick={() => advance(o)} disabled={!canAdvance(o)} />
+    <!-- `blocked`, not `disabled`: a disabled button leaves the tab order, so a
+         keyboard user reaches the end of the step and finds nothing at all. -->
+    <Button
+      doc="onboarding.next"
+      onclick={next}
+      blocked={!canAdvance(o)}
+      describedBy={problems.length > 0 ? 'onboarding-blockers' : undefined}
+    />
   {/if}
   <Button doc="onboarding.skip" variant="ghost" onclick={quickStart} />
 </div>

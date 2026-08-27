@@ -10,13 +10,32 @@
     doc: docId,
     variant = 'primary',
     disabled = false,
+    blocked = false,
+    describedBy,
     label,
     explain = false,
     onclick
   }: {
     doc: string;
     variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+    /**
+     * Hard-disabled: out of the tab order, cannot be pressed. Use only when
+     * there is genuinely nothing to explain.
+     */
     disabled?: boolean;
+    /**
+     * Unavailable, but still reachable, still announced, and still pressable.
+     *
+     * The `disabled` attribute drops a control out of the tab order, so a
+     * keyboard user tabs to the end of a step and finds nothing — no button, no
+     * explanation, no way to discover what is missing. `aria-disabled` keeps it
+     * discoverable. Pair it with `describedBy` and an onclick that routes the
+     * player to whatever is unmet: an unavailable control must still explain
+     * and still lead somewhere. Disabling is not an explanation.
+     */
+    blocked?: boolean;
+    /** Id of the element listing why this is unavailable. */
+    describedBy?: string;
     /** Overrides the registry label. Use sparingly — the registry is the source. */
     label?: string;
     /** Show the ⓘ affordance next to the button (touch-friendly tooltips). */
@@ -31,9 +50,11 @@
 <span class="wrap">
   <button
     class="btn {variant}"
+    class:blocked
     type="button"
     {disabled}
-    aria-describedby={entry ? `${docId}-desc` : undefined}
+    aria-disabled={blocked ? 'true' : undefined}
+    aria-describedby={[entry ? `${docId}-desc` : null, describedBy].filter(Boolean).join(' ') || undefined}
     {onclick}
   >{text}</button>
   <!-- The tooltip belongs in a description, not in the accessible NAME. As a
@@ -72,6 +93,8 @@
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .btn:active:not(:disabled) { transform: scale(0.98); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  /* Looks the same as disabled; behaves completely differently. */
+  .btn.blocked { opacity: 0.45; }
 
   .primary { background: var(--primary); color: #000; }
   .secondary { background: #1e293b; color: var(--accent); border: 1px solid var(--border-strong); }
