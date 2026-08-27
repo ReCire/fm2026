@@ -470,6 +470,30 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (measured, and overruled architecture\'s call to leave it)'
   },
 
+  // ---------------------------------------------------------------- staff --
+  {
+    id: 'staff.effectsAreDeclarative',
+    constant: 'StaffRole.effects',
+    value: 'a key and a value, contributed to a shared bus — never a direct call',
+    rationale:
+      'A role declares `{ key, factor }` or `{ key, add }`. Nothing in staff knows what any key means, and no other system asks whether a particular person is employed — squad asks how much fitness is lost this week, not whether there is a fitness coach. Adding a role is a content edit; removing one cannot strand a check elsewhere.',
+    failureMode:
+      'The alternative — `if (staff.physio.hired)` scattered through other modules — is how the prototype worked, and it means every new role requires edits in systems whose authors never heard of it. A test asserts no effect resolves to a factor of 1 or an add of 0, because an effect that changes nothing is the invisible-stat failure written directly into content.',
+    module: 'staff',
+    source: 'architecture, after the prototype\'s fx/dx design'
+  },
+  {
+    id: 'staff.provideIsNotContribute',
+    constant: 'Hook.provides vs Hook.contributes',
+    value: 'declared separately, because the arity differs',
+    rationale:
+      'A PROVIDED key has one producer and many readers. A CONTRIBUTED key has many contributors and readers that see the accumulated value. They are different mechanisms and cannot share a declaration or a key name.',
+    failureMode:
+      'They did share both, briefly, and it produced the invisible-stat failure a FIFTH time — in the very bus built to prevent it. staff declared `provides: [squad.strength]` while calling `addTo`; matchday `provide`d the same name; the co-trainer\'s +2 landed in a bucket nobody read. Caught only because the effect test hired a co-trainer and asserted the table moved. The registry now requires every reader to run after ALL contributors, not just one — a reader between two contributors silently sees half a value, which is worse than seeing none because it looks plausible.',
+    module: 'staff',
+    source: 'architecture (found by its own effect test)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

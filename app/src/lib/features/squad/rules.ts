@@ -142,7 +142,12 @@ export interface MatchdayOutcome {
 export function applyPostMatch(
   squad: SquadState,
   rng: Rng,
-  opts: { injuryRiskMultiplier?: number; fitnessLossMultiplier?: number } = {}
+  opts: {
+    injuryRiskMultiplier?: number;
+    fitnessLossMultiplier?: number;
+    /** A physio shortens layoffs without preventing them. */
+    injuryDurationMultiplier?: number;
+  } = {}
 ): MatchdayOutcome {
   const c = squadContent;
   const loss = Math.max(2, Math.round(c.fitnessLossPerMatch * (opts.fitnessLossMultiplier ?? 1)));
@@ -167,7 +172,10 @@ export function applyPostMatch(
     if (!squad.lineup.includes(p.id) || p.injured > 0) continue;
     const risk = baseRisk * (p.fitness < c.tiredFitnessThreshold ? c.tiredInjuryMultiplier : 1);
     if (rng.chance(risk)) {
-      const matchdays = rng.int(1, 6);
+      const matchdays = Math.max(
+        1,
+        Math.round(rng.int(1, 6) * (opts.injuryDurationMultiplier ?? 1))
+      );
       p.injured = matchdays;
       outcome.injuries.push({ player: p, matchdays });
     }

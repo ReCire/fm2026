@@ -49,14 +49,18 @@ export class Registry {
 
       ordered.forEach((entry, index) => {
         for (const key of entry.hook.consumes ?? []) {
-          const producedEarlier = ordered
-            .slice(0, index)
-            .some((earlier) => (earlier.hook.provides ?? []).includes(key));
-          if (producedEarlier) continue;
+          const supplies = (h: Hook) =>
+            (h.provides ?? []).includes(key) || (h.contributes ?? []).includes(key);
 
-          const producedLater = ordered
+          // Every contributor must run before the reader, not just one of them:
+          // a reader placed between two contributors silently sees half the
+          // value, which is worse than seeing none because it looks plausible.
+          const laterSupplier = ordered
             .slice(index + 1)
-            .find((later) => (later.hook.provides ?? []).includes(key));
+            .find((later) => supplies(later.hook));
+          if (!laterSupplier && ordered.slice(0, index).some((e) => supplies(e.hook))) continue;
+
+          const producedLater = laterSupplier;
 
           throw new Error(
             producedLater

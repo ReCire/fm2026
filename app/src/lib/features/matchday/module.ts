@@ -31,8 +31,10 @@ export default defineModule({
          */
         phase: 'pre',
         order: 10,
-        provides: ['squad.strength', 'matchday.modifiers', 'matchday.fitnessCost', 'matchday.goalChance'],
-        run({ state, emit, provide }) {
+        provides: ['squad.strength', 'matchday.modifiers', 'matchday.goalChance'],
+        contributes: ['squad.fitnessLoss'],
+        consumes: ['squad.strengthBonus', 'matchday.homeStrength'],
+        run({ state, emit, provide, modify, total }) {
           const squad = state.modules.squad;
           const m = state.modules.matchday;
 
@@ -49,14 +51,22 @@ export default defineModule({
             ?.find((f) => f.home === us || f.away === us);
           const isHome = fixture ? fixture.home === us : true;
 
-          const base = teamStrength(squad, false);
+          /*
+           * Everything the backroom and the doctrine contributed lands here.
+           * matchday is the single place that turns "how good are we" into one
+           * number, so it has to read the bus rather than only its own tactics
+           * — otherwise a co-trainer's +2 sits in a bucket nobody opens.
+           */
+          const external = total('squad.strengthBonus') + (isHome ? total('matchday.homeStrength') : 0);
+          const base = teamStrength(squad, false, external);
           const strength = effectiveStrength(m, base, isHome);
 
           provide('squad.strength', strength);
           provide('matchday.modifiers', modifiers(m, isHome));
-          // The price of the chosen style. squad applies it after the match, so
-          // an attacking week is paid for in the next one.
-          provide('matchday.fitnessCost', fitnessMultiplier(m));
+          // The price of the chosen style, contributed rather than owned: a
+          // fitness coach and a doctrine will want to move the same number, and
+          // none of us should have to know the others exist.
+          modify('squad.fitnessLoss', fitnessMultiplier(m));
           provide('matchday.goalChance', goalChance(m));
 
           const available = squad.players.filter(isAvailable).length;

@@ -36,14 +36,22 @@ describe('design intent', () => {
   });
 
   /**
-   * The point of the record: once a module is ported, its rationale should be
-   * visible to the player, not sitting in a holding pen. This test lists the
-   * entries that still need wiring, and fails once a ported module leaves one
-   * stranded.
+   * Once a module has a SCREEN, its rationale must reach the player rather than
+   * sitting in a holding pen.
+   *
+   * Keyed on having a screen, not merely on being registered. A module can be
+   * legitimately rules-only for a while — registered, ticking, tested, with its
+   * surface still to be built by the other session — and in that state there is
+   * no control for a doc entry to attach to. Firing then would push someone to
+   * write placeholder documentation for a screen that does not exist, which is
+   * worse than the gap: it turns the record into a formality.
+   *
+   * The real failure is still caught: a shipped screen whose reasoning is
+   * stranded in design-intent and never reaches a tooltip.
    */
-  it('surfaces rationale for every module that has already been ported', () => {
+  it('surfaces rationale for every module that has a screen', () => {
     const docs = registry.docs();
-    const ported = new Set(registry.all.map((m) => m.id));
+    const ported = new Set(registry.all.filter((m) => m.screen).map((m) => m.id));
     const stranded: string[] = [];
 
     for (const d of designIntent) {

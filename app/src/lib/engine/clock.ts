@@ -46,6 +46,11 @@ export function runTick(
   const failed: string[] = [];
   const timings: TickResult['timings'] = [];
   const provided = new Map<string, unknown>();
+  // Shared modifiers. Many contributors, one accumulated value — see
+  // TickContext.modify. Separate from `provided` because the arity differs:
+  // provide is one producer, modify is many.
+  const factors = new Map<string, number>();
+  const totals = new Map<string, number>();
 
   // Locked modules do not tick. A feature the player has not unlocked must not
   // move money, generate events, or advance its own state behind their back.
@@ -75,7 +80,11 @@ export function runTick(
       emit: (e) => events.push(e),
       query: <T>(key: string, fallback: T): T =>
         provided.has(key) ? (provided.get(key) as T) : fallback,
-      provide: (key, value) => provided.set(key, value)
+      provide: (key, value) => provided.set(key, value),
+      modify: (key, f) => factors.set(key, (factors.get(key) ?? 1) * f),
+      addTo: (key, a) => totals.set(key, (totals.get(key) ?? 0) + a),
+      factor: (key, base = 1) => (factors.has(key) ? factors.get(key)! : base),
+      total: (key, base = 0) => (totals.has(key) ? totals.get(key)! : base)
     };
 
     // A delegated department runs its autopilot instead of its normal hook, so

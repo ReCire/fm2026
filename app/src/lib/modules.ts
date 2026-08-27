@@ -16,6 +16,7 @@ import matchday from './features/matchday/module';
 import squad from './features/squad/module';
 import transfer from './features/transfer/module';
 import stadium from './features/stadium/module';
+import staff from './features/staff/module';
 
 export const modules: readonly ModuleDef[] = [
   core,
@@ -26,5 +27,6 @@ export const modules: readonly ModuleDef[] = [
   stadium,
   league,
   matchday,
-  transfer
+  transfer,
+  staff
 ];

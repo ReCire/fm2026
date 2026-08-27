@@ -36,6 +36,29 @@ export interface TickContext {
   provide<T>(key: string, value: T): void;
 
   /**
+   * Contribute a MULTIPLIER to a shared modifier, e.g. `modify('squad.fitnessLoss', 0.7)`.
+   *
+   * `provide` has exactly one producer per key. Modifiers have many: a fitness
+   * coach, an attacking style and a doctrine all want to move the same number,
+   * and none of them should have to know the others exist — or fight over who
+   * owns the key.
+   *
+   * Contributions are commutative, so the order among contributors does not
+   * matter. Only reader-after-contributor matters, and that is what the
+   * registry's provides/consumes check already enforces.
+   */
+  modify(key: string, factor: number): void;
+
+  /** Contribute an ADDEND to a shared modifier, e.g. `addTo('squad.strength', 2)`. */
+  addTo(key: string, amount: number): void;
+
+  /** Read an accumulated multiplier. Returns `base` when nothing contributed. */
+  factor(key: string, base?: number): number;
+
+  /** Read an accumulated addend. Returns `base` when nothing contributed. */
+  total(key: string, base?: number): number;
+
+  /**
    * Set when this module's `autopilot` is running instead of its normal hook.
    * Undefined during a normal tick.
    *
@@ -61,7 +84,21 @@ export interface Hook {
   provides?: readonly string[];
 
   /**
-   * Context keys this hook reads via `ctx.query`.
+   * Modifier keys this hook contributes to via `modify` or `addTo`.
+   *
+   * Distinct from `provides` because the arity differs: a provided key has one
+   * producer, a contributed key has many. Declaring them separately is what
+   * lets the registry check that every reader runs after ALL contributors —
+   * and stops a contribution being mistaken for a provision.
+   *
+   * That mistake already happened once: staff declared `provides: ['squad.strength']`
+   * while actually calling `addTo`, matchday `provide`d the same key, and the
+   * co-trainer's +2 landed in a bucket nobody read. Silent, as always.
+   */
+  contributes?: readonly string[];
+
+  /**
+   * Context keys this hook reads via `ctx.query`, `ctx.factor` or `ctx.total`.
    *
    * `query` returns a FALLBACK when the key has not been provided yet, and a
    * fallback is indistinguishable from a real answer — no error, no event, no

@@ -16,9 +16,8 @@ export default defineModule({
   hooks: {
     matchday: [{
       phase: 'post',
-      provides: ['squad.strength'],
-      consumes: ['matchday.fitnessCost'],
-      run({ state, rng, emit, provide, query }) {
+      consumes: ['squad.fitnessLoss', 'squad.injuryRisk', 'squad.injuryDuration'],
+      run({ state, rng, emit, factor }) {
         const squad = state.modules.squad;
 
         if (squad.lineup.length < 11) squad.lineup = autoLineup(squad);
@@ -28,11 +27,11 @@ export default defineModule({
         // Doctrine and staff will modify these too; they arrive as plain
         // multipliers so squad never needs to know those systems exist.
         const outcome = applyPostMatch(squad, rng, {
-          injuryRiskMultiplier: 1,
-          fitnessLossMultiplier: query<number>('matchday.fitnessCost', 1)
+          injuryRiskMultiplier: factor('squad.injuryRisk'),
+          fitnessLossMultiplier: factor('squad.fitnessLoss'),
+          injuryDurationMultiplier: factor('squad.injuryDuration')
         });
 
-        provide('squad.strength', teamStrength(squad, true));
 
         for (const { player, matchdays } of outcome.injuries) {
           emit({
