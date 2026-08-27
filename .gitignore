@@ -13,3 +13,8 @@ docs/screenshots/*.png
 .svelte-kit/
 app/build/
 app/.vercel/
+
+# Reference material dropped in by hand, not part of this project.
+# Ignored so a broad `git add` cannot sweep 8 MB of someone else's repo in —
+# which has already happened twice here with generated directories.
+traumverein_app/

@@ -20,13 +20,18 @@ directories at the same time; they touch different files in them.
 | | fm-03-design owns | architecture owns |
 |---|---|---|
 | **A feature** | `Screen.svelte`, `content.ts`, `docs.ts` | `module.ts`, `state.ts`, `rules.ts`, `rules.test.ts` |
-| **Shared code** | `src/lib/ui/`, `src/lib/design/`, `src/lib/graphics/` | `src/lib/engine/`, `src/lib/state/`, `src/lib/docs/registry.ts` |
+| **Shared code** | `src/lib/ui/`, `src/lib/design/`, `src/lib/graphics/` | `src/lib/engine/`, `src/lib/state/`, `src/lib/shell/`, `src/lib/docs/registry.ts` |
+| **The app shell** | `src/routes/` markup and styles | `src/lib/shell/` — which modules appear, what is reachable, what is new |
 | **Everything else** | game design, balance, copy, accessibility, motion | `modules.ts`, `scripts/`, `.github/`, `content/` schemas |
 
 Why that line: **`rules.ts` is how a mechanic computes, `content.ts` is what the
 numbers are.** Splitting there is what lets balance be retuned without an
 engineer and refactored without a designer. `Screen.svelte` follows the design
 side because it is presentation; the logic it calls lives in `rules.ts`.
+
+`src/routes/+layout.svelte` is presentation and belongs to design; the data it
+renders comes from `src/lib/shell/`. A convention about which half of one file
+you may edit is not a seam — a seam has to be something you can `git log`.
 
 **Nobody edits `src/lib/modules.ts` except architecture.** It is the one global
 list and the one place a merge conflict would actually hurt.
