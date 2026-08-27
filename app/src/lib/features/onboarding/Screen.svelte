@@ -12,6 +12,7 @@
   import { Panel, Button, toast } from '$lib/ui';
   import { STEPS } from './state';
   import { onboardingContent, clubById } from './content';
+  import Crest from '$lib/graphics/Crest.svelte';
   import { narratives } from '../progression/content';
   import { applyNarrative } from '../progression/rules';
   import {
@@ -143,7 +144,11 @@
         <label class="club" class:on={o.clubId === c.id}>
           <!-- docs-check-ignore: documented as a group (onboarding.club) -->
           <input type="radio" name="club" value={c.id} onchange={() => chooseClub(o, c.id)} checked={o.clubId === c.id} data-first-field={i === 0 ? '' : undefined} />
-          <span class="crest" style="--a: {c.colours[0]}; --b: {c.colours[1]}" aria-hidden="true">{c.short}</span>
+          <!-- 56px: initials stay legible and the whole set fits a 375px screen
+               without scrolling. Not smaller, even though the mark survives it —
+               the club step is the one moment the identity should feel like
+               something rather than a bullet. -->
+          <Crest name={c.name} colours={c.colours} size={56} />
           <span class="meta">
             <strong>{c.name}</strong>
             <small>{c.city} · Liga {c.leagueLevel + 1}</small>
@@ -235,13 +240,6 @@
   .narr .diff, .club .flav { margin-top: var(--sp-1); }
 
   .clubs { display: grid; gap: var(--sp-2); }
-  .crest {
-    display: grid; place-items: center; flex: none;
-    width: 42px; height: 42px; border-radius: 50%;
-    background: var(--a); color: var(--b);
-    border: 2px solid var(--b);
-    font-weight: 900; font-size: var(--fs-small); letter-spacing: -0.02em;
-  }
   .meta { min-width: 0; }
 
   .problems { color: var(--accent); font-size: var(--fs-small); margin: var(--sp-3) 0; }
