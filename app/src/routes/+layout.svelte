@@ -6,6 +6,9 @@
   import { navGroups, primaryNav, initTheme } from '$lib/shell';
   import { page } from '$app/state';
   import Toast from '$lib/ui/Toast.svelte';
+  import ThemeControl from '$lib/ui/ThemeControl.svelte';
+  import Crest from '$lib/graphics/Crest.svelte';
+  import { clubById } from '$lib/features/onboarding/content';
   import { formatMoney } from '$lib/features/finance/rules';
 
   let { children } = $props();
@@ -16,6 +19,12 @@
   $effect(() => { initTheme(); });
   const current = $derived(page.url.pathname.split('/')[1] ?? '');
 
+  // The chosen club's identity, falling back before onboarding completes.
+  const club = $derived(
+    clubById(game.modules.onboarding.clubId) ??
+      { name: game.modules.onboarding.clubName || 'FC Anstoß Pro', colours: ['#3D5C44', '#F0E8D4'] as const }
+  );
+
   let drawerOpen = $state(false);
 </script>
 
@@ -23,9 +32,9 @@
   <header>
     <button class="burger" aria-label="Menü" onclick={() => (drawerOpen = !drawerOpen)}>☰</button>
     <div class="brand">
-      <span class="crest">A</span>
+      <span class="crest"><Crest name={club.name} colours={club.colours} size={28} /></span>
       <div>
-        <strong>FC Anstoß Pro</strong>
+        <strong>{club.name}</strong>
         <small>Saison {game.meta.season} · Spieltag {game.meta.matchday}</small>
       </div>
     </div>
@@ -50,6 +59,7 @@
           </a>
         {/each}
       {/each}
+      <ThemeControl />
     </nav>
 
     {#if drawerOpen}
@@ -95,21 +105,16 @@
   }
   .burger { background: none; border: none; color: var(--text-main); font-size: var(--fs-title); cursor: pointer; min-width: var(--tap); min-height: var(--tap); }
   .brand { display: flex; align-items: center; gap: var(--s2); flex: 1; min-width: 0; }
-  .crest {
-    width: 30px; height: 30px; border-radius: 50%;
-    background: radial-gradient(circle, #ffc107 20%, #ff8f00 80%);
-    display: grid; place-items: center;
-    font-weight: 900; color: #000; border: 2px solid #fff;
-  }
-  .brand strong { display: block; font-size: var(--fs-headline); color: #fff; }
-  .brand small { font-size: var(--fs-caption); color: var(--accent); }
-  .balance { font-size: var(--fs-title); font-weight: 800; color: var(--primary); }
+  .crest { display: flex; flex: none; }
+  .brand strong { display: block; font-size: var(--fs-headline); color: var(--text-main); }
+  .brand small { font-size: var(--fs-caption); color: var(--accent-ink); }
+  .balance { font-size: var(--fs-title); font-weight: 800; color: var(--primary-ink); }
 
   .body { display: flex; flex: 1; min-height: 0; }
 
   .sidebar {
     width: 210px; flex: none;
-    background: #0a0e18;
+    background: var(--bg-sidebar);
     border-right: 1px solid var(--border);
     padding: var(--s3) var(--s2);
     display: flex; flex-direction: column; gap: 2px;
@@ -120,12 +125,12 @@
     display: flex; align-items: center; gap: var(--s2);
     padding: var(--s2) var(--s3);
     border-radius: var(--r-sm);
-    color: #cbd5e1; text-decoration: none;
+    color: var(--text-muted); text-decoration: none;
     font-size: var(--fs-body); font-weight: 700;
     border: 1px solid transparent;
   }
-  .sidebar a:hover { background: rgba(255,255,255,0.05); color: #fff; }
-  .sidebar a.active { background: var(--primary-glow); color: var(--primary); border-color: var(--border-highlight); }
+  .sidebar a:hover { background: var(--bg-inset); color: var(--text-main); }
+  .sidebar a.active { background: var(--primary-glow); color: var(--primary-ink); border-color: var(--border-highlight); }
   /* The department rule: 2px in the domain colour, replacing the pictogram. */
   .rule { flex: none; width: 2px; height: 14px; border-radius: 1px; background: currentColor; opacity: 0.45; }
   .sidebar a.active .rule { opacity: 1; }
@@ -133,7 +138,7 @@
     margin-left: auto;
     font-size: var(--fs-caption);
     font-weight: 700;
-    color: var(--primary-ink, var(--primary));
+    color: var(--primary-ink);
   }
 
   /* Landscape on a notched phone: viewport-fit=cover means the notch and the
@@ -159,14 +164,14 @@
       padding-top: calc(var(--s3) + var(--safe-top));
     }
     .sidebar.open { transform: none; }
-    .scrim { display: block; position: fixed; inset: 0; z-index: 299; background: rgba(3,6,12,0.72); border: none; }
+    .scrim { display: block; position: fixed; inset: 0; z-index: 299; background: color-mix(in srgb, var(--bg-body) 78%, transparent); border: none; }
 
     main { padding-bottom: calc(72px + var(--safe-bottom)); }
 
     .tabbar {
       display: flex;
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
-      background: rgba(10, 14, 24, 0.94);
+      background: color-mix(in srgb, var(--bg-header) 94%, transparent);
       backdrop-filter: blur(14px);
       border-top: 1px solid var(--border);
       padding-bottom: var(--safe-bottom);
@@ -180,7 +185,7 @@
       background: none; border: none; cursor: pointer;
       color: var(--text-dim); text-decoration: none;
     }
-    .tabbar .on { color: var(--primary); }
+    .tabbar .on { color: var(--primary-ink); }
     .ico { font-size: 17px; line-height: 1; }
     .lbl { font-size: var(--fs-caption); font-weight: 800; }
   }
