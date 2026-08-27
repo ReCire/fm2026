@@ -390,15 +390,15 @@ export const designIntent = defineIntent([
     source: 'architecture (measured), target set by fm-03-design'
   },
   {
-    id: 'league.relegationPlacesEvidence',
-    constant: 'relegationPlaces',
-    value: '2 — and the measurement says that is why -10 sides survive',
+    id: 'league.threeUpThreeDown',
+    constant: 'promotionPlaces / relegationPlaces',
+    value: '3 and 3 — RESOLVED, was 2 and 2',
     rationale:
-      'A side ten points below its league now averages 16th of 18 and is in the bottom four in 20 of 24 seasons. The strength mapping does its job.',
+      'Not a balance number, a tutorial requirement. Aufsteiger is the default start and its premise is survival — "Halte die Klasse. Danach reden wir weiter." Every improvement system in the game is ultimately justified by "or else you go down", so that has to bite. Three also matches German lower-league practice, and the player starts in the lower leagues.',
     failureMode:
-      'But it is actually relegated in only 11 of 24, short of the "clear majority" target — because there are only two places. This is evidence for the open relegationPlaces decision (3 in the prototype, cut to 2 to satisfy a promotion/relegation symmetry invariant), not a separate mapping problem.',
+      'At two down the clearly-worst side survived more than half the time, so the tutorial spent a season teaching that its own stated threat was theatre. MEASURED at three-down across four seed families of 40 seasons: a side ten points below is relegated 68-80% of the time, while a side at the league average goes down 5-18% — at or below the 3-of-18 base rate. Both halves matter: being clearly worst must be usually fatal, being ordinary must not be risky. The symmetry invariant was never the problem and is untouched — it was right and the content was wrong.',
     module: 'league',
-    source: 'architecture (measured) — evidence for an open decision'
+    source: 'fm-03-design (ruling), architecture (measured)'
   },
 
   // ---------------------------------------------------------------- design --

@@ -331,7 +331,7 @@ describe('seasonOutcome', () => {
     return handMade(levels, level);
   };
 
-  it('promotes the top two of a division below the first', () => {
+  it('promotes the top clubs of a division below the first', () => {
     const first = seasonOutcome(withRank(2, 99));
     expect(first.rank).toBe(1);
     expect(first.promoted).toBe(true);
@@ -340,10 +340,15 @@ describe('seasonOutcome', () => {
   });
 
   it('leaves the club where it is one place short of promotion', () => {
-    // 16 wins puts us behind the two clubs on 17 and 16... build it explicitly:
+    /*
+     * Position ourselves exactly one place outside promotion, derived from the
+     * content rather than written in. The setup used to hardcode a win count
+     * chosen when two clubs went up; raising it to three silently turned this
+     * into a test of a different situation.
+     */
     const state = withRank(2, 0);
-    // ranks: Klub 2-17 has 17 wins, 2-16 has 16, so we sit third from the top.
-    state.levels[2]![0] = team(US, 15, 0, 0, 0, 0);
+    const rivals = C.teamsPerLevel - 1;
+    state.levels[2]![0] = team(US, rivals - C.promotionPlaces, 0, 0, 0, 0);
     const outcome = seasonOutcome(state);
     expect(outcome.rank).toBe(C.promotionPlaces + 1);
     expect(outcome.promoted).toBe(false);

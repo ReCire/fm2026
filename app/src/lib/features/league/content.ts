@@ -109,8 +109,26 @@ export const leagueContent: LeagueContent = LeagueContentSchema.parse({
   pointsForDraw: 1,
   pointsForLoss: 0,
 
-  promotionPlaces: 2,
-  relegationPlaces: 2,
+  /*
+   * Three up, three down.
+   *
+   * Not a balance number — a tutorial requirement. Aufsteiger is the default
+   * start and its whole premise is survival ("Halte die Klasse. Danach reden
+   * wir weiter."). At two down, the clearly-worst side in the division survived
+   * more than half the time, so the tutorial spent a season teaching that its
+   * own stated threat was mostly theatre.
+   *
+   * Every improvement system in the game — transfers, youth, training,
+   * delegation — is ultimately justified by "or else you go down". That
+   * justification has to bite. Three also matches German lower-league practice,
+   * and the player starts in the lower leagues.
+   *
+   * The symmetry invariant below is untouched: league size conservation was
+   * always correct, and three-and-three satisfies it. The invariant was right
+   * and the content was wrong.
+   */
+  promotionPlaces: 3,
+  relegationPlaces: 3,
   europePlaces: 4,
 
   promotionBonus: 1_500_000,

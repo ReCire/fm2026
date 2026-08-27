@@ -38,33 +38,51 @@ function seasonFinish(seed: number, delta: number): number {
   return table.findIndex((r) => r.team.name === 'FC Anstoß Pro') + 1;
 }
 
-const SEASONS = 12;
+/*
+ * Twenty seasons, not twelve.
+ *
+ * At a true relegation rate near 75%, twelve seasons has a standard deviation
+ * of 1.5 — so a legitimate build lands on 6/12 often enough to fail a sensible
+ * threshold. A flaky balance test gets its threshold weakened until it asserts
+ * nothing, so the sample has to be big enough that the bands can stay honest.
+ * Measured across four independent seed families of 40 seasons each:
+ *   -10 relegated 68-80%,  level side relegated 5-18% (base rate is 3/18 = 17%).
+ */
+const SEASONS = 20;
 const positions = (delta: number) =>
   Array.from({ length: SEASONS }, (_, s) => seasonFinish(seedFrom(`bal${s}`), delta));
 
 describe('strength decides results', () => {
   it('a side ten points above its league finishes top three in most seasons', () => {
     const top3 = positions(10).filter((p) => p <= 3).length;
-    expect(top3, `${top3}/${SEASONS} seasons in the top three`).toBeGreaterThanOrEqual(8);
+    expect(top3, `${top3}/${SEASONS} seasons in the top three`).toBeGreaterThanOrEqual(13);
   });
 
   /**
-   * MEASURED over 24 seasons: average finish 16.0 of 18; bottom four in 20 of
-   * 24; actually relegated in 11 of 24.
+   * Being clearly worst has to be usually fatal.
    *
-   * The design target was "relegated in the clear majority", and 46% is not
-   * that — but the shortfall is not the strength mapping, it is that there are
-   * only TWO relegation places. A side ten points below its league is reliably
-   * in the relegation fight; whether the fight claims it is a separate lever,
-   * and `league.relegationPlaces` is already flagged NEEDS A DESIGN DECISION
-   * (it was 3 in the prototype and became 2 to satisfy a symmetry invariant).
-   *
-   * So this asserts what the mapping actually guarantees.
+   * Not a balance preference: Aufsteiger is the default start and the tutorial,
+   * and its whole premise is survival. Every improvement system in the game is
+   * ultimately justified by "or else you go down", so that has to bite.
+   * MEASURED at three-down: relegated in 68-80% of seasons across four seed families.
    */
-  it('a side ten points below spends the season in the relegation fight', () => {
-    const ps = positions(-10);
-    const bottomFour = ps.filter((p) => p >= 15).length;
-    expect(bottomFour, `${bottomFour}/${SEASONS} seasons in the bottom four`).toBeGreaterThanOrEqual(8);
+  it('a side ten points below is relegated in most seasons', () => {
+    const down = positions(-10).filter((p) => p >= 16).length;
+    expect(down, `${down}/${SEASONS} seasons relegated`).toBeGreaterThanOrEqual(11);
+  });
+
+  /**
+   * The other half of the same requirement: being ORDINARY must not be risky.
+   *
+   * With 3 of 18 going down, the base rate for a side with no edge either way is
+   * 17%. MEASURED at 5-18% — a median side sits at or below the base rate, which is
+   * what "average" should mean. This guards the ceiling: if an ordinary squad
+   * started going down half the time, the threat would have stopped
+   * discriminating and would just be noise.
+   */
+  it('a side at its league’s strength is not in real danger', () => {
+    const down = positions(0).filter((p) => p >= 16).length;
+    expect(down, `${down}/${SEASONS} seasons relegated while merely average`).toBeLessThanOrEqual(6);
   });
 
   it('a side at its league’s strength finishes mid-table', () => {
