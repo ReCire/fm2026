@@ -2,55 +2,89 @@
 
 Two Claude sessions build this repo in parallel, and Eric pushes.
 
-## Who does what
+## The current phase: both sessions work in `app/`
 
-| | Owns | Files |
+`index.html` is **frozen**. It stays deployed and playable, and it is the
+reference implementation the port is written against — but no new work goes into
+it. Everything new is built in `app/`, by both sessions, so the single file can
+be retired.
+
+If something in the prototype needs to change to keep it running, that is fine.
+New features are not.
+
+## Who owns what, inside `app/`
+
+The split is by **seam**, not by folder. Both sessions work in the same feature
+directories at the same time; they touch different files in them.
+
+| | fm-03-design owns | architecture owns |
 |---|---|---|
-| **fm-03-design** | Game design, mechanics, balance, and everything the player sees and feels — layout, colour, motion, accessibility, copy, the parody layer | `index.html`, `sw.js`, `icons/`, `manifest.webmanifest` |
-| **architecture** | The machinery underneath — engine, state, data model, build, CI, tests, documentation system, the port | `app/`, `.github/`, `app/content/` |
-| **Eric** | Direction, and every `git push` | — |
+| **A feature** | `Screen.svelte`, `content.ts`, `docs.ts` | `module.ts`, `state.ts`, `rules.ts`, `rules.test.ts` |
+| **Shared code** | `src/lib/ui/`, `src/lib/design/`, `src/lib/graphics/` | `src/lib/engine/`, `src/lib/state/`, `src/lib/docs/registry.ts` |
+| **Everything else** | game design, balance, copy, accessibility, motion | `modules.ts`, `scripts/`, `.github/`, `content/` schemas |
 
-Shared, ping before editing: `.claude/launch.json`, `CONTRIBUTING.md`, `README.md`.
+Why that line: **`rules.ts` is how a mechanic computes, `content.ts` is what the
+numbers are.** Splitting there is what lets balance be retuned without an
+engineer and refactored without a designer. `Screen.svelte` follows the design
+side because it is presentation; the logic it calls lives in `rules.ts`.
+
+**Nobody edits `src/lib/modules.ts` except architecture.** It is the one global
+list and the one place a merge conflict would actually hurt.
+
+When you need something on the other side of the line, ask rather than reach
+across. It is usually a five-line addition and always faster than an unpick.
+
+## Before every commit
+
+```bash
+cd app && npm run verify      # typecheck + docs gate + tests
+```
+
+Not optional, and not only for the session that wrote logic. The docs gate fails
+the build on an undocumented control, a `doc` id that resolves to nothing, and
+`Math.random()` inside a rules file — those are the guardrails that make it safe
+for two people to move fast in one directory.
 
 ## Git
 
 **Agents commit. Only Eric pushes.** He pushes mid-flight on purpose, to test
-the live Vercel build on his phone while work continues. So `main` may move
-under you at any time — that is expected, not a problem.
+the live build on his phone while work continues, so `main` may move under you.
 
-Two rules that follow from it:
-
-1. **Stage explicitly.** `git add index.html sw.js`, never `git add -A` or
-   `git add .`. The other session's tree may be mid-write, and `app/` has
-   generated directories.
-2. **Commit under your own identity**, passed per command so nothing shared
-   changes:
+1. **Stage explicitly.** `git add <paths>`, never `-A` or `.`.
+2. **Commit under your own identity**, per command, so nothing shared changes:
 
    ```bash
    git -c user.name="fm-03-design" -c user.email="fm-03@local" commit -m "…"
-   git -c user.name="architecture" -c user.email="arch@local" commit -m "…"
+   git -c user.name="architecture"  -c user.email="arch@local"  commit -m "…"
    ```
 
-   Without this every commit reads as `ReCire`, including Eric's, and nobody
-   can tell who did what after the fact.
+   Without this every commit reads as `ReCire`, including Eric's, and nobody can
+   tell who did what afterwards.
+
+## Two rules that came out of real bugs
+
+**Vary the input across its range and assert the output moves.** Every tuneable
+gets a test that changes it and asserts something downstream changes. It does
+not need to know the direction. This is the test that would have caught all four
+of our invisible-stat bugs: an executive's competence that resolved nowhere, a
+crest's initials that were the same colour as the field behind them, a lineup
+that never reached the simulation, and a fitness cost that was documented,
+computed, and never wired.
+
+**A screenshot confirms what you expect to see.** Verify by querying the
+artifact, not by looking at it: assert the element exists, assert its value
+equals the expected one, assert it is absent where it should be absent.
 
 ## Design intent
 
-When you tune a number, record why — not what it does, but what breaks if
-someone changes it. Those go in `app/src/lib/docs/design-intent.ts` and become
-the `why` field of the matching control in the generated manual.
-
-The bar is the failure mode, not the mechanic:
+When you tune a number, record why in `app/src/lib/docs/design-intent.ts` — not
+what it does, but what breaks if someone changes it. The bar is the failure
+mode, not the mechanic:
 
 > `injuryBaseRisk = 0.055` — at 0.08 you lose a starter most weeks and rotation
 > stops being a choice you make: it becomes triage, and the depth-versus-quality
 > decision the whole transfer market is built around collapses.
 
 That is knowledge no reader could recover from the code, which is exactly why it
-is written down.
-
-## The port
-
-`index.html` stays the live, playable game and the reference implementation
-until `app/` catches up. It growing is expected. Nothing in it is throwaway:
-it is what Eric tests on, and it is the spec the port is written against.
+is written down. A test enforces that every entry has both a rationale and a
+failure mode.
