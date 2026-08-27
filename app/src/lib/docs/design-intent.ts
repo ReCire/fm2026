@@ -424,7 +424,7 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (Creative Director)'
   },
   {
-    id: 'design.flakyBandsErodeSocially',
+    id: 'league.flakyBandsErodeSocially',
     constant: 'balance canary sample size',
     value: '20 seasons, bands set from a 4-family measurement before the first red run',
     rationale:
