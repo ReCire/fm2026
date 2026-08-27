@@ -1,6 +1,6 @@
 /* Anstoß service worker — app-shell precache, network-first for the document.
    Bump CACHE when you ship: old caches are dropped on activate. */
-const CACHE = 'anstoss-v2';
+const CACHE = 'anstoss-v3';
 const SHELL = [
   '/',
   '/index.html',

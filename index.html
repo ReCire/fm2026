@@ -1035,6 +1035,81 @@
             color: var(--c-industry); font-weight: 800; margin-top: 6px; }
         .bp-name { font-size: 16px; font-weight: 800; color: var(--text-main); margin-top: 3px; }
         .bp-desc { font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.45; }
+    
+        /* ==========================================================
+           LINKEDOUT — Karrierenetzwerk als Parodie
+           Die Kategorien führen keine eigenen Farben ein, sondern greifen
+           die Wada-Ressorts auf: Scouts sind Youth-Grün, Presse ist
+           Matchday-Rot. Dieselbe Bedeutung, dieselbe Farbe, überall.
+           ========================================================== */
+        .lo-app { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .lo-top { display: flex; align-items: center; gap: var(--s3); padding: var(--s3); border-bottom: 1px solid var(--divider); }
+        .lo-mark { font-size: var(--fs-title); font-weight: 800; letter-spacing: -.5px; color: var(--text-1); white-space: nowrap; }
+        .lo-mark b { background: #1B9E6E; color: #FFFDF7; padding: 1px var(--s1) 2px; border-radius: 3px; font-weight: 800; }
+        .lo-search {
+            flex: 1; min-width: 0; background: var(--bg-inset); border-radius: 99px;
+            padding: var(--s2) var(--s3); font-size: var(--fs-caption); color: var(--text-3);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .lo-me { width: 28px; height: 28px; flex: 0 0 28px; border-radius: 50%;
+            background: var(--c-industry); color: #0B1410; display: grid; place-items: center;
+            font-size: var(--fs-caption); font-weight: 800; }
+
+        .lo-cats { display: flex; gap: var(--s1); padding: var(--s2) var(--s3) var(--s3);
+            overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--divider); }
+        .lo-cats::-webkit-scrollbar { display: none; }
+        .lo-cat {
+            flex: 0 0 auto; display: flex; align-items: center; gap: 5px; cursor: pointer;
+            background: transparent; border: 1px solid var(--border); border-radius: 99px;
+            padding: 6px var(--s3); font-family: inherit; font-size: var(--fs-caption);
+            font-weight: 600; color: var(--text-2); min-height: 32px;
+        }
+        .lo-cat i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+        .lo-cat.on { background: var(--text-1); color: var(--surface); border-color: var(--text-1); }
+
+        .lo-section-head {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-size: var(--fs-caption); font-weight: 700; letter-spacing: 1.4px;
+            text-transform: uppercase; color: var(--text-3);
+            padding: var(--s4) var(--s3) var(--s2);
+        }
+        .lo-section-head span { letter-spacing: 0; text-transform: none; font-weight: 600; color: var(--text-2); }
+
+        .lo-card {
+            display: flex; gap: var(--s3); align-items: flex-start;
+            padding: var(--s3); border-top: 1px solid var(--divider);
+        }
+        .lo-card.hired { background: var(--bg-inset); }
+        .lo-card.premium { opacity: .96; }
+        .lo-av {
+            width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%;
+            display: grid; place-items: center; font-size: var(--fs-caption);
+            font-weight: 800; color: #0B1410;
+        }
+        .lo-av.locked { background: var(--bg-inset); color: var(--text-3); font-size: var(--fs-body); }
+        .lo-main { flex: 1; min-width: 0; }
+        .lo-name { font-size: var(--fs-body); font-weight: 700; color: var(--text-1); line-height: var(--lh-tight); }
+        .lo-deg { font-size: var(--fs-caption); font-weight: 600; color: var(--text-3); margin-left: var(--s1); }
+        .lo-role { font-size: var(--fs-caption); font-weight: 700; margin-top: 2px; }
+        .lo-blurb { font-size: var(--fs-caption); color: var(--text-2); margin-top: var(--s1); line-height: 1.45; }
+        .lo-meta { font-size: var(--fs-caption); color: var(--text-3); margin-top: var(--s1); }
+        .lo-name.blurred, .lo-role.blurred { filter: blur(3.5px); user-select: none; }
+
+        .lo-comp { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+        .lo-comp-mark { font-size: 10px; color: var(--text-2); width: 10px; }
+        .lo-comp-track { flex: 1; max-width: 110px; height: 4px; background: var(--bg-inset); border-radius: 2px; overflow: hidden; }
+        .lo-comp-track i { display: block; height: 100%; }
+        .lo-comp-val { font-size: var(--fs-caption); color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+        .lo-btn {
+            flex: 0 0 auto; align-self: center; min-height: var(--tap); padding: 0 var(--s3);
+            border: 0; border-radius: 8px; cursor: pointer; font-family: inherit;
+            font-size: var(--fs-caption); font-weight: 700;
+            background: #1B9E6E; color: #FFFDF7;
+        }
+        .lo-btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
+        .lo-btn.pro { background: var(--c-industry); color: #0B1410; }
+        .lo-empty { padding: var(--s4) var(--s3); font-size: var(--fs-caption); color: var(--text-3); line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -1120,6 +1195,7 @@
             <button class="nav-btn" onclick="showScreen('screen-youth')" data-screen="screen-youth">Jugendakademie</button>
             <button class="nav-btn" onclick="showScreen('screen-contracts')" data-screen="screen-contracts">Spielerverträge</button>
             <button class="nav-btn" onclick="showScreen('screen-history')" data-screen="screen-history">Trophäenraum</button>
+            <button class="nav-btn" onclick="showScreen('screen-linkedout')" data-screen="screen-linkedout">LinkedOut</button>
             <button class="nav-btn" onclick="showScreen('screen-badges')" data-screen="screen-badges">Auszeichnungen</button>
 
             <div class="nav-category">Spezial & Karriere</div>
@@ -1231,6 +1307,29 @@
             </div>
 
             <!-- 3. MANAGER-RPG & TALENTBAUM -->
+            <!-- ===== LINKEDOUT ===== -->
+            <div id="screen-linkedout" style="display:none;">
+                <div class="lo-app">
+                    <div class="lo-top">
+                        <div class="lo-mark">Linked<b>Out</b></div>
+                        <div class="lo-search">Fach- und Führungskräfte durchsuchen</div>
+                        <div class="lo-me">AP</div>
+                    </div>
+                    <div class="lo-cats" id="lo-cats"></div>
+                    <div id="lo-hired"></div>
+                    <div id="lo-feed"></div>
+                </div>
+                <div class="panel" style="margin-top:12px;">
+                    <div class="panel-header">Was Delegieren bedeutet</div>
+                    <div style="font-size:var(--fs-caption); color:var(--text-2); line-height:1.7;">
+                        Eine übergebene Abteilung meldet sich nicht mehr im Posteingang und taucht nicht mehr
+                        in den offenen Vorgängen auf. Sie entscheidet selbst — nach bestem Wissen ihrer Leitung.
+                        Eine Kraft mit dünner Kompetenz verlängert zu teuer, kauft zu spät und bestellt zu wenig.
+                        Du merkst es an der Bilanz, nicht an einer Meldung.
+                    </div>
+                </div>
+            </div>
+
             <!-- ===== AUSZEICHNUNGEN ===== -->
             <div id="screen-badges" style="display:none;">
                 <div class="panel">
@@ -2901,7 +3000,7 @@
         if (content) content.scrollTop = 0;
         const screens = [
             'screen-dashboard', 'screen-calendar', 'screen-squad', 'screen-training',
-            'screen-europe', 'screen-doctrine', 'screen-mail', 'screen-badges', 'screen-scouting-global',
+            'screen-europe', 'screen-doctrine', 'screen-mail', 'screen-badges', 'screen-linkedout', 'screen-scouting-global',
             'screen-industry', 'screen-raw-materials', 'screen-holding', 'screen-merch',
             'screen-finances', 'screen-stocks', 'screen-sponsors', 'screen-stadium',
             'screen-campus', 'screen-staff', 'screen-fans', 'screen-transfer',
@@ -2930,6 +3029,7 @@
         if (screenId === 'screen-doctrine') renderDoctrineView();
         if (screenId === 'screen-mail') renderMailView();
         if (screenId === 'screen-badges') renderBadgeView();
+        if (screenId === 'screen-linkedout') renderLinkedOutView();
         if (screenId === 'screen-scouting-global') renderGlobalScoutingView();
         if (screenId === 'screen-industry') renderIndustryView();
         if (screenId === 'screen-raw-materials') renderRawMaterialsView();
@@ -4622,6 +4722,7 @@
         if (game.boardSat < 45 && Math.random() < 0.4) mailBoardWarning();
         if (game.fans < 40 && Math.random() < 0.3) mailPressJab('Die Kurve pfeift — steht der Trainer vor dem Aus?');
         if (Math.random() < 0.12) mailAgentSpam(squad[Math.floor(Math.random() * squad.length)]);
+        loAutopilotTick();
         invalidateAttention();
         mailPendingDecisions();
         checkBadges();
@@ -5027,6 +5128,366 @@
 
 
 
+
+    // ==========================================================
+    // LINKEDOUT
+    // Ein Karrierenetzwerk als Parodie und als Auslagerungsschalter.
+    // Der eigentliche Reiz ist nicht "eine Zahl steigt", sondern: dieser
+    // Posteingang hört auf, mich zu fragen. Wer eine Abteilung delegiert,
+    // kauft Ruhe — und bezahlt sie mit den Entscheidungen eines Fremden.
+    //
+    // Kategorien übernehmen die Wada-Ressortfarben, statt eigene
+    // einzuführen: dieselbe Bedeutung, dieselbe Farbe, überall.
+    // ==========================================================
+    const LO_CATS = {
+        it:        { label:'IT',             tone:'stocks' },
+        gov:       { label:'Regierung',      tone:'europe' },
+        under:     { label:'Unterwelt',      tone:'under' },
+        lobby:     { label:'Lobby',          tone:'doctrine' },
+        investor:  { label:'Investoren',     tone:'finance' },
+        pe:        { label:'Private Equity', tone:'finance' },
+        fanclub:   { label:'Fanclubs',       tone:'matchday' },
+        press:     { label:'Presse',         tone:'matchday' },
+        scout:     { label:'Scouts',         tone:'youth' },
+        coach:     { label:'Trainer',        tone:'squad' },
+        pr:        { label:'PR',             tone:'transfer' },
+        physio:    { label:'Physio',         tone:'youth' }
+    };
+
+    // Welche Abteilung eine Kraft übernehmen kann. Die IDs entsprechen
+    // den Bildschirmen aus DEPTS — delegiert wird, was dort auflaufen kann.
+    const LO_ROLES = [
+        { role:'Kaufmännische Leitung',  cat:'investor', dept:'screen-finances' },
+        { role:'Sportdirektion',         cat:'coach',    dept:'screen-transfer' },
+        { role:'Leitung Nachwuchs',      cat:'scout',    dept:'screen-youth' },
+        { role:'Chefscout',              cat:'scout',    dept:'screen-youth' },
+        { role:'Fanbeauftragung',        cat:'fanclub',  dept:'screen-fans' },
+        { role:'Stadionmanagement',      cat:'lobby',    dept:'screen-stadium' },
+        { role:'Personalleitung',        cat:'pr',       dept:'screen-staff' },
+        { role:'Leitung Merchandising',  cat:'pr',       dept:'screen-merch' },
+        { role:'Werksleitung',           cat:'it',       dept:'screen-industry' },
+        { role:'Vertragswesen',          cat:'gov',      dept:'screen-contracts' },
+        { role:'Sponsoring & Partner',   cat:'pe',       dept:'screen-sponsors' },
+        { role:'Campusentwicklung',      cat:'lobby',    dept:'screen-campus' },
+        { role:'Athletik & Reha',        cat:'physio',   dept:'screen-training' }
+    ];
+
+    // Kurzprofile im Duktus eines Karrierenetzwerks: viel Selbstbeschreibung,
+    // wenig Inhalt. Der Witz liegt im Vokabular, nicht in der Pointe.
+    const LO_BLURBS = [
+        'Ergebnisorientierter Möglichmacher mit Leidenschaft für Prozesse.',
+        '15 Jahre Erfahrung, davon 14 im selben Verein, davon 11 im selben Büro.',
+        'Spezialisiert auf Strukturen, die vorher niemand vermisst hat.',
+        'Denkt in Systemen. Spricht in Quartalen.',
+        'Führt Menschen, Zahlen und gelegentlich Selbstgespräche.',
+        'Bringt frischen Wind. Fragen Sie nicht, aus welcher Richtung.',
+        'Hands-on-Mentalität, Hands-off-Verantwortung.',
+        'Hat schon zwei Vereine saniert. Beide existieren noch.',
+        'Versteht Fußball als Wertschöpfungskette mit Rasenanteil.',
+        'Kommunikationsstark, konfliktfähig, kurzfristig verfügbar.',
+        'Sucht neue Herausforderung. Die alte hat gekündigt.',
+        'Zertifiziert in agiler Vereinsführung (Wochenendkurs).'
+    ];
+
+    const LO_FIRST = ['Klaus','Marion','Thomas','Sabine','Kevin-Pascal','Ute','Detlef','Nadine','Ralf','Beatrix',
+                      'Hendrik','Jasmin','Wolfgang','Carla','Sven','Petra','Ahmet','Lena','Bernd','Katja'];
+    const LO_LAST  = ['Berger','Santos','Müller-Schmidt','Reinhardt','Özdemir','Voss','Kowalski','Brandt','Neuhaus',
+                      'Falkenberg','Wiedemann','Sorge','Grünwald','Lipinski','Achterberg','Marquardt'];
+
+    let linkedout = {
+        contacts: [], hired: {}, nextId: 1, cat: 'all',
+        pro: false, refreshedAt: -1, seen: 0
+    };
+
+    function loName() {
+        return LO_FIRST[Math.floor(Math.random()*LO_FIRST.length)] + ' ' +
+               LO_LAST[Math.floor(Math.random()*LO_LAST.length)];
+    }
+
+    /** Erzeugt eine Fachkraft. Kompetenz ist der interessante Wert, nicht das Gehalt. */
+    function loMakeContact(forceRole) {
+        const r = forceRole || LO_ROLES[Math.floor(Math.random()*LO_ROLES.length)];
+        // Kompetenz folgt der Liga: in der Regionalliga bewirbt sich niemand mit 90.
+        const ceiling = [95, 88, 78, 70][game.leagueLevel] || 70;
+        const comp = Math.max(35, Math.min(ceiling, Math.round(38 + Math.random()*(ceiling-38))));
+        // Gehalt korreliert, aber unvollkommen — sonst gäbe es nichts zu entscheiden.
+        const wage = Math.round((comp * comp * 0.9 + Math.random()*4000) / 100) * 100;
+        return {
+            id: 'lo' + (linkedout.nextId++),
+            name: loName(), role: r.role, cat: r.cat, dept: r.dept,
+            comp: comp, wage: wage,
+            degree: Math.random() < 0.45 ? 1 : (Math.random() < 0.7 ? 2 : 3),
+            blurb: LO_BLURBS[Math.floor(Math.random()*LO_BLURBS.length)],
+            premium: false
+        };
+    }
+
+    function loRefresh(force) {
+        if (!force && linkedout.refreshedAt === game.matchday) return;
+        linkedout.refreshedAt = game.matchday;
+        const keep = linkedout.contacts.filter(c => loIsHired(c.id));
+        const n = 5 + Math.floor(Math.random()*3);
+        const fresh = [];
+        for (let i = 0; i < n; i++) fresh.push(loMakeContact());
+        // Ein gesperrtes Premium-Profil pro Durchgang: der Blick auf das,
+        // was hinter der nächsten Stufe liegt, ist der halbe Antrieb.
+        if (!linkedout.pro) {
+            const p = loMakeContact();
+            p.premium = true; p.comp = Math.min(97, p.comp + 22);
+            p.wage = Math.round(p.wage * 2.4);
+            p.name = 'Premium-Kontakt';
+            fresh.splice(2, 0, p);
+        }
+        linkedout.contacts = keep.concat(fresh);
+    }
+
+    function loIsHired(id) { return Object.values(linkedout.hired).indexOf(id) !== -1; }
+    function loContact(id) { return linkedout.contacts.find(c => c.id === id); }
+    function loHiredCount() { return Object.keys(linkedout.hired).length; }
+    function loMonthlyCost() {
+        return Object.values(linkedout.hired).reduce((s, id) => {
+            const c = loContact(id); return s + (c ? c.wage : 0);
+        }, 0);
+    }
+
+    // ---------- Ansicht ----------
+    function loTone(cat) { return 'var(--c-' + (LO_CATS[cat] ? LO_CATS[cat].tone : 'squad') + ')'; }
+    function loToneInk(cat) { return 'var(--c-' + (LO_CATS[cat] ? LO_CATS[cat].tone : 'squad') + '-ink)'; }
+    function loInitials(n) {
+        return n.split(/\s+/).slice(0,2).map(w => w.charAt(0)).join('').toUpperCase();
+    }
+    /** Kompetenz als Balken mit Kerbe — nie über Farbe allein. */
+    function loCompBar(c) {
+        const band = c.comp >= 78 ? 'hoch' : (c.comp >= 58 ? 'solide' : 'dünn');
+        const mark = c.comp >= 78 ? '▲' : (c.comp >= 58 ? '■' : '▼');
+        return `<div class="lo-comp" title="Kompetenz ${c.comp}">
+            <span class="lo-comp-mark">${mark}</span>
+            <span class="lo-comp-track"><i style="width:${c.comp}%;background:${loTone(c.cat)}"></i></span>
+            <span class="lo-comp-val">${c.comp} · ${band}</span>
+        </div>`;
+    }
+
+    function renderLinkedOutView() {
+        loRefresh(false);
+        const cats = ['all'].concat(Object.keys(LO_CATS));
+        document.getElementById('lo-cats').innerHTML = cats.map(k => {
+            const on = linkedout.cat === k;
+            if (k === 'all') return `<button class="lo-cat${on?' on':''}" onclick="loSetCat('all')">Alle</button>`;
+            return `<button class="lo-cat${on?' on':''}" onclick="loSetCat('${k}')">
+                <i style="background:${loTone(k)}"></i>${LO_CATS[k].label}</button>`;
+        }).join('');
+
+        const list = linkedout.contacts.filter(c =>
+            !loIsHired(c.id) && (linkedout.cat === 'all' || c.cat === linkedout.cat));
+
+        const hired = Object.keys(linkedout.hired).map(dept => ({ dept, c: loContact(linkedout.hired[dept]) }))
+                        .filter(x => x.c);
+
+        document.getElementById('lo-hired').innerHTML = hired.length
+            ? `<div class="lo-section-head">Dein Führungsteam
+                 <span>${formatVal(loMonthlyCost())} / Spieltag</span></div>` +
+              hired.map(x => `<div class="lo-card hired">
+                <div class="lo-av" style="background:${loTone(x.c.cat)}">${loInitials(x.c.name)}</div>
+                <div class="lo-main">
+                    <div class="lo-name">${escapeXml(x.c.name)}</div>
+                    <div class="lo-role" style="color:${loToneInk(x.c.cat)}">${escapeXml(x.c.role)}</div>
+                    <div class="lo-meta">Übernimmt: ${escapeXml(DEPTS[x.dept] ? DEPTS[x.dept].label : x.dept)} · ${formatVal(x.c.wage)}/SpT</div>
+                    ${loCompBar(x.c)}
+                </div>
+                <button class="lo-btn ghost" onclick="loFire('${x.dept}')">Trennen</button>
+            </div>`).join('')
+            : `<div class="lo-empty">Noch niemand eingestellt. Wer eine Abteilung übergibt, bekommt deren
+               Vorgänge nicht mehr in den Posteingang — und lebt mit den Entscheidungen, die dort getroffen werden.</div>`;
+
+        document.getElementById('lo-feed').innerHTML =
+            `<div class="lo-section-head">Vorgeschlagene Kontakte <span>${list.length}</span></div>` +
+            (list.length ? list.map(loCardHtml).join('')
+                         : `<div class="lo-empty">Keine Kontakte in dieser Kategorie.</div>`);
+    }
+
+    function loCardHtml(c) {
+        const taken = linkedout.hired[c.dept];
+        const deptLabel = DEPTS[c.dept] ? DEPTS[c.dept].label : c.dept;
+        if (c.premium) {
+            return `<div class="lo-card premium">
+                <div class="lo-av locked">🔒</div>
+                <div class="lo-main">
+                    <div class="lo-name blurred">${escapeXml(c.role)}</div>
+                    <div class="lo-role blurred">Kompetenz ${Math.floor(c.comp/10)*10}+ · ${formatVal(c.wage)}/SpT</div>
+                    <div class="lo-meta">Premium-Profile sind für Basiskonten nicht sichtbar.</div>
+                </div>
+                <button class="lo-btn pro" onclick="loBuyPro()">PRO</button>
+            </div>`;
+        }
+        return `<div class="lo-card">
+            <div class="lo-av" style="background:${loTone(c.cat)}">${loInitials(c.name)}</div>
+            <div class="lo-main">
+                <div class="lo-name">${escapeXml(c.name)}
+                    <span class="lo-deg">${c.degree}. Grad</span></div>
+                <div class="lo-role" style="color:${loToneInk(c.cat)}">${escapeXml(c.role)} · ${LO_CATS[c.cat].label}</div>
+                <div class="lo-blurb">${escapeXml(c.blurb)}</div>
+                ${loCompBar(c)}
+                <div class="lo-meta">Übernimmt ${escapeXml(deptLabel)} · ${formatVal(c.wage)} / Spieltag</div>
+            </div>
+            <button class="lo-btn${taken?' ghost':''}" onclick="loHire('${c.id}')">${taken ? 'Ersetzen' : 'Anfragen'}</button>
+        </div>`;
+    }
+
+    function loSetCat(k) { playSound('click'); linkedout.cat = k; renderLinkedOutView(); }
+
+    function loHire(id) {
+        const c = loContact(id);
+        if (!c) return;
+        const prev = linkedout.hired[c.dept];
+        const deptLabel = DEPTS[c.dept] ? DEPTS[c.dept].label : c.dept;
+        if (game.money < c.wage * 4) {
+            alert(`Für ${c.name} sind vier Spieltage Gehalt als Rücklage nötig (${formatVal(c.wage*4)}).`);
+            return;
+        }
+        playSound('click');
+        linkedout.hired[c.dept] = c.id;
+        invalidateAttention();
+        sendMail({
+            from:c.name, role:c.role, color:'#2FA84F', cat:'primary',
+            subject:`Zusage — ${deptLabel}`,
+            body:`<p>Sehr geehrte Damen und Herren,</p>
+                  <p>ich nehme an und übernehme <b>${escapeXml(deptLabel)}</b> mit sofortiger Wirkung.</p>
+                  <p>Sie werden von mir wenig hören. Das ist der Sinn der Sache.</p>`,
+            tagline:'Gesendet über LinkedOut'
+        });
+        if (prev) toastWP(`${deptLabel}: Leitung gewechselt`);
+        else toastWP(`${deptLabel} delegiert`);
+        renderLinkedOutView(); updateUI();
+    }
+
+    function loFire(dept) {
+        const c = loContact(linkedout.hired[dept]);
+        if (!c) return;
+        if (!confirm(`${c.name} von der Leitung ${DEPTS[dept] ? DEPTS[dept].label : dept} trennen?\n\nAbfindung: ${formatVal(c.wage*3)}`)) return;
+        playSound('click');
+        game.money -= c.wage * 3;
+        delete linkedout.hired[dept];
+        invalidateAttention();
+        renderLinkedOutView(); updateUI();
+    }
+
+    function loBuyPro() {
+        const cost = 250000;
+        if (linkedout.pro) return;
+        if (game.money < cost) { alert(`LinkedOut PRO kostet ${formatVal(cost)} pro Saison.`); return; }
+        if (!confirm(`LinkedOut PRO für ${formatVal(cost)} freischalten?\n\nPremium-Profile werden sichtbar. Die Kompetenz liegt deutlich höher.`)) return;
+        game.money -= cost;
+        linkedout.pro = true;
+        playSound('goal');
+        loRefresh(true);
+        renderLinkedOutView(); updateUI();
+    }
+
+    /** Delegierte Abteilungen arbeiten ihre Vorgänge selbst ab —
+     *  gut oder schlecht, je nach Kompetenz. Genau darin liegt das Risiko. */
+    function loAutopilotTick() {
+        let handled = 0, botched = 0, cost = 0;
+        for (const dept in linkedout.hired) {
+            const c = loContact(linkedout.hired[dept]);
+            if (!c || !DEPTS[dept]) continue;
+            cost += c.wage;
+            // Direkt bei der Abteilung nachfragen: die Anzeigeliste blendet
+            // delegierte Ressorts aus, der Autopilot muss sie trotzdem sehen.
+            let items = [];
+            try { items = DEPTS[dept].check() || []; } catch (err) { items = []; }
+            let did = 0, lost = 0, waste = 0;
+            items.forEach(() => {
+                // Kompetenz entscheidet, ob die Erledigung etwas taugt.
+                if (Math.random() * 100 < c.comp) { handled++; did++; }
+                else {
+                    botched++; lost++;
+                    const w = Math.round(c.wage * 0.8);
+                    waste += w; game.money -= w;
+                }
+            });
+            loResolveDept(dept, c);
+            if (did + lost > 0) loReport(dept, c, did, lost, waste);
+        }
+        game.money -= cost;
+        if (botched > 0 && Math.random() < 0.5) {
+            sendMail({
+                from:'Interne Revision', role:'Controlling', color:'#C84032', cat:'primary',
+                subject:`Auffälligkeiten in ${botched} delegierten Vorgängen`,
+                body:`<p>Bei der Durchsicht delegierter Entscheidungen sind ${botched} Vorgänge aufgefallen,
+                      die wir anders bewertet hätten.</p><p>Die Mehrkosten wurden bereits gebucht.</p>`,
+                tagline:'Diese Prüfung erfolgt stichprobenartig.'
+            });
+        }
+        return { handled, botched };
+    }
+
+    /** Wochenbericht einer delegierten Abteilung. Der Tonfall ist die
+     *  eigentliche Information: wer gut arbeitet, braucht wenig Worte. */
+    function loVorg(n) {
+        return n === 0 ? 'keinen Vorgang' : (n === 1 ? 'einen Vorgang' : n + ' Vorgänge');
+    }
+
+    function loReport(dept, c, did, lost, waste) {
+        if (Math.random() > 0.42) return;          // nicht jede Woche, sonst Rauschen
+        const label = DEPTS[dept] ? DEPTS[dept].label : dept;
+        const good = c.comp >= 78, weak = c.comp < 58;
+        let body;
+        if (good) {
+            body = `<p>${loVorg(did)} erledigt.${lost ? ` ${lost} noch offen.` : ''}</p>
+                    <p>Keine Rückfragen.</p>`;
+        } else if (weak) {
+            body = `<p>Ich habe ${loVorg(did)} abgeschlossen.</p>
+                    <p>Bei ${lost === 1 ? 'einem weiteren' : lost + ' weiteren'} war die Lage schwieriger als
+                    zunächst angenommen. Es sind Mehrkosten von <b>${formatVal(waste)}</b> entstanden, die ich
+                    für vertretbar halte, da wir andernfalls prozessual in eine Sackgasse geraten wären.</p>
+                    <p>Ich schlage vor, das im nächsten Jour fixe zu vertiefen.</p>`;
+        } else {
+            body = `<p>${loVorg(did)} erledigt${lost ? `, bei ${lost} entstanden Mehrkosten von ${formatVal(waste)}` : ''}.</p>
+                    <p>Nichts, was Ihre Aufmerksamkeit braucht.</p>`;
+        }
+        sendMail({
+            from: c.name, role: c.role, color: '#2FA84F', cat: 'primary',
+            subject: `${label} — Wochenbericht`,
+            body: body,
+            tagline: good ? 'Gesendet über LinkedOut' : 'Gesendet über LinkedOut · Diese Nachricht wurde diktiert.'
+        });
+    }
+
+    /** Die tatsächliche Erledigung je Abteilung — bewusst konservativ:
+     *  eine Führungskraft hält den Laden am Laufen, sie baut kein Imperium. */
+    function loResolveDept(dept, c) {
+        const good = c.comp >= 60;
+        if (dept === 'screen-contracts') {
+            squad.filter(p => p.contracts <= 1).slice(0, good ? 3 : 2).forEach(p => {
+                // Verhandlungsgeschick skaliert stufenlos: 3 % bei 95, 11 % bei 35.
+                const rate = 0.12 - (c.comp / 100) * 0.095;
+                const fee = Math.max(1200, Math.round(p.marketValue * rate));
+                if (game.money >= fee) { game.money -= fee; p.contracts += good ? 2 : 1; }
+            });
+        } else if (dept === 'screen-fans') {
+            fanGroups.forEach(g => { if (g.mood < 60) g.mood = Math.min(100, g.mood + (good ? 6 : 2)); });
+        } else if (dept === 'screen-youth') {
+            if (youthTalents.length && squad.length < 24) {
+                const idx = good ? youthTalents.reduce((b,p,i,arr)=> p.strength>arr[b].strength?i:b, 0) : 0;
+                squad.push(youthTalents[idx]); youthTalents.splice(idx, 1);
+            }
+        } else if (dept === 'screen-staff') {
+            const open = Object.keys(staffMembers).filter(k => !staffMembers[k].hired);
+            if (open.length && game.money > 40000) {
+                const k = open[0];
+                game.money -= staffMembers[k].cost; staffMembers[k].hired = true;
+            }
+        } else if (dept === 'screen-merch') {
+            Object.keys(merchandise).forEach(k => {
+                const m = merchandise[k];
+                if (m.stock < 40) m.stock += good ? 180 : 60;
+            });
+        } else if (dept === 'screen-training') {
+            if (good) squad.forEach(p => { if ((p.injured||0) > 0 && Math.random() < 0.25) p.injured--; });
+        }
+        invalidateAttention();
+    }
+
     // ==========================================================
     // VORGÄNGE — Aufmerksamkeitssteuerung
     // Das Spiel hat 29 Bildschirme. Ohne Hinweis besucht ein Spieler drei
@@ -5111,6 +5572,7 @@
         if (attentionCache) return attentionCache;
         const map = {};
         for (const screen in DEPTS) {
+            if (typeof linkedout !== 'undefined' && linkedout.hired[screen]) continue;  // delegiert
             let items = [];
             try { items = DEPTS[screen].check() || []; } catch (e) { items = []; }
             if (items.length) map[screen] = items;
@@ -7604,7 +8066,7 @@
     // ==========================================
     // ---------- Gemeinsame Serialisierung (von saveGame, loadGame und dem Admin-JSON genutzt) ----------
     function buildSaveState() {
-        return { game, managerRPG, knowledge, mailbox, badges, youthTalents, incomingOffers, holdingCompany, rawMaterials,
+        return { game, managerRPG, knowledge, mailbox, badges, linkedout, youthTalents, incomingOffers, holdingCompany, rawMaterials,
                  factories, merchandise, stockMarket, underworld, stadium, campusBuildings, staffMembers,
                  fanGroups, privateLife, bandenSponsors, squad, lineup, leaguesData, fixturesData,
                  cupTournament, europeTournament };
@@ -7625,6 +8087,7 @@
         }
         if (p.mailbox) Object.assign(mailbox, p.mailbox);
         if (p.badges) Object.assign(badges, p.badges);
+        if (p.linkedout) Object.assign(linkedout, p.linkedout);
         invalidateAttention();
         if (p.youthTalents) youthTalents = p.youthTalents;
         if (p.incomingOffers) incomingOffers = p.incomingOffers;
