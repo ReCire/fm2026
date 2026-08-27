@@ -5,6 +5,7 @@ import { installDocs } from '$lib/docs/registry';
 import type { GameState, MetaState, ModuleStates } from '$lib/engine/state';
 import type { TickKind } from '$lib/engine/module';
 import { modules } from '$lib/modules';
+import { delegationFor } from '$lib/features/progression/rules';
 import { pushSnapshot, popSnapshot, clearHistory } from './history.svelte';
 
 export const registry = new Registry(modules);
@@ -53,7 +54,9 @@ export function advance(kind: TickKind = 'matchday'): TickResult {
   // Snapshot BEFORE the tick, so "undo matchday" returns to the decision point.
   pushSnapshot(game);
 
-  const result = runTick(registry, game, kind);
+  const result = runTick(registry, game, kind, {
+    delegationFor: (moduleId) => delegationFor(game, moduleId)
+  });
 
   // A hook that threw leaves the tick half-applied: the engine mutates state in
   // place, so a transfer fee can be debited without the player arriving. Rather

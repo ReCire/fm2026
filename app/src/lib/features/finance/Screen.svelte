@@ -37,21 +37,21 @@
 <Panel title="Buchungen" accent="accent" meta="{finance.ledger.length} Einträge">
   <DataTable
     columns={[
-      { key: 'md', header: 'ST' },
-      { key: 'source', header: 'Quelle' },
-      { key: 'reason', header: 'Grund' },
-      { key: 'amount', header: 'Betrag', numeric: true }
+      { key: 'reason', label: 'Grund',  role: 'primary' },
+      { key: 'amount', label: 'Betrag', role: 'primary',   numeric: true },
+      { key: 'source', label: 'Quelle', role: 'secondary' },
+      { key: 'md',     label: 'ST',     role: 'detail' }
     ]}
     rows={recent}
+    id={(e) => `${e.season}-${e.matchday}-${e.source}-${e.reason}-${e.amount}`}
+    title={(e) => e.reason}
     empty="Noch keine Buchungen — simuliere einen Spieltag."
   >
-    {#snippet row(e)}
-      <tr>
-        <td class="tabular dim">{e.season}.{e.matchday}</td>
-        <td>{e.source}</td>
-        <td class="dim">{e.reason}</td>
-        <td class="tabular num" class:neg={e.amount < 0}>{formatMoney(e.amount)}</td>
-      </tr>
+    {#snippet cell(e, key)}
+      {#if key === 'md'}<span class="dim">{e.season}.{e.matchday}</span>
+      {:else if key === 'source'}{e.source}
+      {:else if key === 'reason'}{e.reason}
+      {:else}<span class="tabular" class:neg={e.amount < 0}>{formatMoney(e.amount)}</span>{/if}
     {/snippet}
   </DataTable>
 </Panel>
@@ -60,9 +60,5 @@
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--sp-2); }
   .sources { list-style: none; }
   .sources li { display: flex; justify-content: space-between; padding: var(--sp-2) 0; border-bottom: 1px solid var(--border); }
-  .sources em, td.num { font-style: normal; color: var(--primary); }
-  .neg { color: var(--danger) !important; }
-  td { padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); font-size: var(--fs-base); }
-  td.num { text-align: right; }
-  .dim { color: var(--text-muted); }
+  .sources em { font-style: normal; color: var(--primary); }
 </style>

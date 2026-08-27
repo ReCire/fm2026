@@ -1,5 +1,5 @@
 import type { Registry } from './registry';
-import type { TickContext, TickKind } from './module';
+import type { DelegationInfo, TickContext, TickKind } from './module';
 import type { GameEvent } from './events';
 import type { GameState } from './state';
 import { createRng, mixSeed } from './rng';
@@ -25,10 +25,22 @@ export interface TickResult {
  * know the next one. Here, the clock collects hooks from the registry, runs
  * them in phase order, and nobody imports anybody.
  */
+export interface TickOptions {
+  /**
+   * How to find out whether a department has been handed to an executive.
+   *
+   * Supplied by the caller rather than read from state directly, so the engine
+   * never learns that a `progression` module exists — the same reason `gate`
+   * lives on the module rather than in here.
+   */
+  delegationFor?: (moduleId: string) => DelegationInfo | undefined;
+}
+
 export function runTick(
   registry: Registry,
   state: GameState,
-  kind: TickKind
+  kind: TickKind,
+  options: TickOptions = {}
 ): TickResult {
   const events: GameEvent[] = [];
   const failed: string[] = [];
@@ -68,8 +80,9 @@ export function runTick(
 
     // A delegated department runs its autopilot instead of its normal hook, so
     // the player sees outcomes rather than prompts.
-    const delegated = provided.get(`delegated.${module.id}`) === true;
-    const toRun = delegated && module.autopilot ? module.autopilot : hook;
+    const delegation = options.delegationFor?.(module.id);
+    const toRun = delegation && module.autopilot ? module.autopilot : hook;
+    if (delegation && module.autopilot) ctx.delegation = delegation;
 
     const t0 = performance.now();
     try {

@@ -324,3 +324,65 @@ describe('rng stream separation', () => {
     expect(forkB).toBe(forkA);
   });
 });
+
+describe('delegation', () => {
+  const withAutopilot = (record: string[]) =>
+    modules.map((m) =>
+      m.id === 'stadium'
+        ? {
+            ...m,
+            autopilot: {
+              phase: 'economy' as const,
+              run(ctx: any) {
+                // The competence value is the whole point: an autopilot should
+                // act WORSE when it is low, not merely differently.
+                record.push(`auto:${ctx.delegation?.executiveId}:${ctx.delegation?.competence}`);
+              }
+            }
+          }
+        : m
+    );
+
+  it('runs the autopilot instead of the normal hook, and hands it the competence', () => {
+    const record: string[] = [];
+    const r = new Registry(withAutopilot(record));
+    const game = freshGame();
+
+    runTick(r, game, 'matchday', {
+      delegationFor: (id) =>
+        id === 'stadium'
+          ? { executiveId: 'exec-3', competence: 0.35, hiredOnMatchday: 2 }
+          : undefined
+    });
+
+    expect(record).toEqual(['auto:exec-3:0.35']);
+    // The normal hook did not also run: no gate receipts were posted.
+    expect(game.modules.finance.ledger.some((e) => e.source === 'stadium')).toBe(false);
+  });
+
+  it('runs the normal hook when nothing is delegated', () => {
+    const record: string[] = [];
+    const r = new Registry(withAutopilot(record));
+    const game = freshGame();
+
+    runTick(r, game, 'matchday', {});
+
+    expect(record).toEqual([]);
+    expect(game.modules.finance.ledger.some((e) => e.source === 'stadium')).toBe(true);
+  });
+
+  it('leaves ctx.delegation undefined for modules that are not delegated', () => {
+    let seen: unknown = 'unset';
+    const r = new Registry(
+      modules.map((m) =>
+        m.id === 'squad'
+          ? { ...m, hooks: { matchday: { phase: 'post' as const, run(ctx: any) { seen = ctx.delegation; } } } }
+          : m
+      )
+    );
+    runTick(r, freshGame(), 'matchday', {
+      delegationFor: (id) => (id === 'stadium' ? { executiveId: 'x', competence: 1, hiredOnMatchday: 0 } : undefined)
+    });
+    expect(seen).toBeUndefined();
+  });
+});

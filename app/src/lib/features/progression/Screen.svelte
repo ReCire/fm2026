@@ -22,7 +22,7 @@
       revoke(p, id);
       toast('Bereich zurückgenommen', 'Du entscheidest wieder selbst.', 'info');
     } else {
-      delegate(p, id, 'exec-default');
+      delegate(p, id, { executiveId: 'exec-default', competence: 0.6, hiredOnMatchday: game.meta.matchday });
       toast('Bereich abgegeben', 'Eine Führungskraft übernimmt.', 'good');
     }
   }

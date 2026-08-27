@@ -28,28 +28,28 @@
 <Panel title="Spieler" accent="accent">
   <DataTable
     columns={[
-      { key: 'name', header: 'Name' },
-      { key: 'pos', header: 'Pos' },
-      { key: 'str', header: 'Stärke', numeric: true },
-      { key: 'fit', header: 'Fitness' },
-      { key: 'wage', header: 'Gehalt', numeric: true }
+      { key: 'name', label: 'Name',    role: 'primary' },
+      { key: 'pos',  label: 'Pos',     role: 'primary' },
+      { key: 'str',  label: 'Stärke',  role: 'secondary', numeric: true },
+      { key: 'fit',  label: 'Fitness', role: 'secondary', numeric: true },
+      { key: 'wage', label: 'Gehalt',  role: 'detail',    numeric: true },
+      { key: 'age',  label: 'Alter',   role: 'detail',    numeric: true }
     ]}
     rows={sorted}
+    id={(p) => p.id}
+    title={(p) => p.name}
   >
-    {#snippet row(p)}
-      <tr class:starting={inLineup(p.id)} class:out={!isAvailable(p)}>
-        <td>
-          {p.name}
-          {#if inLineup(p.id)}<span class="badge">Elf</span>{/if}
-          {#if p.injured > 0}<span class="badge hurt">🚑 {p.injured}</span>{/if}
-          {#if p.suspended > 0}<span class="badge hurt">🟥 {p.suspended}</span>{/if}
-          {#if p.trait !== 'Kein'}<small>{p.trait}</small>{/if}
-        </td>
-        <td class="dim">{p.pos}</td>
-        <td class="tabular num">{p.strength}</td>
-        <td class="fit"><Bar value={p.fitness} label="Fitness {p.name}" /></td>
-        <td class="tabular num dim">{formatMoney(p.wage)}</td>
-      </tr>
+    {#snippet cell(p, key)}
+      {#if key === 'name'}
+        <span class:out={!isAvailable(p)}>{p.name}</span>
+        {#if inLineup(p.id)}<span class="badge">Elf</span>{/if}
+        {#if p.injured > 0}<span class="badge hurt">🚑 {p.injured}</span>{/if}
+        {#if p.suspended > 0}<span class="badge hurt">🟥 {p.suspended}</span>{/if}
+      {:else if key === 'pos'}<span class="dim">{p.pos}</span>
+      {:else if key === 'str'}{p.strength}
+      {:else if key === 'fit'}<span class="fitcell"><Bar value={p.fitness} label="Fitness {p.name}" /></span>
+      {:else if key === 'age'}{p.age}
+      {:else}<span class="dim">{formatMoney(p.wage)}</span>{/if}
     {/snippet}
   </DataTable>
 </Panel>
@@ -57,13 +57,4 @@
 <style>
   .summary { display: flex; flex-wrap: wrap; gap: var(--sp-5); margin-bottom: var(--sp-4); color: var(--text-muted); font-size: var(--fs-small); }
   .summary strong { color: var(--text-main); font-size: var(--fs-body); display: block; }
-  td { padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); font-size: var(--fs-base); vertical-align: middle; }
-  td.num { text-align: right; }
-  .dim { color: var(--text-muted); }
-  .fit { width: 70px; }
-  .starting td:first-child { border-left: 2px solid var(--primary); }
-  .out { opacity: 0.5; }
-  .badge { font-size: var(--fs-micro); background: var(--primary-glow); color: var(--primary); padding: 1px 4px; border-radius: 3px; margin-left: 4px; }
-  .badge.hurt { background: rgba(255,23,68,0.18); color: var(--danger); }
-  small { display: block; color: var(--text-dim); font-size: var(--fs-micro); }
 </style>

@@ -196,33 +196,32 @@
 <Panel title="Verfügbare Spieler" accent="accent" meta="{transfer.market.length} Angebote">
   <DataTable
     columns={[
-      { key: 'name', header: 'Name' },
-      { key: 'pos', header: 'Pos' },
-      { key: 'str', header: 'Stärke', numeric: true },
-      { key: 'wage', header: 'Gehalt', numeric: true },
-      { key: 'buy', header: 'Ablöse' }
+      { key: 'name', label: 'Name',   role: 'primary' },
+      { key: 'str',  label: 'Stärke', role: 'primary',   numeric: true },
+      { key: 'buy',  label: 'Ablöse', role: 'secondary' },
+      { key: 'pos',  label: 'Pos',    role: 'secondary' },
+      { key: 'wage', label: 'Gehalt', role: 'detail',    numeric: true }
     ]}
     rows={transfer.market}
+    id={(l) => l.id}
+    title={(l) => l.player.name}
     empty="Der Markt ist leer — der nächste Spieltag bringt neue Spieler."
   >
-    {#snippet row(listing)}
-      <tr>
-        <td>
-          {listing.player.name}
-          {#if listing.player.trait !== 'Kein'}<small>{listing.player.trait}</small>{/if}
-        </td>
-        <td class="dim">{listing.player.pos}</td>
-        <td class="tabular num">{listing.player.strength}</td>
-        <td class="tabular num dim">{formatMoney(listing.player.wage)}</td>
-        <td class="action">
-          <Button
-            doc="transfer.buy"
-            label="Kaufen · {formatMoney(listing.fee)}"
-            disabled={finance.money < listing.fee}
-            onclick={() => sign(listing.id, 'Ablöse')}
-          />
-        </td>
-      </tr>
+    {#snippet cell(r, key)}
+      {#if key === 'name'}
+        {r.player.name}
+        {#if r.player.trait !== 'Kein'}<small>{r.player.trait}</small>{/if}
+      {:else if key === 'pos'}<span class="dim">{r.player.pos}</span>
+      {:else if key === 'str'}{r.player.strength}
+      {:else if key === 'wage'}<span class="dim">{formatMoney(r.player.wage)}</span>
+      {:else}
+        <Button
+          doc="transfer.buy"
+          label="Kaufen · {formatMoney(r.fee)}"
+          disabled={finance.money < r.fee}
+          onclick={() => sign(r.id, 'Ablöse')}
+        />
+      {/if}
     {/snippet}
   </DataTable>
 </Panel>
@@ -230,31 +229,31 @@
 <Panel title="Ablösefreie Spieler" accent="primary" meta="{transfer.freeAgents.length} Spieler">
   <DataTable
     columns={[
-      { key: 'name', header: 'Name' },
-      { key: 'pos', header: 'Pos' },
-      { key: 'str', header: 'Stärke', numeric: true },
-      { key: 'wage', header: 'Gehalt', numeric: true },
-      { key: 'sign', header: 'Handgeld' }
+      { key: 'name', label: 'Name',     role: 'primary' },
+      { key: 'str',  label: 'Stärke',   role: 'primary',   numeric: true },
+      { key: 'sign', label: 'Handgeld', role: 'secondary' },
+      { key: 'pos',  label: 'Pos',      role: 'secondary' },
+      { key: 'wage', label: 'Gehalt',   role: 'detail',    numeric: true }
     ]}
     rows={transfer.freeAgents}
+    id={(l) => l.id}
+    title={(l) => l.player.name}
     empty="Zurzeit ist kein vertragsloser Spieler verfügbar."
   >
-    {#snippet row(listing)}
-      <tr>
-        <td>{listing.player.name}</td>
-        <td class="dim">{listing.player.pos}</td>
-        <td class="tabular num">{listing.player.strength}</td>
-        <td class="tabular num dim">{formatMoney(listing.player.wage)}</td>
-        <td class="action">
-          <Button
-            doc="transfer.signFree"
-            variant="secondary"
-            label="Verpflichten · {formatMoney(listing.fee)}"
-            disabled={finance.money < listing.fee}
-            onclick={() => sign(listing.id, 'Handgeld')}
-          />
-        </td>
-      </tr>
+    {#snippet cell(r, key)}
+      {#if key === 'name'}{r.player.name}
+      {:else if key === 'pos'}<span class="dim">{r.player.pos}</span>
+      {:else if key === 'str'}{r.player.strength}
+      {:else if key === 'wage'}<span class="dim">{formatMoney(r.player.wage)}</span>
+      {:else}
+        <Button
+          doc="transfer.signFree"
+          variant="secondary"
+          label="Verpflichten · {formatMoney(r.fee)}"
+          disabled={finance.money < r.fee}
+          onclick={() => sign(r.id, 'Handgeld')}
+        />
+      {/if}
     {/snippet}
   </DataTable>
 </Panel>
@@ -263,29 +262,29 @@
   <p class="empty">Ein Blitzverkauf bringt sofort Geld, aber weniger als ein ausgehandelter Transfer.</p>
   <DataTable
     columns={[
-      { key: 'name', header: 'Name' },
-      { key: 'pos', header: 'Pos' },
-      { key: 'str', header: 'Stärke', numeric: true },
-      { key: 'mv', header: 'Marktwert', numeric: true },
-      { key: 'sell', header: 'Verkauf' }
+      { key: 'name', label: 'Name',      role: 'primary' },
+      { key: 'str',  label: 'Stärke',    role: 'primary',   numeric: true },
+      { key: 'sell', label: 'Verkauf',   role: 'secondary' },
+      { key: 'pos',  label: 'Pos',       role: 'secondary' },
+      { key: 'mv',   label: 'Marktwert', role: 'detail',    numeric: true }
     ]}
     rows={sellable}
+    id={(p) => p.id}
+    title={(p) => p.name}
   >
-    {#snippet row(player)}
-      <tr>
-        <td>{player.name}</td>
-        <td class="dim">{player.pos}</td>
-        <td class="tabular num">{player.strength}</td>
-        <td class="tabular num dim">{formatMoney(player.marketValue)}</td>
-        <td class="action">
-          <Button
-            doc="transfer.quickSell"
-            variant="ghost"
-            label="Blitzverkauf · {formatMoney(quickSellQuote(player))}"
-            onclick={() => sellNow(player.id)}
-          />
-        </td>
-      </tr>
+    {#snippet cell(r, key)}
+      {#if key === 'name'}{r.name}
+      {:else if key === 'pos'}<span class="dim">{r.pos}</span>
+      {:else if key === 'str'}{r.strength}
+      {:else if key === 'mv'}<span class="dim">{formatMoney(r.marketValue)}</span>
+      {:else}
+        <Button
+          doc="transfer.quickSell"
+          variant="ghost"
+          label="Blitzverkauf · {formatMoney(quickSellQuote(r))}"
+          onclick={() => sellNow(r.id)}
+        />
+      {/if}
     {/snippet}
   </DataTable>
 </Panel>
@@ -313,9 +312,4 @@
   .three { grid-template-columns: repeat(3, 1fr); }
   .counters { display: grid; gap: var(--sp-2); }
 
-  td { padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); font-size: var(--fs-base); vertical-align: middle; }
-  td.num { text-align: right; }
-  td.action { min-width: 150px; }
-  .dim { color: var(--text-muted); }
-  small { display: block; color: var(--text-dim); font-size: var(--fs-micro); }
 </style>

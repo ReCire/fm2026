@@ -77,8 +77,39 @@ export function applyNarrative(p: ProgressionState, narrative: Narrative): void 
   p.tutorialStep = 0;
 }
 
-export function delegate(p: ProgressionState, moduleId: string, executiveId: string): void {
-  p.delegated[moduleId] = executiveId;
+export interface Delegation {
+  executiveId: string;
+  /** 0..1. Drives how well the autopilot resolves this department's items. */
+  competence: number;
+  hiredOnMatchday: number;
+}
+
+export function delegate(
+  p: ProgressionState,
+  moduleId: string,
+  executive: Delegation
+): void {
+  p.delegated[moduleId] = { ...executive };
+}
+
+/** What is running this department, if anything. Passed into autopilot hooks. */
+export function delegationFor(
+  state: GameState,
+  moduleId: string
+): Delegation | undefined {
+  const p = state.modules.progression as ProgressionState | undefined;
+  return p?.delegated[moduleId];
+}
+
+/**
+ * Should this department's mail and open items be suppressed?
+ *
+ * The player fantasy is not "a number goes up" — it is "this inbox stops asking
+ * me things". Delegation has to actually silence the department, or hiring
+ * someone changes nothing the player can feel.
+ */
+export function isSilenced(state: GameState, moduleId: string): boolean {
+  return delegationFor(state, moduleId) !== undefined;
 }
 
 export function revoke(p: ProgressionState, moduleId: string): boolean {

@@ -164,3 +164,34 @@ button { font-family: inherit; touch-action: manipulation; }
   line-height: 1;
   margin-right: 0.25em;
 }
+
+/*
+ * Cross-cutting text utilities.
+ *
+ * These are global on purpose. They are used inside {#snippet} blocks that a
+ * child component renders (DataTable's cells), where Svelte's scoped-style
+ * analysis cannot correlate the class with the markup and would strip the rule.
+ * They are also genuinely cross-cutting — "this figure is secondary" means the
+ * same thing on every screen — so a single definition is the right shape
+ * rather than a workaround.
+ */
+.dim { color: var(--text-muted); }
+.neg { color: var(--danger); }
+.pos { color: var(--primary); }
+
+.badge {
+  font-size: var(--fs-caption);
+  background: var(--primary-glow);
+  color: var(--primary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+.badge.hurt { background: rgba(255, 23, 68, 0.18); color: var(--danger); }
+
+/* A player who cannot be selected. Dimmed AND struck, never dimmed alone —
+   opacity on its own is a colour-only signal. */
+.out { opacity: 0.55; text-decoration: line-through; text-decoration-thickness: 1px; }
+
+.fitcell { display: block; min-width: 56px; }

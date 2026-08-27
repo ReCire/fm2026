@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
-  isUnlocked, gatedBy, isDelegated, nextUnlock, unlockNext, unlock,
-  applyNarrative, delegate, revoke, unseen, markSeen, progressRatio
+  isUnlocked, gatedBy, isDelegated, delegationFor, isSilenced, nextUnlock,
+  unlockNext, unlock, applyNarrative, delegate, revoke, unseen, markSeen,
+  progressRatio
 } from './rules';
-import { createProgression, type ProgressionState } from './state';
+import { createProgression, migrateProgression, type ProgressionState } from './state';
 import { narratives, narrativeById } from './content';
 import { createRng } from '$lib/engine/rng';
 import type { GameState } from '$lib/engine/state';
@@ -130,10 +131,27 @@ describe('unlock (out of order)', () => {
 });
 
 describe('delegation', () => {
+  it('carries competence, which is the interesting stat rather than the wage', () => {
+    const p = fresh();
+    delegate(p, 'merch', { executiveId: 'exec-3', competence: 0.35, hiredOnMatchday: 9 });
+    const d = delegationFor(asState(p), 'merch');
+    expect(d?.competence).toBe(0.35);
+    expect(isSilenced(asState(p), 'merch')).toBe(true);
+    expect(isSilenced(asState(p), 'stocks')).toBe(false);
+  });
+
+  it('stores a copy, so a later edit to the caller\'s object cannot rewrite state', () => {
+    const p = fresh();
+    const exec = { executiveId: 'exec-9', competence: 0.5, hiredOnMatchday: 1 };
+    delegate(p, 'youth', exec);
+    exec.competence = 0.99;
+    expect(delegationFor(asState(p), 'youth')?.competence).toBe(0.5);
+  });
+
   it('round-trips', () => {
     const p = fresh();
     expect(isDelegated(asState(p), 'industry')).toBe(false);
-    delegate(p, 'industry', 'exec-7');
+    delegate(p, 'industry', { executiveId: 'exec-7', competence: 0.8, hiredOnMatchday: 4 });
     expect(isDelegated(asState(p), 'industry')).toBe(true);
     expect(revoke(p, 'industry')).toBe(true);
     expect(isDelegated(asState(p), 'industry')).toBe(false);
@@ -174,5 +192,41 @@ describe('progressRatio', () => {
     const p = fresh();
     p.narrativeId = 'does-not-exist';
     expect(progressRatio(p)).toBe(1);
+  });
+});
+
+describe('migration to v2', () => {
+  it('carries a v1 bare-string delegation forward rather than dropping it', () => {
+    const v1 = {
+      narrativeId: 'investor',
+      unlocked: ['core', 'finance'],
+      seen: ['finance'],
+      delegated: { industry: 'exec-4' },
+      tutorialStep: 2,
+      started: true
+    };
+    const out = migrateProgression(v1, 1);
+    expect(out.delegated.industry).toEqual({
+      executiveId: 'exec-4',
+      competence: 0.6,
+      hiredOnMatchday: 0
+    });
+    expect(out.narrativeId).toBe('investor');
+    expect(out.unlocked).toEqual(['core', 'finance']);
+  });
+
+  it('fills sane defaults for a truncated save rather than throwing', () => {
+    const out = migrateProgression({}, 1);
+    expect(out.narrativeId).toBe('aufsteiger');
+    expect(out.unlocked).toEqual([]);
+    expect(out.started).toBe(false);
+  });
+
+  it('passes a v2 record through untouched', () => {
+    const v2 = {
+      narrativeId: 'erbe', unlocked: [], seen: [], tutorialStep: null, started: true,
+      delegated: { merch: { executiveId: 'e1', competence: 0.9, hiredOnMatchday: 3 } }
+    };
+    expect(migrateProgression(v2, 2).delegated.merch!.competence).toBe(0.9);
   });
 });

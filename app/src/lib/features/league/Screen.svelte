@@ -70,29 +70,24 @@
 
   <DataTable
     columns={[
-      { key: 'pos', header: '#', numeric: true },
-      { key: 'name', header: 'Verein' },
-      { key: 'played', header: 'Sp', numeric: true },
-      { key: 'goals', header: 'Tore', numeric: true, hideBelow: 420 },
-      { key: 'diff', header: 'Diff', numeric: true },
-      { key: 'points', header: 'Pkt', numeric: true }
+      { key: 'pos',    label: '#',     role: 'primary',   numeric: true },
+      { key: 'name',   label: 'Verein', role: 'primary' },
+      { key: 'points', label: 'Pkt',   role: 'primary',   numeric: true },
+      { key: 'played', label: 'Sp',    role: 'secondary', numeric: true },
+      { key: 'diff',   label: 'Diff',  role: 'secondary', numeric: true },
+      { key: 'goals',  label: 'Tore',  role: 'detail',    numeric: true }
     ]}
     rows={table}
-    empty="Diese Liga hat noch keine Vereine."
+    id={(t) => t.team.name}
+    title={(t) => t.team.name}
   >
-    {#snippet row(r)}
-      <tr
-        class:us={r.team.name === leagueContent.playerClubName}
-        class:promotion={!isTop && r.pos <= promotionZone}
-        class:relegation={!isBottom && r.pos > relegationZone}
-      >
-        <td class="tabular num dim">{r.pos}</td>
-        <td class="club">{r.team.name}</td>
-        <td class="tabular num">{r.team.played}</td>
-        <td class="tabular num dim">{r.team.goalsFor}:{r.team.goalsAgainst}</td>
-        <td class="tabular num">{r.goalDifference > 0 ? '+' : ''}{r.goalDifference}</td>
-        <td class="tabular num"><strong>{r.points}</strong></td>
-      </tr>
+    {#snippet cell(t, key)}
+      {#if key === 'pos'}{t.pos}.
+      {:else if key === 'name'}{t.team.name}
+      {:else if key === 'played'}{t.team.played}
+      {:else if key === 'goals'}{t.team.goalsFor}:{t.team.goalsAgainst}
+      {:else if key === 'diff'}{t.goalDifference > 0 ? '+' : ''}{t.goalDifference}
+      {:else}{t.points}{/if}
     {/snippet}
   </DataTable>
 
@@ -133,14 +128,7 @@
   .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--sp-2); margin-bottom: var(--sp-3); }
   .nav { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); }
 
-  td { padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--border); font-size: var(--fs-base); }
-  td.num { text-align: right; }
-  .dim { color: var(--text-muted); }
-  .club { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }
 
-  .us .club { color: var(--primary); font-weight: 800; }
-  .promotion td:first-child { border-left: 3px solid var(--primary); }
-  .relegation td:first-child { border-left: 3px solid var(--danger); }
 
   .legend { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-3); font-size: var(--fs-micro); color: var(--text-muted); }
   .key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }

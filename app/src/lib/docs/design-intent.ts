@@ -230,6 +230,52 @@ export const designIntent = defineIntent([
     source: 'architecture — NEEDS PLAY-TESTING'
   },
 
+  // ------------------------------------------------------------------- ui --
+  {
+    id: 'design.iconEarnsItsPlace',
+    constant: 'nav pictograms',
+    value: 'none in the nav list; kept in the tab bar',
+    rationale:
+      'An icon earns its place when it is faster to recognise than its label at the size it actually appears. In a 28-item nav list at 14px every icon competes with 27 others and none disambiguates, so the word wins. In a five-item tab bar at thumb distance with an 11px label, the mark IS the affordance and the word is the fallback.',
+    failureMode:
+      'Reading "minimal icons" as "no icons" strips the tab bar of the only thing carrying it at thumb distance. Same rule, opposite outcomes — the rule is what travels, not the outcome.',
+    module: 'design',
+    source: 'fm-03-design (Creative Director)'
+  },
+  {
+    id: 'design.declaredMeaningNotBreakpoints',
+    constant: 'DataTable Column.role',
+    value: "'primary' | 'secondary' | 'detail' — no caller names a breakpoint",
+    rationale:
+      'The caller declares meaning, the component decides presentation. Below 768px DataTable renders rows, not a table: primary on line one, secondary on line two, detail behind a tap.',
+    failureMode:
+      'The previous API was a `hideBelow: number` that no CSS matched — a documented API doing nothing, which is worse than a missing one because callers believe the problem is handled. The naive fix is worse still: hiding a header while the caller\'s cells remain misaligns the table, which in a game about reading numbers is a data-integrity failure. A nine-column squad table cannot be rescued at 375px by removing columns.',
+    module: 'design',
+    source: 'fm-03-design (Creative Director)'
+  },
+  {
+    id: 'design.entityKeys',
+    constant: 'DataTable row keys',
+    value: 'keyed by entity id, never by array index',
+    rationale:
+      'An index key is the same as no key. Sorting reuses DOM nodes positionally, so per-row state attaches to a different row than the one it belongs to.',
+    failureMode:
+      'Not a rendering nit: an open menu or a focused field landing on the wrong player makes the player distrust every number on the screen, including the correct ones.',
+    module: 'design',
+    source: 'fm-03-design (Creative Director)'
+  },
+  {
+    id: 'progression.delegationIsSilence',
+    constant: 'autopilot + delegated.competence',
+    value: 'an executive resolves the department AND stops its mail',
+    rationale:
+      'The player fantasy is not "a number goes up", it is "this inbox stops asking me things". Competence (0..1) rather than wage is the interesting stat: a mediocre executive still decides, just badly, and the player finds out at the balance sheet.',
+    failureMode:
+      'Delegation that only costs a wage and changes no prompts is a menu entry, not a mechanic. Delegation that resolves items perfectly removes the trade — there has to be a way to hire the wrong person.',
+    module: 'progression',
+    source: 'fm-03-design (Creative Director)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

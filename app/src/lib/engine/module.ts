@@ -14,6 +14,14 @@ export type Phase = (typeof PHASES)[number];
 
 export type TickKind = 'matchday' | 'week' | 'seasonStart' | 'seasonEnd';
 
+/** Who is running a department instead of the player, if anyone. */
+export interface DelegationInfo {
+  executiveId: string;
+  /** 0..1. An autopilot should act WORSE at low competence, not merely slower. */
+  competence: number;
+  hiredOnMatchday: number;
+}
+
 export interface TickContext {
   /** Live, mutable game state. Rune-backed, so writes are reactive. */
   state: GameState;
@@ -26,6 +34,17 @@ export interface TickContext {
   query<T>(key: string, fallback: T): T;
   /** Answer a question other modules may ask. Registered for this tick only. */
   provide<T>(key: string, value: T): void;
+
+  /**
+   * Set when this module's `autopilot` is running instead of its normal hook.
+   * Undefined during a normal tick.
+   *
+   * The competence value is the point: a delegated department must still make
+   * decisions, and a mediocre executive should make them badly — visible at the
+   * balance sheet rather than in a prompt. Otherwise hiring someone is a wage
+   * with no trade attached.
+   */
+  delegation?: DelegationInfo;
 }
 
 export interface Hook {
@@ -89,9 +108,14 @@ export interface ModuleDef<Id extends string = string, S = unknown> {
    * What this department does when an executive runs it instead of the player.
    *
    * Hiring an executive is delegation: the module keeps making decisions, but
-   * without the player in the loop. Declaring it here rather than in a central
-   * "AI" module means the people who understand a system write its autopilot,
-   * and deleting the feature deletes its autopilot with it.
+   * without the player in the loop, and it must also stop asking them things —
+   * a delegated department's open items resolve themselves and its mail stops.
+   * The player fantasy is not "a number goes up", it is "this inbox went quiet".
+   *
+   * Declaring it here rather than in a central "AI" module means the people who
+   * understand a system write its autopilot, and deleting the feature deletes
+   * its autopilot with it. Read `ctx.delegation.competence` to decide how well
+   * it is done.
    */
   autopilot?: Hook;
 }

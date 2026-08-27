@@ -55,13 +55,18 @@
 
   <nav class="tabbar">
     {#each primary as m (m.id)}
+      <!-- An icon earns its place when it is faster to recognise than its
+           label at the size it actually appears. In a 28-item nav list the
+           word wins and the pictogram is decoration; in a five-item tab bar at
+           thumb distance with an 11px label, the mark IS the affordance and
+           the word is the fallback. -->
       <a href="/{m.id}" class:on={current === m.id}>
-        <i class="rule" aria-hidden="true"></i>
+        <span class="ico" aria-hidden="true">{m.nav?.icon}</span>
         <span class="lbl">{m.title}</span>
       </a>
     {/each}
     <button class="more" aria-label="Weitere Bereiche" onclick={() => (drawerOpen = true)}>
-      <i class="rule" aria-hidden="true"></i>
+      <span class="ico" aria-hidden="true">☰</span>
       <span class="lbl">Mehr</span>
     </button>
   </nav>
@@ -117,7 +122,7 @@
   .sidebar a.active { background: var(--primary-glow); color: var(--primary); border-color: var(--border-highlight); }
   /* The department rule: 2px in the domain colour, replacing the pictogram. */
   .rule { flex: none; width: 2px; height: 14px; border-radius: 1px; background: currentColor; opacity: 0.45; }
-  .sidebar a.active .rule, .tabbar .on .rule { opacity: 1; }
+  .sidebar a.active .rule { opacity: 1; }
 
   /* Landscape on a notched phone: viewport-fit=cover means the notch and the
      rounded corners overlay the page, so content needs the horizontal insets
@@ -164,7 +169,7 @@
       color: var(--text-dim); text-decoration: none;
     }
     .tabbar .on { color: var(--primary); }
-    .tabbar .rule { width: 16px; height: 2px; }
+    .ico { font-size: 17px; line-height: 1; }
     .lbl { font-size: var(--fs-caption); font-weight: 800; }
   }
 </style>
