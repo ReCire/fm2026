@@ -66,12 +66,12 @@
 {/if}
 
 <style>
-  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--sp-2); margin-bottom: var(--sp-4); }
-  .actions { display: flex; flex-direction: column; gap: var(--sp-2); }
-  .events { list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); margin-bottom: var(--s3); }
+  .actions { display: flex; flex-direction: column; gap: var(--s2); }
+  .events { list-style: none; display: flex; flex-direction: column; gap: var(--s2); }
   .events li {
     border-left: 3px solid var(--text-dim);
-    padding: var(--sp-2) var(--sp-3);
+    padding: var(--s2) var(--s2);
     background: rgba(0,0,0,0.25);
     border-radius: 0 var(--r-sm) var(--r-sm) 0;
     display: grid;
@@ -80,12 +80,12 @@
   .events .warn { border-left-color: var(--accent); }
   .events .bad { border-left-color: var(--danger); }
   .events .info { border-left-color: var(--blue); }
-  .events strong { font-size: var(--fs-base); }
-  .events span { font-size: var(--fs-small); color: var(--text-muted); }
-  .events em { font-style: normal; font-size: var(--fs-small); color: var(--text-muted); }
-  h4 { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin: var(--sp-4) 0 var(--sp-2); }
+  .events strong { font-size: var(--fs-body); }
+  .events span { font-size: var(--fs-caption); color: var(--text-muted); }
+  .events em { font-style: normal; font-size: var(--fs-caption); color: var(--text-muted); }
+  h4 { font-size: var(--fs-caption); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin: var(--s3) 0 var(--s2); }
   .sources { list-style: none; display: flex; flex-direction: column; gap: 2px; }
-  .sources li { display: flex; justify-content: space-between; padding: var(--sp-1) 0; border-bottom: 1px solid var(--border); }
+  .sources li { display: flex; justify-content: space-between; padding: var(--s1) 0; border-bottom: 1px solid var(--border); }
   .sources em { font-style: normal; color: var(--primary); }
   .sources .neg { color: var(--danger); }
 </style>

@@ -45,7 +45,7 @@
 </span>
 
 <style>
-  .marks { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+  .marks { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
   .track { display: flex; gap: 3px; }
   .track i {
     width: 12px; height: 4px; border-radius: 1px;
@@ -55,7 +55,7 @@
   .accent .track i.on { background: var(--accent); }
   .muted .track i.on { background: var(--text-muted); }
   .caption {
-    font-size: var(--fs-micro); color: var(--text-muted);
+    font-size: var(--fs-caption); color: var(--text-muted);
     font-family: var(--font-num); font-variant-numeric: tabular-nums;
   }
 </style>

@@ -33,5 +33,5 @@
 
 <style>
   .loading { color: var(--text-muted); }
-  pre { font-size: var(--fs-small); color: var(--danger); white-space: pre-wrap; }
+  pre { font-size: var(--fs-caption); color: var(--danger); white-space: pre-wrap; }
 </style>

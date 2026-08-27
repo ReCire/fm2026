@@ -37,18 +37,18 @@
   .chip {
     background: var(--bg-inset);
     border: 1px solid var(--border);
-    padding: var(--sp-2) var(--sp-3);
+    padding: var(--s2) var(--s2);
     border-radius: var(--r-sm);
     min-width: 0;
   }
   .label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-caption);
     color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 2px;
   }
-  strong { font-size: var(--fs-base); color: var(--text-main); display: block; }
+  strong { font-size: var(--fs-body); color: var(--text-main); display: block; }
   .good strong { color: var(--primary-ink); }
   .bad strong { color: var(--danger-ink); }
   .warn strong { color: var(--accent-ink); }

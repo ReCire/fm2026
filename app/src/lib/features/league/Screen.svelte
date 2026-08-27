@@ -124,28 +124,28 @@
 </Panel>
 
 <style>
-  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--sp-2); }
-  .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--sp-2); margin-bottom: var(--sp-3); }
-  .nav { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); }
+  .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--s2); margin-bottom: var(--s2); }
+  .nav { display: flex; gap: var(--s2); margin-bottom: var(--s2); }
 
 
 
-  .legend { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-3); font-size: var(--fs-micro); color: var(--text-muted); }
+  .legend { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s2); font-size: var(--fs-caption); color: var(--text-muted); }
   .key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
   .key.promotion { background: var(--primary); }
   .key.relegation { background: var(--danger); }
 
-  .fixtures { list-style: none; display: grid; gap: var(--sp-1); }
+  .fixtures { list-style: none; display: grid; gap: var(--s1); }
   .fixtures li {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    gap: var(--sp-2);
-    padding: var(--sp-2) var(--sp-3);
+    gap: var(--s2);
+    padding: var(--s2) var(--s2);
     background: var(--bg-inset);
     border: 1px solid var(--border);
     border-radius: var(--r-sm);
-    font-size: var(--fs-small);
+    font-size: var(--fs-caption);
   }
   .fixtures li.us { border-color: var(--primary); }
   .fixtures .home { text-align: right; }

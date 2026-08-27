@@ -55,6 +55,6 @@
 </Panel>
 
 <style>
-  .summary { display: flex; flex-wrap: wrap; gap: var(--sp-5); margin-bottom: var(--sp-4); color: var(--text-muted); font-size: var(--fs-small); }
+  .summary { display: flex; flex-wrap: wrap; gap: var(--s3); margin-bottom: var(--s3); color: var(--text-muted); font-size: var(--fs-caption); }
   .summary strong { color: var(--text-main); font-size: var(--fs-body); display: block; }
 </style>

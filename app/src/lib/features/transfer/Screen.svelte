@@ -290,26 +290,26 @@
 </Panel>
 
 <style>
-  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--sp-2); }
-  .empty { color: var(--text-muted); font-size: var(--fs-small); padding: var(--sp-2) 0 var(--sp-3); }
+  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); }
+  .empty { color: var(--text-muted); font-size: var(--fs-caption); padding: var(--s2) 0 var(--s2); }
 
-  .offers { list-style: none; display: grid; gap: var(--sp-3); }
+  .offers { list-style: none; display: grid; gap: var(--s2); }
   .offer {
     border: 1px solid var(--border);
     border-radius: var(--r-sm);
-    padding: var(--sp-3);
+    padding: var(--s2);
     display: grid;
-    gap: var(--sp-2);
+    gap: var(--s2);
   }
-  .head, .who, .bid { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); }
-  .head { font-size: var(--fs-small); }
-  .who { font-size: var(--fs-base); }
+  .head, .who, .bid { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); }
+  .head { font-size: var(--fs-caption); }
+  .who { font-size: var(--fs-body); }
   .bid strong { font-size: var(--fs-title); color: var(--primary-ink); }
-  .status { font-size: var(--fs-small); color: var(--text-muted); }
+  .status { font-size: var(--fs-caption); color: var(--text-muted); }
 
-  .row { display: grid; gap: var(--sp-2); }
+  .row { display: grid; gap: var(--s2); }
   .two { grid-template-columns: 2fr 1fr; }
   .three { grid-template-columns: repeat(3, 1fr); }
-  .counters { display: grid; gap: var(--sp-2); }
+  .counters { display: grid; gap: var(--s2); }
 
 </style>

@@ -199,23 +199,23 @@
 </div>
 
 <style>
-  .steps { list-style: none; display: flex; gap: 4px; padding: 0; margin: 0 0 var(--sp-4); }
+  .steps { list-style: none; display: flex; gap: 4px; padding: 0; margin: 0 0 var(--s3); }
   .steps li { flex: 1; height: 3px; border-radius: 2px; background: var(--border); }
   .steps li.done { background: var(--primary); }
   .steps li.now { background: var(--accent); }
 
-  .muted { color: var(--text-muted); font-size: var(--fs-small); }
-  .field { display: block; font-size: var(--fs-small); color: var(--text-muted); margin-bottom: var(--sp-1); }
+  .muted { color: var(--text-muted); font-size: var(--fs-caption); }
+  .field { display: block; font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s1); }
 
   input[type='text'] {
-    width: 100%; padding: var(--sp-3); min-height: 40px;
+    width: 100%; padding: var(--s2); min-height: 40px;
     background: var(--bg-inset); color: var(--text-main);
     border: 1px solid var(--border-strong); border-radius: var(--r-sm);
     font-family: inherit; font-size: var(--fs-body);
   }
 
-  fieldset { border: 0; margin: var(--sp-5) 0 0; }
-  legend { font-size: var(--fs-small); color: var(--text-muted); margin-bottom: var(--sp-2); }
+  fieldset { border: 0; margin: var(--s3) 0 0; }
+  legend { font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s2); }
 
   /* The radio itself stays in the accessibility tree and keyboard order; only
      its default rendering is hidden. */
@@ -224,7 +224,7 @@
   }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 
-  .avatars { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+  .avatars { display: flex; gap: var(--s2); flex-wrap: wrap; }
   .avatar { cursor: pointer; }
   .avatar .face {
     display: grid; place-items: center;
@@ -236,23 +236,23 @@
   .avatar input:focus-visible + .face { outline: 2px solid var(--primary); outline-offset: 2px; }
 
   .bg, .club, .narr {
-    display: flex; gap: var(--sp-3); align-items: flex-start;
-    padding: var(--sp-3); margin-bottom: var(--sp-2);
+    display: flex; gap: var(--s2); align-items: flex-start;
+    padding: var(--s2); margin-bottom: var(--s2);
     border: 1px solid var(--border); border-radius: var(--r-sm);
     background: var(--bg-inset); cursor: pointer; min-height: 44px;
   }
   .bg.on, .club.on, .narr.on { border-color: var(--primary); background: var(--primary-glow); }
   .bg input:focus-visible ~ *, .club input:focus-visible ~ *, .narr input:focus-visible ~ * { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-  .bg strong, .club strong, .narr strong { display: block; font-size: var(--fs-base); }
-  .bg small, .club small, .narr small { display: block; color: var(--text-muted); font-size: var(--fs-micro); }
-  .narr em { display: block; font-style: normal; color: var(--accent); font-size: var(--fs-small); margin: 2px 0; }
-  .narr .diff, .club .flav { margin-top: var(--sp-1); }
+  .bg strong, .club strong, .narr strong { display: block; font-size: var(--fs-body); }
+  .bg small, .club small, .narr small { display: block; color: var(--text-muted); font-size: var(--fs-caption); }
+  .narr em { display: block; font-style: normal; color: var(--accent); font-size: var(--fs-caption); margin: 2px 0; }
+  .narr .diff, .club .flav { margin-top: var(--s1); }
 
-  .clubs { display: grid; gap: var(--sp-2); }
+  .clubs { display: grid; gap: var(--s2); }
   .meta { min-width: 0; }
 
-  .problems { color: var(--accent); font-size: var(--fs-small); margin: var(--sp-3) 0; }
-  .nav { display: flex; gap: var(--sp-2); margin-top: var(--sp-4); }
+  .problems { color: var(--accent); font-size: var(--fs-caption); margin: var(--s2) 0; }
+  .nav { display: flex; gap: var(--s2); margin-top: var(--s3); }
   .nav :global(.wrap) { flex: 1; }
 </style>

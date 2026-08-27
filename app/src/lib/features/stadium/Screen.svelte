@@ -65,12 +65,12 @@
 </Panel>
 
 <style>
-  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--sp-2); }
-  .fans { margin-top: var(--sp-4); font-size: var(--fs-small); color: var(--text-muted); display: grid; gap: var(--sp-2); }
-  .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--sp-3); }
-  .block { background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-3); }
-  .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--sp-1); }
-  .head strong { font-size: var(--fs-base); }
+  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); }
+  .fans { margin-top: var(--s3); font-size: var(--fs-caption); color: var(--text-muted); display: grid; gap: var(--s2); }
+  .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s2); }
+  .block { background: var(--bg-inset); border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--s2); }
+  .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s1); }
+  .head strong { font-size: var(--fs-body); }
   .head span { color: var(--primary); font-weight: 800; }
-  .comfort { display: flex; gap: var(--sp-3); font-size: var(--fs-micro); color: var(--text-muted); margin-bottom: var(--sp-2); }
+  .comfort { display: flex; gap: var(--s2); font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s2); }
 </style>

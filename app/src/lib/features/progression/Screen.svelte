@@ -62,12 +62,12 @@
 </Panel>
 
 <style>
-  .premise { color: var(--text-muted); font-size: var(--fs-body); margin-bottom: var(--sp-4); }
-  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--sp-2); margin-bottom: var(--sp-3); }
-  .next { margin-top: var(--sp-3); font-size: var(--fs-small); color: var(--text-muted); }
-  .mods { list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
-  .mods li { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); padding: var(--sp-2) 0; border-bottom: 1px solid var(--border); }
-  .mods strong { display: block; font-size: var(--fs-base); }
-  .mods small { color: var(--text-muted); font-size: var(--fs-micro); }
+  .premise { color: var(--text-muted); font-size: var(--fs-body); margin-bottom: var(--s3); }
+  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); margin-bottom: var(--s2); }
+  .next { margin-top: var(--s2); font-size: var(--fs-caption); color: var(--text-muted); }
+  .mods { list-style: none; display: flex; flex-direction: column; gap: var(--s2); }
+  .mods li { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s2) 0; border-bottom: 1px solid var(--border); }
+  .mods strong { display: block; font-size: var(--fs-body); }
+  .mods small { color: var(--text-muted); font-size: var(--fs-caption); }
   .mods li :global(.wrap) { width: auto; flex: none; }
 </style>

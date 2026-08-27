@@ -12,6 +12,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="Anstoß" />
+    <script>
+      /*
+       * Runs before first paint so the page never flashes the wrong theme.
+       * Inline on purpose: a module import would resolve after the first frame.
+       * `system` leaves the attribute off so the media query stays live.
+       */
+      try {
+        var t = localStorage.getItem('anstoss:theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">
