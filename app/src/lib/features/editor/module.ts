@@ -12,8 +12,6 @@ export default defineModule({
   // No hooks. The editor changes what things are CALLED and what their numbers
   // are; it does not advance anything. Overrides are resolved at read time by
   // whoever displays a club or a player, which is why there is nothing to tick.
-
-  docs: {}
 });
 
 export * from './rules';

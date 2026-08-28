@@ -40,6 +40,15 @@ describe('features on disk are wired into the registry', () => {
     expect(orphans, 'feature folders that no module registers').toEqual([]);
   });
 
+  /**
+   * These now guard DISCOVERY rather than hand-wiring.
+   *
+   * The plumbing used to be two lines in each module.ts and this test caught
+   * two people forgetting them. A check that keeps catching the same omission
+   * is telling you the omission should not be possible — so `discover.ts` reads
+   * both from disk, and these assert the discovery actually worked. The shape
+   * of the failure changed; the need for the check did not.
+   */
   it('a folder with Screen.svelte registers a screen', () => {
     const missing = [...SCREENS].filter((d) => {
       const mod = registry.byId.get(d);
@@ -48,7 +57,7 @@ describe('features on disk are wired into the registry', () => {
     expect(missing, 'features whose screen exists but is unreachable').toEqual([]);
   });
 
-  it('a folder with docs.ts registers docs that actually resolve', () => {
+  it('every docs.ts contributes entries — discovery recognises it by shape, so a drifted shape must fail loudly', () => {
     const missing: string[] = [];
     for (const d of DOC_FILES) {
       const mod = registry.byId.get(d);

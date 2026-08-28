@@ -1,7 +1,6 @@
 import { defineModule } from '$lib/engine/module';
 import { MatchdaySchema, createMatchday, MATCHDAY_VERSION, type Report } from './state';
 import { effectiveStrength, modifiers, recordResult, moraleDelta, fitnessMultiplier, goalChance } from './rules';
-import { matchdayDocs } from './docs';
 import { autoLineup, teamStrength, isAvailable } from '../squad/rules';
 
 export default defineModule({
@@ -122,8 +121,5 @@ export default defineModule({
         }
       }
     ]
-  },
-
-  screen: () => import('./Screen.svelte'),
-  docs: matchdayDocs
+  }
 });

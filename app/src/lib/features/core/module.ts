@@ -28,6 +28,13 @@ export default defineModule({
     create: () => ({ soundOn: false, lastSeenReport: 0 }),
     version: 1
   },
+
+  /*
+   * Declared inline rather than in a docs.ts, because `core` has no folder of
+   * its own beyond this file — these are the shell's controls, not a feature's.
+   * An explicit `docs` always wins over discovery, which is why this still
+   * works after the plumbing was removed everywhere else.
+   */
   docs: defineDocs({
     'game.advance': {
       label: '▶ Spieltag simulieren',

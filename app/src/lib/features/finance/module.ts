@@ -2,7 +2,6 @@ import { defineModule } from '$lib/engine/module';
 import { FinanceSchema, createFinance, FINANCE_VERSION } from './state';
 import { post, loanInterest } from './rules';
 import { financeContent } from './content';
-import { financeDocs } from './docs';
 
 export default defineModule({
   id: 'finance',
@@ -51,10 +50,7 @@ export default defineModule({
         }
       }
     }
-  },
-
-  screen: () => import('./Screen.svelte'),
-  docs: financeDocs
+  }
 });
 
 /**

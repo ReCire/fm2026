@@ -1,6 +1,5 @@
 import { defineModule } from '$lib/engine/module';
 import { ProgressionSchema, createProgression, PROGRESSION_VERSION, migrateProgression } from './state';
-import { progressionDocs } from './docs';
 import { unlockNext, nextUnlock } from './rules';
 import { narrativeById } from './content';
 
@@ -67,10 +66,7 @@ export default defineModule({
         }
       }
     }
-  },
-
-  screen: () => import('./Screen.svelte'),
-  docs: progressionDocs
+  }
 });
 
 export { isUnlocked, gatedBy, isDelegated, delegationFor, isSilenced, type Delegation, unlock, unlockNext, applyNarrative, delegate, revoke, markSeen, unseen, progressRatio } from './rules';

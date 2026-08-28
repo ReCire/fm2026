@@ -1,7 +1,6 @@
 import { defineModule } from '$lib/engine/module';
 import { StadiumSchema, createStadium, STADIUM_VERSION } from './state';
 import { ticketIncome, attendance, capacity } from './rules';
-import { stadiumDocs } from './docs';
 import { postToLedger } from '../finance/module';
 
 export default defineModule({
@@ -45,8 +44,5 @@ export default defineModule({
         });
       }
     }
-  },
-
-  screen: () => import('./Screen.svelte'),
-  docs: stadiumDocs
+  }
 });

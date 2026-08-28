@@ -1,7 +1,6 @@
 import { defineModule } from '$lib/engine/module';
 import { SquadSchema, createSquad, SQUAD_VERSION } from './state';
 import { applyPostMatch, autoLineup, wageBill, teamStrength } from './rules';
-import { squadDocs } from './docs';
 import { postToLedger } from '../finance/module';
 
 export default defineModule({
@@ -80,8 +79,5 @@ export default defineModule({
         }
       }
     }]
-  },
-
-  screen: () => import('./Screen.svelte'),
-  docs: squadDocs
+  }
 });

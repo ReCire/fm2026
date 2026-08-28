@@ -6,6 +6,7 @@
  * nav entry, save slice, tick hooks, docs and Studio panel all go with it.
  */
 import type { ModuleDef } from './engine/module';
+import { withDiscovered } from './discover';
 
 import core from './features/core/module';
 import editor from './features/editor/module';
@@ -19,7 +20,7 @@ import transfer from './features/transfer/module';
 import stadium from './features/stadium/module';
 import staff from './features/staff/module';
 
-export const modules: readonly ModuleDef[] = [
+const declared: readonly ModuleDef[] = [
   core,
   onboarding,
   progression,
@@ -32,3 +33,11 @@ export const modules: readonly ModuleDef[] = [
   staff,
   editor
 ];
+
+/*
+ * Each feature's `Screen.svelte` and `docs.ts` are attached by discovery — see
+ * discover.ts. The list above stays hand-written because it is the one place
+ * you can read the whole game, and because deleting a line here is what makes
+ * deleting a feature a two-step operation rather than an archaeology exercise.
+ */
+export const modules = withDiscovered(declared);

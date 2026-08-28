@@ -541,6 +541,29 @@ export const designIntent = defineIntent([
     source: 'Eric (the requirement), architecture (the model)'
   },
 
+  {
+    id: 'editor.discoverDoNotWire',
+    constant: 'discover.ts',
+    value: 'screens and docs found on disk; only the module LIST stays explicit',
+    rationale:
+      'A check that keeps catching the same omission is telling you the omission should not be possible. The wiring test caught two people forgetting the same two lines, which proved the information was derivable all along.',
+    failureMode:
+      'The module list is deliberately NOT discovered. It is the one place you can read the whole game, and an explicit line is what makes deleting a feature a two-step operation rather than an archaeology exercise. Only the plumbing — the part with no decision in it — is inferred. Docs are recognised by SHAPE rather than by a naming convention, because a convention is another thing to remember and removing things to remember is the point; the wiring test still asserts every docs.ts contributed, so a drifted shape fails loudly instead of going quiet.',
+    module: 'editor',
+    source: 'fm-03-design (proposed), architecture (built)'
+  },
+  {
+    id: 'editor.crestDownscaleNeverReject',
+    constant: 'putCrest',
+    value: 'downscale to 512px on write; a missing asset returns null, not an error',
+    rationale:
+      'Someone picking a 4 MB photo from their camera roll gets a working crest. Cleared site data degrades to the generated mark. Object URLs are managed by the store, so callers get a stable string and never have to remember to revoke anything. One club, one crest — replace, never accumulate.',
+    failureMode:
+      'The failure mode of "your file is too big" is that the player gives up, and an upload they gave up on is a feature they never used. Rejecting is the obvious implementation and the wrong one. Likewise a missing asset must be a normal outcome rather than an error: a save imported from someone else\'s pack references crests this device has never seen, and that must show the shipped mark rather than a broken image.',
+    module: 'editor',
+    source: 'fm-03-design (all four constraints)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

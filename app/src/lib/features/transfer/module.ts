@@ -2,7 +2,6 @@ import { defineModule } from '$lib/engine/module';
 import { TransferSchema, createTransfer, TRANSFER_VERSION } from './state';
 import { refreshMarket, isRefreshDue, expireOffers, canReceiveOffer, generateOffer } from './rules';
 import { transferContent } from './content';
-import { transferDocs } from './docs';
 // The sanctioned cross-module surface: a narrow public API plus a declared
 // dependency. Imported but unused for control flow — a transfer only moves
 // money when the player pushes a button, and the screen posts it there.
@@ -68,8 +67,5 @@ export default defineModule({
         }
       }
     }
-  },
-
-  screen: () => import('./Screen.svelte'),
-  docs: transferDocs
+  }
 });

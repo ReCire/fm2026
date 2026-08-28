@@ -9,7 +9,6 @@ import {
   seasonOutcome
 } from './rules';
 import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
-import { leagueDocs } from './docs';
 import { postToLedger, formatMoney } from '../finance/module';
 
 export default defineModule({
@@ -161,10 +160,7 @@ export default defineModule({
         }
       }
     }
-  },
-
-  screen: () => import('./Screen.svelte'),
-  docs: leagueDocs
+  }
 });
 
 /** Narrow public surface for modules that declare `requires: ['league']`. */
