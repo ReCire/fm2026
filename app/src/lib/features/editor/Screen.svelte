@@ -3,6 +3,7 @@
   import { Panel, Button, StatChip, toast } from '$lib/ui';
   import Doc from '$lib/docs/Doc.svelte';
   import Crest from '$lib/graphics/Crest.svelte';
+  import CrestUpload from '$lib/graphics/CrestUpload.svelte';
   import AttributeRadar from '$lib/graphics/AttributeRadar.svelte';
   import { onboardingContent, clubById } from '../onboarding/content';
   import { ATTRIBUTES, ATTRIBUTE_LABEL, ATTRIBUTE_BLURB, POSITION_WEIGHTS, overallFor, type Attribute } from '../squad/attributes';
@@ -113,7 +114,7 @@
       <div class="preview">
         <!-- Live, because changing a colour and seeing the crest change IS the
              feature. A preview behind a save button is a form. -->
-        <Crest name={club.name} colours={club.colours} size={96} />
+        <CrestUpload clubId={club.id} name={club.name} colours={club.colours} size={96} />
       </div>
       <div class="fields">
         <label class="field" for="club-name">Name</label>

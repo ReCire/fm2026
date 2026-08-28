@@ -19,6 +19,14 @@ export const editorDocs = defineDocs({
     since: '0.1.0',
     related: ['editor.club', 'editor.reset']
   },
+  'editor.crest': {
+    label: 'Wappen',
+    tooltip: 'Ein eigenes Bild hochladen, oder das erzeugte Wappen behalten.',
+    manual: '## Eigenes Wappen\n\nDas erzeugte Wappen entsteht aus den beiden Vereinsfarben und braucht keine Datei. Wer ein echtes Logo hat, lädt es hoch — es wird auf eine sinnvolle Größe gebracht und im Browser gespeichert.\n\nWird das eigene Bild entfernt oder der Browserspeicher geleert, gilt wieder das erzeugte Wappen. Es kann also nie ein leeres Feld entstehen.',
+    why: 'Das erzeugte Wappen ist nicht der Leerzustand, sondern der Boden: es liegt immer darunter. Deshalb ist sowohl das Hochladen als auch das Entfernen gefahrlos — man sieht jederzeit, was man zurückbekommt.',
+    since: '0.1.0',
+    related: ['editor.club']
+  },
   'editor.reset': {
     label: 'Zurücksetzen',
     tooltip: 'Entfernt deine Änderung und stellt den Originalwert wieder her.',
