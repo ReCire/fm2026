@@ -1,3 +1,5 @@
+import { strengthOf } from '$lib/features/squad/rules';
+import { uniform } from '$lib/features/squad/attributes';
 import { describe, it, expect } from 'vitest';
 import { Registry } from '$lib/engine/registry';
 import { runTick } from '$lib/engine/clock';
@@ -28,8 +30,8 @@ describe('provide/query ordering', () => {
     const strong = freshGame();
     const weak = freshGame();
     // Make one squad drastically better than the other.
-    for (const p of strong.modules.squad.players) { p.strength = 95; p.fitness = 100; }
-    for (const p of weak.modules.squad.players)   { p.strength = 25; p.fitness = 40; }
+    for (const p of strong.modules.squad.players) { p.attributes = uniform(95); p.fitness = 100; }
+    for (const p of weak.modules.squad.players)   { p.attributes = uniform(25); p.fitness = 40; }
 
     runTick(registry, strong, 'matchday');
     runTick(registry, weak, 'matchday');

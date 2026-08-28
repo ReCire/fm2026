@@ -1,3 +1,4 @@
+import { strengthOf } from './rules';
 import { describe, it, expect } from 'vitest';
 import {
   marketValue, wage, createPlayer, autoLineup, teamStrength,
@@ -45,8 +46,8 @@ describe('createPlayer', () => {
     const rng = createRng(3);
     for (let i = 0; i < 200; i++) {
       const p = createPlayer(rng, 'MIT', 45, 55);
-      expect(p.strength).toBeGreaterThanOrEqual(45);
-      expect(p.strength).toBeLessThanOrEqual(55);
+      expect(strengthOf(p)).toBeGreaterThanOrEqual(45);
+      expect(strengthOf(p)).toBeLessThanOrEqual(55);
     }
   });
   it('honours a forced trait', () => {

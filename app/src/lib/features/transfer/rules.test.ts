@@ -1,3 +1,5 @@
+import { strengthOf } from '../squad/rules';
+import { uniform } from '../squad/attributes';
 import { describe, it, expect } from 'vitest';
 import {
   roundToStep, marketStrengthBand, refreshMarket, isRefreshDue,
@@ -42,7 +44,7 @@ function negotiation(opts: { marketValue: number; bid: number; round?: number })
     playerId: player.id,
     playerName: player.name,
     playerPos: player.pos,
-    playerStrength: player.strength,
+    playerStrength: strengthOf(player),
     marketValue: opts.marketValue,
     clubName: 'SV Testhausen',
     currentBid: opts.bid,
@@ -423,14 +425,14 @@ describe('refreshMarket', () => {
       const band = marketStrengthBand(leagueLevel);
       const t = level(leagueLevel, 100 + leagueLevel);
       for (const l of t.market) {
-        expect(l.player.strength).toBeGreaterThanOrEqual(band.min);
-        expect(l.player.strength).toBeLessThanOrEqual(band.max);
+        expect(strengthOf(l.player)).toBeGreaterThanOrEqual(band.min);
+        expect(strengthOf(l.player)).toBeLessThanOrEqual(band.max);
       }
       for (const l of t.freeAgents) {
-        expect(l.player.strength).toBeGreaterThanOrEqual(
+        expect(strengthOf(l.player)).toBeGreaterThanOrEqual(
           Math.max(c.freeAgentStrengthFloor, band.min + c.freeAgentMinOffset)
         );
-        expect(l.player.strength).toBeLessThanOrEqual(band.max + c.freeAgentMaxOffset);
+        expect(strengthOf(l.player)).toBeLessThanOrEqual(band.max + c.freeAgentMaxOffset);
       }
     }
   });
@@ -612,7 +614,7 @@ describe('generateOffer', () => {
 
   it('gives up when nobody in the squad is worth bidding for', () => {
     const { transfer, squad, rng } = world(8);
-    for (const p of squad.players) p.strength = c.offerMinStrength - 1;
+    for (const p of squad.players) p.attributes = uniform(c.offerMinStrength - 1);
     expect(generateOffer(transfer, squad, rng)).toBeUndefined();
     expect(transfer.offers).toHaveLength(0);
   });

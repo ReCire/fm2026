@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { strengthOf } from '../squad/rules';
   /**
    * Transfer screen. Structure only — no decoration.
    *
@@ -212,7 +213,7 @@
         {r.player.name}
         {#if r.player.trait !== 'Kein'}<small>{r.player.trait}</small>{/if}
       {:else if key === 'pos'}<span class="dim">{r.player.pos}</span>
-      {:else if key === 'str'}{r.player.strength}
+      {:else if key === 'str'}{strengthOf(r.player)}
       {:else if key === 'wage'}<span class="dim">{formatMoney(r.player.wage)}</span>
       {:else}
         <Button
@@ -243,7 +244,7 @@
     {#snippet cell(r, key)}
       {#if key === 'name'}{r.player.name}
       {:else if key === 'pos'}<span class="dim">{r.player.pos}</span>
-      {:else if key === 'str'}{r.player.strength}
+      {:else if key === 'str'}{strengthOf(r.player)}
       {:else if key === 'wage'}<span class="dim">{formatMoney(r.player.wage)}</span>
       {:else}
         <Button
@@ -275,7 +276,7 @@
     {#snippet cell(r, key)}
       {#if key === 'name'}{r.name}
       {:else if key === 'pos'}<span class="dim">{r.pos}</span>
-      {:else if key === 'str'}{r.strength}
+      {:else if key === 'str'}{strengthOf(r)}
       {:else if key === 'mv'}<span class="dim">{formatMoney(r.marketValue)}</span>
       {:else}
         <Button

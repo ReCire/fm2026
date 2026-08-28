@@ -8,6 +8,7 @@
 import type { ModuleDef } from './engine/module';
 
 import core from './features/core/module';
+import editor from './features/editor/module';
 import onboarding from './features/onboarding/module';
 import progression from './features/progression/module';
 import finance from './features/finance/module';
@@ -28,5 +29,6 @@ export const modules: readonly ModuleDef[] = [
   league,
   matchday,
   transfer,
-  staff
+  staff,
+  editor
 ];

@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import type { Rng } from '$lib/engine/rng';
 import { POSITIONS } from './positions';
+import { AttributesSchema } from './attributes';
 import { squadContent } from './content';
 import { createPlayer } from './rules';
+import { uniform } from './attributes';
 
 export { POSITIONS, type Position } from './positions';
 
@@ -10,7 +12,12 @@ export const PlayerSchema = z.object({
   id: z.string(),
   name: z.string(),
   pos: z.enum(POSITIONS),
-  strength: z.number().int().min(1).max(99),
+  /**
+   * The five things a player is judged on. `strength` is no longer stored — it
+   * is derived from these by position, so there is exactly one place the
+   * combination is decided and an editor has something real to shape.
+   */
+  attributes: AttributesSchema,
   fitness: z.number().int().min(0).max(100),
   morale: z.number().int().min(0).max(100),
   age: z.number().int().min(15).max(45),
@@ -49,4 +56,28 @@ export function createSquad(rng: Rng): SquadState {
   return { players, lineup: [], captainId: null };
 }
 
-export const SQUAD_VERSION = 1;
+/**
+ * v2: `strength: number` became `attributes: {...}`, and strength is derived.
+ */
+export const SQUAD_VERSION = 2;
+
+export function migrateSquad(old: unknown, fromVersion: number): SquadState {
+  const base = old as { players?: unknown[]; lineup?: string[]; captainId?: string | null };
+  const players = (base.players ?? []).map((raw) => {
+    const p = raw as Record<string, unknown>;
+    if (p.attributes) return p as unknown as Player;
+    /*
+     * A v1 player carried one number. Spreading it flat across the five keeps
+     * their overall almost exactly where it was in their own position — the
+     * weights sum to 1 — so a career loaded from v1 does not silently get
+     * better or worse at the moment of upgrading.
+     */
+    const s = typeof p.strength === 'number' ? p.strength : 50;
+    return { ...p, attributes: uniform(s) } as unknown as Player;
+  });
+  return {
+    players,
+    lineup: base.lineup ?? [],
+    captainId: base.captainId ?? null
+  };
+}

@@ -506,6 +506,41 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (found it by opening the route instead of trusting the green)'
   },
 
+  // --------------------------------------------------------------- editor --
+  {
+    id: 'editor.overridesNeverReplace',
+    constant: 'EditorState.clubs / .players',
+    value: 'shipped content stays; edits sit on top and resolve at read time',
+    rationale:
+      'The magic of the old managers was never the fake names — it was that you could go in and fix them. Rename the hocus-pocus clubs to what they are actually called, drop in a real crest, rename the squad, build one player with 99 in everything. The game shipped safe and the player made it theirs.',
+    failureMode:
+      'Editing the shipped data in place would make "reset" a restore-from-backup, which can fail and eventually will. As an override layer, reset is deleting a key — it cannot fail, because the original was never written over. It also means we ship no real names, crests or people at any point: the player supplies those, which is the answer to the licensing question rather than a workaround for it.',
+    module: 'editor',
+    source: 'Eric (the feature), architecture (the shape)'
+  },
+  {
+    id: 'editor.packsImportPartially',
+    constant: 'applyPack',
+    value: 'validate entry by entry, never all-or-nothing',
+    rationale:
+      'A pack with one malformed club imports the other thirteen and names the one it skipped.',
+    failureMode:
+      'Refusing an entire file over a single typo is how a sharing feature stops being used. Crest images are deliberately not inlined for the same reason — a pack with a dozen base64 PNGs is megabytes and cannot be pasted into a message.',
+    module: 'editor',
+    source: 'architecture'
+  },
+  {
+    id: 'squad.fiveAttributes',
+    constant: 'Player.attributes',
+    value: 'Technik, Tempo, Kraft, Übersicht, Mentalität — strength derived, not stored',
+    rationale:
+      'An editor over a single number is a slider. Five categories give the player something to shape, and make a 99-everywhere ringer feel absurd in the way it is supposed to. The same five numbers mean different things per position — a keeper lives on Mentalität and Übersicht, a striker on Technik and Tempo — which is what stops them collapsing back into one number wearing a hat.',
+    failureMode:
+      'Position weights must each sum to 1, checked in a test: a column summing to 0.9 would quietly rate every player in that position 10 percent low, and nothing else would object. Generation shifts a spread into the requested band rather than clamping the overall, because the transfer market picks by league level and a striker drifting above the band would put a top-flight player in a fourth-division shop window.',
+    module: 'squad',
+    source: 'Eric (the requirement), architecture (the model)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

@@ -2,6 +2,7 @@ import type { Rng } from '$lib/engine/rng';
 import type { Position } from './positions';
 import type { Player, SquadState } from './state';
 import { squadContent } from './content';
+import { overallFor, uniform, type Attributes } from './attributes';
 
 /**
  * Squad rules. Pure functions over plain data, RNG always injected.
@@ -9,6 +10,17 @@ import { squadContent } from './content';
  * Everything the prototype did with a bare `Math.random()` now takes an `rng`
  * argument, which is what makes a season reproducible from its seed.
  */
+
+/**
+ * A player's overall rating in the position they actually play.
+ *
+ * Derived rather than stored so the five attributes are the single source of
+ * truth. Everything that used to read `p.strength` reads this instead, which
+ * means the editor changes one thing and the whole game follows.
+ */
+export function strengthOf(p: { attributes: Attributes; pos: Position }): number {
+  return overallFor(p.attributes, p.pos);
+}
 
 /** Market value from strength, via the piecewise curve in content.ts. */
 export function marketValue(strength: number): number {
@@ -36,14 +48,30 @@ export function createPlayer(
   maxStrength: number,
   forceTrait?: string
 ): Player {
-  const strength = rng.int(minStrength, maxStrength);
+  const target = rng.int(minStrength, maxStrength);
+  /*
+   * Generate around the target rather than at it. A player whose five numbers
+   * are identical is a spreadsheet row; the spread is what makes one midfielder
+   * different from another at the same overall, and what gives the editor
+   * something to notice and adjust.
+   *
+   * The overall lands close to `target` because the position weights sum to 1,
+   * so a symmetric spread averages out.
+   */
+  const attributes = shiftToBand(
+    spreadAround(rng, target, 12),
+    pos,
+    minStrength,
+    maxStrength
+  );
+  const strength = overallFor(attributes, pos);
   const value = marketValue(strength);
   const trait = forceTrait ?? (rng.chance(squadContent.traitChance) ? rng.pick(squadContent.traits) : 'Kein');
   return {
     id: `p${rng.int(100_000, 999_999)}-${strength}`,
+    attributes,
     name: `${rng.pick(squadContent.firstNames)} ${rng.pick(squadContent.lastNames)}`,
     pos,
-    strength,
     fitness: rng.int(85, 100),
     morale: rng.int(60, 90),
     age: rng.int(18, 34),
@@ -53,6 +81,35 @@ export function createPlayer(
     injured: 0,
     suspended: 0,
     individualFocus: 'allgemein'
+  };
+}
+
+/**
+ * Slide a spread until its overall sits inside the requested band.
+ *
+ * Callers ask for a band and rely on it — the transfer market picks players by
+ * league level, so a striker drifting above the band would put a Bundesliga
+ * player in a fourth-division shop window. Because the position weights sum to
+ * 1, adding the same delta to every attribute moves the overall by exactly that
+ * delta, so the spread is preserved and only the level shifts.
+ */
+function shiftToBand(a: Attributes, pos: Position, min: number, max: number): Attributes {
+  const current = overallFor(a, pos);
+  const wanted = Math.max(min, Math.min(max, current));
+  const delta = wanted - current;
+  if (delta === 0) return a;
+  const shift = (v: number) => Math.max(1, Math.min(99, v + delta));
+  return {
+    technik: shift(a.technik), tempo: shift(a.tempo), kraft: shift(a.kraft),
+    uebersicht: shift(a.uebersicht), mentalitaet: shift(a.mentalitaet)
+  };
+}
+
+/** Five values scattered around a target, each clamped to the legal range. */
+function spreadAround(rng: Rng, target: number, spread: number): Attributes {
+  const one = () => Math.max(1, Math.min(99, target + rng.int(-spread, spread)));
+  return {
+    technik: one(), tempo: one(), kraft: one(), uebersicht: one(), mentalitaet: one()
   };
 }
 
@@ -105,7 +162,7 @@ export function autoLineup(squad: SquadState): string[] {
  */
 export function rating(p: Player): number {
   const { fitnessWeight: w, fitnessBaseline: base } = squadContent;
-  return p.strength * (1 + (w * (p.fitness - base)) / 100);
+  return strengthOf(p) * (1 + (w * (p.fitness - base)) / 100);
 }
 
 /**

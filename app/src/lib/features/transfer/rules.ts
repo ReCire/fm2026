@@ -1,3 +1,4 @@
+import { strengthOf } from '../squad/rules';
 import { createRng, mixSeed, type Rng } from '$lib/engine/rng';
 import type { Position } from '../squad/positions';
 import { POSITIONS } from '../squad/positions';
@@ -241,7 +242,7 @@ export function generateOffer(
   opts: OfferOptions = {}
 ): Offer | undefined {
   const targets = squad.players.filter(
-    (p) => p.strength >= c.offerMinStrength && !transfer.offers.some((o) => o.playerId === p.id)
+    (p) => strengthOf(p) >= c.offerMinStrength && !transfer.offers.some((o) => o.playerId === p.id)
   );
   if (targets.length === 0) return undefined;
 
@@ -255,7 +256,7 @@ export function generateOffer(
     playerId: target.id,
     playerName: target.name,
     playerPos: target.pos,
-    playerStrength: target.strength,
+    playerStrength: strengthOf(target),
     marketValue: target.marketValue,
     clubName: clubName(rng),
     currentBid: bid,
