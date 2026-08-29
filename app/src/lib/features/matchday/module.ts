@@ -1,7 +1,17 @@
 import { defineModule } from '$lib/engine/module';
-import { MatchdaySchema, createMatchday, MATCHDAY_VERSION, type Report } from './state';
+import { MatchdaySchema, createMatchday, MATCHDAY_VERSION, migrateMatchday, type Report } from './state';
+import { narrate } from './narrate';
 import { effectiveStrength, modifiers, recordResult, moraleDelta, fitnessMultiplier, goalChance } from './rules';
 import { autoLineup, teamStrength, isAvailable } from '../squad/rules';
+
+/** Our club's current display name, which the editor may have changed. */
+function ourName(state: { modules: { league: { levels: { id: string; name: string }[][]; playerClubId: string } } }): string {
+  for (const level of state.modules.league.levels) {
+    const found = level.find((t) => t.id === state.modules.league.playerClubId);
+    if (found) return found.name;
+  }
+  return 'Unser Verein';
+}
 
 export default defineModule({
   id: 'matchday',
@@ -10,7 +20,7 @@ export default defineModule({
   nav: { group: 'Sport', icon: '⚽', order: 5, primary: true },
   requires: ['squad', 'league'],
 
-  state: { schema: MatchdaySchema, create: createMatchday, version: MATCHDAY_VERSION },
+  state: { schema: MatchdaySchema, create: createMatchday, version: MATCHDAY_VERSION, migrate: migrateMatchday },
 
   hooks: {
     matchday: [
@@ -91,7 +101,7 @@ export default defineModule({
         phase: 'post',
         order: 5,
         consumes: ['league.result', 'league.opponentStrength', 'squad.strength'],
-        run({ state, query }) {
+        run({ state, query, rng }) {
           const m = state.modules.matchday;
 
           const result = query<{
@@ -111,6 +121,28 @@ export default defineModule({
           };
 
           recordResult(m, report);
+
+          /*
+           * Narrate the match that was just resolved.
+           *
+           * The score is already decided — the simulation owns it, which is what
+           * keeps "a better eleven wins more" true. This lays ninety minutes of
+           * incident over the top so there is something to watch, and stores it
+           * in state so closing the screen does not lose the match.
+           */
+          m.live = {
+            beats: narrate(rng, {
+              ourGoals: report.goalsFor,
+              theirGoals: report.goalsAgainst,
+              ourName: ourName(state),
+              theirName: report.opponent,
+              edge: report.ourStrength - report.opponentStrength
+            }),
+            minute: 0,
+            running: true,
+            opponent: report.opponent,
+            isHome: report.isHome
+          };
 
           // The team talk's cost lands now, a week after it was chosen.
           const delta = moraleDelta(m);

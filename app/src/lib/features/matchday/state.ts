@@ -30,7 +30,33 @@ export const ReportSchema = z.object({
 });
 export type Report = z.infer<typeof ReportSchema>;
 
+/**
+ * A match in progress.
+ *
+ * Held in state rather than in the component so that closing the screen, or
+ * reloading, does not lose the match — a live view you cannot walk away from is
+ * a cutscene.
+ */
+export const LiveSchema = z.object({
+  /** Ordered beats for the whole match, decided up front. */
+  beats: z.array(z.object({
+    minute: z.number().int().min(0).max(90),
+    kind: z.string(),
+    ours: z.boolean(),
+    text: z.string(),
+    score: z.tuple([z.number().int(), z.number().int()])
+  })),
+  /** How far the clock has run. 90 means finished. */
+  minute: z.number().int().min(0).max(90),
+  running: z.boolean(),
+  opponent: z.string(),
+  isHome: z.boolean()
+});
+export type Live = z.infer<typeof LiveSchema>;
+
 export const MatchdaySchema = z.object({
+  /** Null when no match is being watched. */
+  live: LiveSchema.nullable(),
   formation: z.enum(FORMATIONS),
   style: z.enum(STYLES),
   talk: z.enum(TALKS),
@@ -48,7 +74,20 @@ declare module '$lib/engine/state' {
 }
 
 export function createMatchday(_rng: Rng): MatchdayState {
-  return { formation: '4-4-2', style: 'ausgeglichen', talk: 'ruhig', lastReport: null, recent: [] };
+  return { live: null, formation: '4-4-2', style: 'ausgeglichen', talk: 'ruhig', lastReport: null, recent: [] };
 }
 
-export const MATCHDAY_VERSION = 1;
+/** v2: adds the live match, so watching survives leaving the screen. */
+export const MATCHDAY_VERSION = 2;
+
+export function migrateMatchday(old: unknown, _from: number): MatchdayState {
+  const base = old as Partial<MatchdayState>;
+  return {
+    live: null,
+    formation: base.formation ?? '4-4-2',
+    style: base.style ?? 'ausgeglichen',
+    talk: base.talk ?? 'ruhig',
+    lastReport: base.lastReport ?? null,
+    recent: base.recent ?? []
+  };
+}
