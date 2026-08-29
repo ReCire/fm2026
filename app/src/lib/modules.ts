@@ -20,6 +20,8 @@ import transfer from './features/transfer/module';
 import stadium from './features/stadium/module';
 import staff from './features/staff/module';
 import training from './features/training/module';
+import calendar from './features/calendar/module';
+import history from './features/history/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -31,8 +33,10 @@ const declared: readonly ModuleDef[] = [
   stadium,
   league,
   matchday,
+  calendar,
   transfer,
   staff,
+  history,
   editor
 ];
 
