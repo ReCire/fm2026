@@ -13,17 +13,36 @@
     children: Snippet;
     actions?: Snippet;
   } = $props();
+
+  /*
+   * An explicit map rather than `var(--{accent}-ink)`.
+   *
+   * Composing a token name at runtime defeats every static check downstream —
+   * which is how every panel heading in the app came to be a fill used as type,
+   * at 2.81:1 on the light card, with the fill/ink gate unable to see it. The
+   * literals below ARE checkable, so if one of these ever became a fill the
+   * gate would say so.
+   *
+   * The prop and its values are unchanged; only the indirection is gone.
+   */
+  const INK: Record<NonNullable<typeof accent>, string> = {
+    accent: 'var(--accent-ink)',
+    primary: 'var(--primary-ink)',
+    industry: 'var(--industry-ink)',
+    europe: 'var(--europe-ink)',
+    danger: 'var(--danger-ink)',
+    gold: 'var(--gold-ink)'
+  };
+  const ink = $derived(INK[accent]);
 </script>
 
 <section class="panel">
   {#if title}
-    <!-- `-ink`, not the bare fill. The title is TYPE, and a fill is not
-         legible as type on a light ground: accent measured 2.81:1 and primary
-         3.63:1 on the white card, so every panel heading in the app failed AA
-         in day mode. The fill/ink gate could not see it because the token name
-         is composed from a prop at runtime, so a static search for
-         `color: var(--accent)` finds nothing here. -->
-    <header style="--panel-accent: var(--{accent}-ink)">
+    <!-- `-ink`, not the bare fill. The title is TYPE, and a fill is not legible
+         as type on a light ground: accent measured 2.81:1 and primary 3.63:1 on
+         the white card, so every panel heading in the app failed AA in day
+         mode. -->
+    <header style="--panel-accent: {ink}">
       <h2>{title}</h2>
       <div class="right">
         {#if meta}<span class="meta">{meta}</span>{/if}

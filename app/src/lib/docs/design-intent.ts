@@ -599,6 +599,29 @@ export const designIntent = defineIntent([
     source: 'architecture'
   },
 
+  {
+    id: 'design.runtimeTokenNamesDefeatChecks',
+    constant: 'var(--{expr})',
+    value: 'flagged; pass the resolved token instead',
+    rationale:
+      'A token name composed at runtime cannot be checked for the fill/ink split, or for existing at all. An explicit map from prop to literal token is checkable; the indirection is not.',
+    failureMode:
+      'Panel built `var(--{accent})` from a prop and painted its title with it, so EVERY panel heading in the game was a fill used as type — 2.81:1 for accent and 3.63:1 for primary on the light card. The fill/ink rule was already in place and could not see it, because there was no literal token name to find. A gate is only as good as the indirection it can see through.',
+    module: 'design',
+    source: 'fm-03-design (found it and named the blind spot)'
+  },
+  {
+    id: 'design.undefinedTokensAreSilent',
+    constant: 'var(--x) with no definition',
+    value: 'flagged; a fallback or a local definition is fine',
+    rationale:
+      'CSS drops an undefined custom property without complaint — no error, no warning, nothing in the build.',
+    failureMode:
+      'Retiring the spacing aliases left eight uses of --sp-1..4 resolving to nothing, and the gaps were simply zero. The same silent shape as everything else, in a new medium: the value existed, then stopped existing, and nothing said so. Definitions are collected from the whole tree rather than tokens.css alone, because a component may legitimately declare its own.',
+    module: 'design',
+    source: 'fm-03-design (proposed), architecture (built)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

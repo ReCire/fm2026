@@ -40,6 +40,26 @@ const MATH_RANDOM = /Math\.random\s*\(/;
  */
 const COLOUR_PROP = /(^|[;{\s])color\s*:\s*var\(\s*--([a-z0-9-]+)\s*[,)]/gi;
 
+/**
+ * A token name composed at runtime, e.g. `var(--{accent}-ink)`.
+ *
+ * This defeats every static check downstream, and it hid a real bug: `Panel`
+ * built `var(--{accent})` from a prop and painted its title with it, so every
+ * panel heading in the game was a FILL used as type — 2.81:1 on the light card.
+ * The fill/ink rule was already in place and could not see it, because there is
+ * no literal token name to find.
+ *
+ * So the interpolation itself is what gets flagged. It is not forbidden — a
+ * `docs-check-ignore` still allows it — but it has to be a decision someone
+ * made on purpose, because nothing after it can be verified.
+ */
+const DYNAMIC_TOKEN = /var\(\s*--\{/g;
+
+/** Every `var(--name)` read, so undefined ones can be caught. */
+const TOKEN_USE = /var\(\s*--([a-z0-9-]+)\s*([,)])/gi;
+/** Every `--name:` definition, wherever it is declared. */
+const TOKEN_DEF = /--([a-z0-9-]+)\s*:/gi;
+
 const problems = [];
 const stats = { files: 0, controls: 0, docIds: 0, inkPairs: 0 };
 
@@ -64,6 +84,29 @@ async function inkRoles() {
 const INK_ROLES = await inkRoles();
 stats.inkPairs = INK_ROLES.size;
 
+/**
+ * Every custom property defined anywhere in src.
+ *
+ * CSS drops an undefined `var()` WITHOUT COMPLAINT — no error, no warning,
+ * nothing in the build. Retiring the spacing aliases left eight uses of
+ * `--sp-1..4` resolving to nothing, and the gaps were simply zero. Same silent
+ * shape as everything else, in a new medium.
+ *
+ * Definitions are collected from the whole tree, not just tokens.css, because a
+ * component may legitimately declare its own (`--panel-accent`). Inline
+ * `style="--x: …"` counts too.
+ */
+async function definedTokens() {
+  const defined = new Set();
+  for await (const file of walk(SRC)) {
+    if (!file.endsWith('.css') && !file.endsWith('.svelte')) continue;
+    const text = await readFile(file, 'utf8');
+    for (const m of text.matchAll(TOKEN_DEF)) defined.add(m[1]);
+  }
+  return defined;
+}
+const DEFINED_TOKENS = await definedTokens();
+
 async function* walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
@@ -76,9 +119,17 @@ async function* walk(dir) {
   }
 }
 
-/** Blank out comments while preserving line numbers. */
+/**
+ * Blank out comments while preserving line numbers.
+ *
+ * HTML comments are stripped too. Without that, describing a rule in a
+ * `<!-- -->` block trips the rule — which happened the moment the dynamic-token
+ * check landed, on the very comment explaining why it exists. Same shape as the
+ * determinism check firing on prose about Math.random().
+ */
 function stripComments(text) {
   return text
+    .replace(/<!--[\s\S]*?-->/g, (m) => m.replace(/[^\n]/g, ' '))
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
     .replace(/(^|[^:])\/\/[^\n]*/g, (m, p1) => p1 + ' '.repeat(m.length - p1.length));
 }
@@ -157,6 +208,41 @@ for await (const file of walk(SRC)) {
       rule: 'determinism',
       message: 'Math.random() in a rules file. Take an `rng: Rng` argument instead — a season must replay from its seed.'
     });
+  }
+
+  // Rule 7: a `var(--x)` that resolves to nothing.
+  if (file.endsWith('.svelte') || file.endsWith('.css')) {
+    for (const m of code.matchAll(TOKEN_USE)) {
+      const name = m[1];
+      // `var(--x, fallback)` is a deliberate default, not an accident.
+      if (m[2] === ',') continue;
+      if (DEFINED_TOKENS.has(name)) continue;
+      if (precededByIgnore(text, m.index)) continue;
+      problems.push({
+        file: rel,
+        line: lineOf(code, m.index),
+        rule: 'undefined-token',
+        message: `var(--${name}) is not defined anywhere. CSS drops an undefined custom property silently, so this renders as nothing — a zero gap or a missing colour with no error.`
+      });
+    }
+  }
+
+  // Rule 6: a runtime-composed token name cannot be checked by anything.
+  if (file.endsWith('.svelte') || file.endsWith('.css')) {
+    // Scans the comment-stripped source: explaining the rule in prose must not
+    // trip the rule. Exactly the mistake the determinism check made first.
+    for (const m of code.matchAll(DYNAMIC_TOKEN)) {
+      if (precededByIgnore(text, m.index)) continue;
+      problems.push({
+        file: rel,
+        line: lineOf(code, m.index),
+        rule: 'dynamic-token-name',
+        message:
+          'A token name built at runtime — var(--{…}) — cannot be checked for the ' +
+          'fill/ink split or for existing at all. Pass the resolved token in as a ' +
+          'prop, or add a "docs-check-ignore" comment to say it is deliberate.'
+      });
+    }
   }
 
   // Rule 5: a role with an ink companion must not be used as a text colour.
