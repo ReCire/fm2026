@@ -19,6 +19,7 @@ import squad from './features/squad/module';
 import transfer from './features/transfer/module';
 import stadium from './features/stadium/module';
 import staff from './features/staff/module';
+import sponsors from './features/sponsors/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -31,6 +32,7 @@ const declared: readonly ModuleDef[] = [
   matchday,
   transfer,
   staff,
+  sponsors,
   editor
 ];
 
