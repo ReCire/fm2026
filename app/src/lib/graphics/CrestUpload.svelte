@@ -96,7 +96,7 @@
 </div>
 
 <style>
-  .upload { display: flex; flex-direction: column; align-items: center; gap: var(--sp-2); }
+  .upload { display: flex; flex-direction: column; align-items: center; gap: var(--s2); }
   .mark {
     display: grid; place-items: center;
     /* Width only: the generated crest is a shield and taller than it is wide.
@@ -106,10 +106,10 @@
   .mark.busy { opacity: 0.5; }
   .mark img { object-fit: contain; display: block; max-width: 100%; height: auto; }
 
-  .actions { display: flex; flex-direction: column; align-items: center; gap: var(--sp-1); }
+  .actions { display: flex; flex-direction: column; align-items: center; gap: var(--s1); }
   .btn {
     display: inline-flex; align-items: center; justify-content: center;
-    min-height: var(--tap); padding: 0 var(--sp-3);
+    min-height: var(--tap); padding: 0 var(--s3);
     border: 1px solid var(--border); border-radius: var(--r-sm);
     background: var(--bg-inset); color: var(--text-main);
     font-family: inherit; font-size: var(--fs-caption); font-weight: 700;

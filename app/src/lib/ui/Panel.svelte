@@ -17,7 +17,13 @@
 
 <section class="panel">
   {#if title}
-    <header style="--panel-accent: var(--{accent})">
+    <!-- `-ink`, not the bare fill. The title is TYPE, and a fill is not
+         legible as type on a light ground: accent measured 2.81:1 and primary
+         3.63:1 on the white card, so every panel heading in the app failed AA
+         in day mode. The fill/ink gate could not see it because the token name
+         is composed from a prop at runtime, so a static search for
+         `color: var(--accent)` finds nothing here. -->
+    <header style="--panel-accent: var(--{accent}-ink)">
       <h2>{title}</h2>
       <div class="right">
         {#if meta}<span class="meta">{meta}</span>{/if}

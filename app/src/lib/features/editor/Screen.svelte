@@ -5,7 +5,11 @@
   import Crest from '$lib/graphics/Crest.svelte';
   import CrestUpload from '$lib/graphics/CrestUpload.svelte';
   import AttributeRadar from '$lib/graphics/AttributeRadar.svelte';
-  import { onboardingContent, clubById } from '../onboarding/content';
+  import { allTeams, teamById } from '../league/rules';
+  import type { LeagueTeam } from '../league/state';
+  import { clubById } from '../onboarding/content';
+  import { coloursFor, isDesigned } from '$lib/graphics/clubColours';
+  import { leagueContent } from '../league/content';
   import { ATTRIBUTES, ATTRIBUTE_LABEL, ATTRIBUTE_BLURB, POSITION_WEIGHTS, overallFor, type Attribute } from '../squad/attributes';
   import { resolveClub, resolvePlayer, editClub, editPlayer, resetClub, resetPlayer, editCount } from './rules';
   import { editorContent, MAXED } from './content';
@@ -21,16 +25,61 @@
   let subject = $state<{ kind: 'club' | 'player'; id: string } | null>(null);
   let touched = $state<Attribute | null>(null);
 
-  const myClubId = $derived(game.modules.onboarding.clubId);
-  const clubs = $derived(onboardingContent.clubs.map((c) => resolveClub(editor, c)));
+  const league = $derived(game.modules.league);
+  const myClubId = $derived(league.playerClubId);
+
+  /* Seventy-two clubs is a list nobody scrolls.
+     Grouped by division and led by the player's own, because the clubs you
+     want to rename are the ones you play against this season — the other three
+     divisions are a someday concern. Search is not a nicety at this length: it
+     is how you find the one club you came here for. */
+  let query = $state('');
+
+  /* A LeagueTeam carries id, name and strength — nothing else. The editor edits
+     a club, so the missing fields are filled from the designed roster where the
+     club is one of ours, and derived where it is not. Deriving rather than
+     leaving blank matters: an empty "Kürzel" field reads as a bug, and the
+     player would have no idea what belongs there. */
+  function asClub(team: LeagueTeam) {
+    const designed = clubById(team.id);
+    return {
+      id: team.id,
+      name: team.name,
+      short: designed?.short ?? team.name.replace(/[^A-Za-zÄÖÜäöü]/g, '').slice(0, 3).toUpperCase(),
+      city: designed?.city ?? '',
+      colours: coloursFor(team.id)
+    };
+  }
+
+  const groups = $derived.by(() => {
+    const q = query.trim().toLowerCase();
+    const byLevel = new Map<number, { id: string; name: string }[]>();
+    for (const { team, level } of allTeams(league)) {
+      const resolved = resolveClub(editor, asClub(team));
+      if (q && !resolved.name.toLowerCase().includes(q)) continue;
+      const list = byLevel.get(level) ?? [];
+      list.push(resolved);
+      byLevel.set(level, list);
+    }
+    const mine = league.playerLevel;
+    return [...byLevel.entries()]
+      .sort((a, b) => (a[0] === mine ? -1 : b[0] === mine ? 1 : a[0] - b[0]))
+      .map(([level, clubs]) => ({ level, clubs, isMine: level === mine }));
+  });
+
+  const club = $derived(
+    subject?.kind === 'club'
+      ? (() => {
+          const t = teamById(league, subject!.id);
+          return t ? resolveClub(editor, asClub(t)) : undefined;
+        })()
+      : undefined
+  );
 
   const player = $derived(
     subject?.kind === 'player'
       ? squad.players.map((p) => resolvePlayer(editor, p)).find((p) => p.id === subject!.id)
       : undefined
-  );
-  const club = $derived(
-    subject?.kind === 'club' ? clubs.find((c) => c.id === subject!.id) : undefined
   );
 
   const overall = $derived(player ? overallFor(player.attributes, player.pos) : 0);
@@ -73,19 +122,32 @@
   </Panel>
 
   <Panel title="Vereine">
-    <div class="grid">
-      {#each clubs as c (c.id)}
-        <!-- docs-check-ignore: a list row is navigation into the editor, not a control -->
-        <button class="pick club" class:mine={c.id === myClubId} onclick={() => (subject = { kind: 'club', id: c.id })}>
-          <Crest name={c.name} colours={c.colours} size={40} />
-          <span class="meta">
-            <strong>{c.name}</strong>
-            <small>{c.city}{c.id === myClubId ? ' · dein Verein' : ''}</small>
-          </span>
-          {#if editor.clubs[c.id]}<span class="edited" title="geändert">●</span>{/if}
-        </button>
-      {/each}
-    </div>
+    <label class="field" for="club-search">Suchen</label>
+    <!-- docs-check-ignore: search field; the documented control is editor.club -->
+    <input id="club-search" type="search" placeholder="Vereinsname" bind:value={query} />
+
+    {#each groups as g (g.level)}
+      <p class="division">
+        {leagueContent.levels[g.level]?.name ?? `Liga ${g.level + 1}`}
+        {#if g.isMine}<span class="here">deine Liga</span>{/if}
+      </p>
+      <div class="grid">
+        {#each g.clubs as c (c.id)}
+          <!-- docs-check-ignore: a list row is navigation into the editor, not a control -->
+          <button class="pick club" class:mine={c.id === myClubId} onclick={() => (subject = { kind: 'club', id: c.id })}>
+            <Crest name={c.name} colours={coloursFor(c.id)} size={32} />
+            <span class="meta">
+              <strong>{c.name}</strong>
+              <small>{c.id === myClubId ? 'dein Verein' : isDesigned(c.id) ? 'gestaltet' : 'generiert'}</small>
+            </span>
+            {#if editor.clubs[c.id]}<span class="edited" title="geändert">●</span>{/if}
+          </button>
+        {/each}
+      </div>
+    {/each}
+    {#if !groups.length}
+      <p class="muted">Kein Verein mit diesem Namen.</p>
+    {/if}
   </Panel>
 
   <Panel title="Kader">
@@ -114,7 +176,7 @@
       <div class="preview">
         <!-- Live, because changing a colour and seeing the crest change IS the
              feature. A preview behind a save button is a form. -->
-        <CrestUpload clubId={club.id} name={club.name} colours={club.colours} size={96} />
+        <CrestUpload clubId={club.id} name={club.name} colours={coloursFor(club.id)} size={96} />
       </div>
       <div class="fields">
         <label class="field" for="club-name">Name</label>
@@ -232,6 +294,25 @@
   /* A dot, not a word: the list is scanned, and "geändert" on nineteen rows is
      noise. The title attribute carries it for anyone who needs the word. */
   .edited { flex: none; color: var(--accent-ink); font-size: 10px; }
+
+  /* Division headers, not a flat list. At seventy-two clubs the grouping IS
+     the navigation — you are looking for a rival, and you know its league. */
+  .division {
+    display: flex; align-items: baseline; gap: var(--s2);
+    font-size: var(--fs-caption); font-weight: 700; letter-spacing: 1.4px;
+    text-transform: uppercase; color: var(--text-dim);
+    margin: var(--s4) 0 var(--s1);
+  }
+  .here {
+    letter-spacing: 0; text-transform: none; font-weight: 700;
+    color: var(--primary-ink);
+  }
+  input[type='search'] {
+    width: 100%; background: var(--bg-inset); color: var(--text-main);
+    border: 1px solid var(--border); border-radius: var(--r-sm);
+    padding: var(--s2) var(--s3); font-family: inherit;
+    font-size: 16px; min-height: var(--tap);
+  }
 
   .clubEdit, .playerEdit { display: flex; gap: var(--s4); flex-wrap: wrap; align-items: flex-start; }
   .preview, .shape { flex: none; display: flex; flex-direction: column; align-items: center; gap: var(--s2); }
