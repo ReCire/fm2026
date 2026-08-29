@@ -20,6 +20,7 @@ import transfer from './features/transfer/module';
 import stadium from './features/stadium/module';
 import staff from './features/staff/module';
 import sponsors from './features/sponsors/module';
+import merch from './features/merch/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -33,6 +34,7 @@ const declared: readonly ModuleDef[] = [
   transfer,
   staff,
   sponsors,
+  merch,
   editor
 ];
 
