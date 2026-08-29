@@ -17,8 +17,23 @@ const TICK_MS = 250;
 
 let timer: ReturnType<typeof setInterval> | null = null;
 
-/** Minutes advanced per tick, so ninety minutes takes MATCH_SECONDS. */
-const PER_TICK = 90 / ((MATCH_SECONDS * 1000) / TICK_MS);
+/**
+ * Where the clock started, in real time. The minute is COMPUTED from this
+ * rather than accumulated per interval.
+ *
+ * Counting ticks assumes the interval fires when it was asked to, and it does
+ * not: a browser throttles a hidden tab's timers to roughly one a second, so
+ * a match watched in a background tab ran at a quarter speed and ninety
+ * minutes took six real ones. On a phone, where the tab is backgrounded every
+ * time the player answers a message, that is the normal case rather than the
+ * edge one. Reading the wall clock makes throttling cost smoothness instead of
+ * time — the match arrives when it should, in bigger steps.
+ */
+let startedAt = 0;
+let minuteAtStart = 0;
+
+/** Match minutes per real second. */
+const MINUTES_PER_SECOND = 90 / MATCH_SECONDS;
 
 export function isRunning(): boolean {
   return timer !== null;
@@ -30,13 +45,15 @@ export function start(): void {
   if (!live || live.minute >= 90) return;
 
   live.running = true;
-  let exact = live.minute;
+  startedAt = Date.now();
+  minuteAtStart = live.minute;
 
   timer = setInterval(() => {
     const current = game.modules.matchday.live;
     if (!current) return stop();
 
-    exact = Math.min(90, exact + PER_TICK);
+    const elapsed = (Date.now() - startedAt) / 1000;
+    const exact = Math.min(90, minuteAtStart + elapsed * MINUTES_PER_SECOND);
     current.minute = Math.floor(exact);
 
     if (exact >= 90) {
@@ -50,6 +67,20 @@ export function start(): void {
 export function pause(): void {
   const live = game.modules.matchday.live;
   if (live) live.running = false;
+  stop();
+}
+
+/**
+ * Drop the timer without deciding the match is paused.
+ *
+ * The difference matters: `pause()` is the PLAYER stopping the clock and is
+ * remembered, `release()` is a component unmounting and must not be. A view
+ * that wrote `running = false` on its own teardown turned every navigation
+ * away into a pause the player never asked for — and, worse, the teardown ran
+ * on every tick of the clock it was driving, so the match stopped after one
+ * second and stayed stopped.
+ */
+export function release(): void {
   stop();
 }
 

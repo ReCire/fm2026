@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Rng } from '$lib/engine/rng';
+import { BEAT_KINDS } from './narrate';
 
 /**
  * The pre-match and the report.
@@ -41,7 +42,10 @@ export const LiveSchema = z.object({
   /** Ordered beats for the whole match, decided up front. */
   beats: z.array(z.object({
     minute: z.number().int().min(0).max(90),
-    kind: z.string(),
+    /* The literal list, not z.string(). A stored beat with a kind nobody
+       recognises validated happily and then rendered no glyph — the save
+       said it was fine and the screen disagreed. */
+    kind: z.enum(BEAT_KINDS),
     ours: z.boolean(),
     text: z.string(),
     score: z.tuple([z.number().int(), z.number().int()])

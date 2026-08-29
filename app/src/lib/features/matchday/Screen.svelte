@@ -1,6 +1,9 @@
 <script lang="ts">
   /** Structure only. Visual language belongs to the Creative Director. */
-  import { game, advance } from '$lib/state/game.svelte';
+  import { game } from '$lib/state/game.svelte';
+  import { currentStep, takeStep } from '$lib/shell';
+  import LiveMatch from './LiveMatch.svelte';
+  import { dismiss, skipToEnd } from '$lib/state/live.svelte';
   import { teamById } from '../league/rules';
   import { resolveClub } from '../editor/rules';
   import { Panel, Button, StatChip, Bar, fromEvent } from '$lib/ui';
@@ -41,12 +44,37 @@
   });
   const state = $derived(readiness(squad.lineup.length, available, startingFitness()));
 
+  /*
+   * One button, two steps.
+   *
+   * The loop decides which — see shell/loop.svelte.ts. Offering "train" and
+   * "play" side by side would let the player walk straight past the week, and a
+   * week you can skip is not a week; it is a screen with a button on it.
+   */
+  const step = $derived(currentStep());
+
+  /*
+   * A match in progress holds the loop.
+   *
+   * Without this the button underneath a running match still advanced time,
+   * threw the match away mid-watch, and replaced it with the next one — the
+   * live view had no weight at all, which is the same complaint that started
+   * this in a new costume. Blocked rather than disabled: the control stays in
+   * the tab order and says why, because disabling is not an explanation.
+   */
+  const watching = $derived(!!m.live && m.live.minute < 90);
+
   function play() {
-    for (const e of advance('matchday').events) fromEvent(e);
+    if (watching) return;
+    // A finished match on screen is a report, not a match. Advancing clears it.
+    if (m.live) dismiss();
+    for (const e of takeStep().events) fromEvent(e);
   }
 </script>
 
-{#if m.lastReport}
+<LiveMatch {clubName} />
+
+{#if m.lastReport && !m.live}
   {@const r = m.lastReport}
   {@const o = outcomeOf(r)}
   <!-- Above the next fixture, deliberately. The result you just produced
@@ -97,7 +125,18 @@
     </ul>
   {/if}
 
-  <Button doc="game.advance" onclick={play} explain />
+  <!-- The heading says where you are standing; the button says what the step
+       is. Both come from the loop, so they cannot disagree. -->
+  <p class="step">{step.title}</p>
+  {#if watching}
+    <p class="held" id="loop-held">
+      Das Spiel läuft noch — {m.live?.minute}. Minute.
+      Sieh es zu Ende oder spring zum Abpfiff.
+    </p>
+    <Button doc={step.doc} blocked describedBy="loop-held" onclick={skipToEnd} explain />
+  {:else}
+    <Button doc={step.doc} onclick={play} explain />
+  {/if}
 </Panel>
 
 <Panel title="Aufstellung &amp; Ansprache" accent="primary" meta="{mods.total >= 0 ? '+' : ''}{mods.total}">
@@ -137,6 +176,8 @@
 
 <style>
   .fixture { margin-bottom: var(--s3); font-size: var(--fs-body); }
+  .step { font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s2); }
+  .held { font-size: var(--fs-caption); color: var(--accent-ink); margin-bottom: var(--s2); }
 
   .outcome {
     display: flex; align-items: center; gap: var(--s2);

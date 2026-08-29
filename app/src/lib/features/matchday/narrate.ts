@@ -13,9 +13,11 @@ import type { Rng } from '$lib/engine/rng';
  * fills the gaps with the near-misses that make a 0:0 feel like a match rather
  * than a number.
  */
-export type BeatKind =
-  | 'kickoff' | 'goal' | 'chance' | 'save' | 'foul' | 'card'
-  | 'injury' | 'halftime' | 'fulltime';
+export const BEAT_KINDS = [
+  'kickoff', 'goal', 'chance', 'save', 'foul', 'card',
+  'injury', 'halftime', 'fulltime'
+] as const;
+export type BeatKind = (typeof BEAT_KINDS)[number];
 
 export interface Beat {
   minute: number;

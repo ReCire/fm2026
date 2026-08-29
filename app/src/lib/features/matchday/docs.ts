@@ -1,6 +1,42 @@
 import { defineDocs } from '$lib/docs/registry';
 
 export const matchdayDocs = defineDocs({
+  'matchday.live': {
+    label: 'Spielverlauf',
+    tooltip: 'Neunzig Minuten in neunzig Sekunden. Die Ereignisse kommen an, während die Uhr läuft.',
+    manual: '## Das Spiel ansehen\n\nDas Ergebnis steht fest, sobald angepfiffen wird — die Simulation entscheidet es, und deine Aufstellung entscheidet die Simulation. Was du siehst, ist die Erzählung dieses Ergebnisses: wann die Tore fielen, was dazwischen passiert ist.\n\nDeshalb kann dasselbe Spiel nicht zweimal anders ausgehen, und deshalb kostet dich das Zusehen nichts. Du kannst pausieren, den Bildschirm verlassen oder die Seite neu laden — das Spiel steht da, wo du es verlassen hast.',
+    why: 'Ein Live-Modell, das den Ausgang selbst entscheidet, widerspricht dem Balance-Modell — und das auf dem Bildschirm gewinnt. Erzählen statt simulieren hält „die bessere Elf gewinnt öfter" wahr und gibt trotzdem etwas zu sehen.',
+    since: '0.2.0',
+    related: ['matchday.pause', 'matchday.skip', 'game.advance']
+  },
+  'matchday.pause': {
+    label: '❚❚ Pause',
+    tooltip: 'Hält die Uhr an. Das Spiel bleibt stehen, wo es steht.',
+    why: 'Eine Live-Ansicht, aus der man nicht aussteigen kann, ist eine Zwischensequenz.',
+    since: '0.2.0',
+    related: ['matchday.resume']
+  },
+  'matchday.resume': {
+    label: '▶ Weiter',
+    tooltip: 'Lässt die Uhr weiterlaufen.',
+    why: 'Der Gegenpart zur Pause. Beide sind derselbe Knopf an derselben Stelle, damit die Hand nicht wandern muss.',
+    since: '0.2.0',
+    related: ['matchday.pause']
+  },
+  'matchday.skip': {
+    label: 'Zum Abpfiff',
+    tooltip: 'Springt ans Ende. Das Ergebnis ändert sich dadurch nicht.',
+    why: 'Immer verfügbar. Niemand soll in einem Spiel festgehalten werden, das er heute nicht sehen will — und weil das Ergebnis ohnehin feststeht, wird dabei nichts übersprungen außer der Zeit.',
+    since: '0.2.0',
+    related: ['matchday.live']
+  },
+  'matchday.dismiss': {
+    label: 'Bericht schließen',
+    tooltip: 'Schließt den Spielverlauf. Der Spielbericht bleibt erhalten.',
+    why: 'Der Verlauf ist das Erlebnis, der Bericht ist die Akte. Das eine schließt man, das andere bleibt.',
+    since: '0.2.0',
+    related: ['matchday.live']
+  },
   'matchday.formation': {
     label: 'Grundordnung',
     tooltip: 'Wie die Mannschaft steht. Wirkt sich unterschiedlich aus, je nachdem ob du zu Hause oder auswärts spielst.',
