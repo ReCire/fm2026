@@ -18,3 +18,6 @@ app/.vercel/
 # Ignored so a broad `git add` cannot sweep 8 MB of someone else's repo in —
 # which has already happened twice here with generated directories.
 traumverein_app/
+
+# Subagent worktrees. Working copies, not history.
+.claude/worktrees/
