@@ -18,7 +18,10 @@
   const table = $derived(standings(teams));
   const fixtures = $derived(matchdayFixtures(league, level, matchday));
 
-  const me = $derived(table.find((r) => r.team.name === leagueContent.playerClubName));
+  /* By id, never by name. A name comparison against a constant means the
+     player drops out of their own table the moment they rename their club in
+     the editor — and the symptom is a silent '—' rather than an error. */
+  const me = $derived(table.find((r) => r.team.id === league.playerClubId));
   const next = $derived(playerFixture(league, currentMatchday));
 
   const promotionZone = leagueContent.promotionPlaces;
@@ -27,6 +30,7 @@
   const isBottom = $derived(level === league.levels.length - 1);
 
   const nameAt = (index: number) => teams[index]?.name ?? '—';
+  const idAt = (index: number) => teams[index]?.id ?? '';
 
   function stepMatchday(delta: number) {
     pickedMatchday = Math.max(1, Math.min(MATCHDAYS_PER_SEASON, matchday + delta));
@@ -109,8 +113,8 @@
     <ul class="fixtures">
       {#each fixtures as fixture, index (index)}
         <li
-          class:us={nameAt(fixture.home) === leagueContent.playerClubName ||
-            nameAt(fixture.away) === leagueContent.playerClubName}
+          class:us={idAt(fixture.home) === league.playerClubId ||
+            idAt(fixture.away) === league.playerClubId}
         >
           <span class="home">{nameAt(fixture.home)}</span>
           <strong class="tabular">

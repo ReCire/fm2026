@@ -8,7 +8,9 @@
   import Toast from '$lib/ui/Toast.svelte';
   import ThemeControl from '$lib/ui/ThemeControl.svelte';
   import Crest from '$lib/graphics/Crest.svelte';
-  import { clubById } from '$lib/features/onboarding/content';
+  import { teamById } from '$lib/features/league/rules';
+  import { resolveClub } from '$lib/features/editor/rules';
+  import { coloursFor } from '$lib/graphics/clubColours';
   import { formatMoney } from '$lib/features/finance/rules';
 
   let { children } = $props();
@@ -20,10 +22,19 @@
   const current = $derived(page.url.pathname.split('/')[1] ?? '');
 
   // The chosen club's identity, falling back before onboarding completes.
-  const club = $derived(
-    clubById(game.modules.onboarding.clubId) ??
-      { name: game.modules.onboarding.clubName || 'FC Anstoß Pro', colours: ['#3D5C44', '#F0E8D4'] as const }
-  );
+  /* The league is the authority on which club is yours, not onboarding: it
+     survives a rename, and onboarding's copy is a record of a choice rather
+     than the live answer. Resolved through the editor so a renamed club shows
+     its new name up here too. */
+  const club = $derived.by(() => {
+    const team = teamById(game.modules.league, game.modules.league.playerClubId);
+    const named = team
+      ? resolveClub(game.modules.editor, {
+          id: team.id, name: team.name, short: '', city: '', colours: coloursFor(team.id)
+        })
+      : null;
+    return named ?? { name: 'FC Anstoß Pro', colours: ['#3D5C44', '#F0E8D4'] as const };
+  });
 
   let drawerOpen = $state(false);
 </script>
