@@ -91,7 +91,7 @@ describe('a full season through every registered module', () => {
 
       const find = (g: GameState) =>
         (g.modules.league.levels[g.modules.league.playerLevel] ?? [])
-          .find((t) => t.name === 'FC Anstoß Pro')!;
+          .find((t) => t.id === g.modules.league.playerClubId)!;
       const o = find(off), d = find(def);
       if (o.goalsFor !== d.goalsFor || o.won !== d.won) differed++;
     }

@@ -45,7 +45,9 @@ export default defineModule({
           // from stored state is safe and keeps the dependency one-way.
           const league = state.modules.league;
           const teams = league.levels[league.playerLevel] ?? [];
-          const us = teams.findIndex((t) => t.name === 'FC Anstoß Pro');
+          // By id, not by name: the player renames their own club in the editor,
+          // and a name lookup would stop finding it the moment they did.
+          const us = teams.findIndex((t) => t.id === league.playerClubId);
           const fixture = (league.fixtures[league.playerLevel] ?? [])[state.meta.matchday - 1]
             ?.find((f) => f.home === us || f.away === us);
           const isHome = fixture ? fixture.home === us : true;

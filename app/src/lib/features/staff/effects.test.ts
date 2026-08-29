@@ -58,7 +58,7 @@ describe('staff effects reach the simulation', () => {
     play(with_, 34);
     const us = (g: GameState) =>
       (g.modules.league.levels[g.modules.league.playerLevel] ?? [])
-        .find((t) => t.name === 'FC Anstoß Pro')!;
+        .find((t) => t.id === g.modules.league.playerClubId)!;
     expect({ w: us(with_).won, gf: us(with_).goalsFor })
       .not.toEqual({ w: us(without).won, gf: us(without).goalsFor });
   });

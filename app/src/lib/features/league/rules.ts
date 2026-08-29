@@ -33,7 +33,7 @@ const C = leagueContent;
 export function generateClubName(rng: Rng, used: Set<string>): string {
   for (let i = 0; i < 150; i++) {
     const name = `${rng.pick(C.prefixPool)} ${rng.pick(C.cityPool)}`;
-    if (!used.has(name) && name !== C.playerClubName) {
+    if (!used.has(name)) {
       used.add(name);
       return name;
     }
@@ -47,8 +47,9 @@ export function generateClubName(rng: Rng, used: Set<string>): string {
   }
 }
 
-export function emptyTeam(name: string, strength: number): LeagueTeam {
+export function emptyTeam(id: string, name: string, strength: number): LeagueTeam {
   return {
+    id,
     name,
     strength: clamp(Math.round(strength), 1, 99),
     played: 0,
@@ -66,16 +67,70 @@ export function emptyTeam(name: string, strength: number): LeagueTeam {
  * is never used as an identity: everything looks the club up by name, because
  * promotion reorders the array.
  */
-export function buildPyramid(rng: Rng, playerLevel: number): LeagueTeam[][] {
-  const used = new Set<string>([C.playerClubName]);
+/**
+ * Build the pyramid.
+ *
+ * `designed` are the hand-written clubs for a division — crests, cities,
+ * flavour — seeded as a MINORITY among generated ones. Four crafted clubs in a
+ * division of eighteen anchors its character and makes the crest carousel show
+ * teams the player will actually meet.
+ *
+ * The generated remainder is deliberately plain, and that is a feature rather
+ * than a shortfall: a club called "Dynamo Regensburg" with no story is a blank
+ * slate that invites replacement, which is the whole point of shipping an
+ * editor. Crafted identity works slightly AGAINST that — nobody wants to
+ * overwrite a club they have grown fond of. So a handful with character to give
+ * the division texture, and the rest forgettable so the pencil feels welcome.
+ */
+export function buildPyramid(
+  rng: Rng,
+  playerLevel: number,
+  designed: Record<number, readonly { id: string; name: string }[]> = {}
+): LeagueTeam[][] {
+  const used = new Set<string>();
   return C.levels.map((level, l) => {
+    const seeded = designed[l] ?? [];
+    for (const d of seeded) used.add(d.name);
+
     const teams: LeagueTeam[] = [];
     for (let t = 0; t < C.teamsPerLevel; t++) {
-      const name = l === playerLevel && t === 0 ? C.playerClubName : generateClubName(rng, used);
-      teams.push(emptyTeam(name, rng.int(level.baseStrength, level.baseStrength + C.strengthSpread - 1)));
+      const strength = rng.int(level.baseStrength, level.baseStrength + C.strengthSpread - 1);
+      const design = seeded[t];
+      teams.push(
+        design
+          ? emptyTeam(design.id, design.name, strength)
+          : emptyTeam(generatedId(rng), generateClubName(rng, used), strength)
+      );
     }
     return teams;
   });
+}
+
+/**
+ * An id for a generated club: from the seeded stream, never from the name.
+ * Same seed, same ids — so an edit survives restarting the same career.
+ */
+function generatedId(rng: Rng): string {
+  return `g${rng.int(100_000, 999_999)}`;
+}
+
+/** Find a club anywhere in the pyramid. The editor addresses teams by id. */
+/** Where our club sits in its division, found by id rather than by name. */
+export function rankOfId(teams: readonly LeagueTeam[], id: string): number {
+  return standings(teams).findIndex((r) => r.team.id === id) + 1;
+}
+
+export function teamById(league: LeagueState, id: string): LeagueTeam | undefined {
+  for (const level of league.levels) {
+    const found = level.find((t) => t.id === id);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/** Every club in the world, for the editor's list. */
+export function allTeams(league: LeagueState): { team: LeagueTeam; level: number }[] {
+  return league.levels.flatMap((teams, level) => teams.map((team) => ({ team, level })));
 }
 
 /**
@@ -253,7 +308,7 @@ export interface PlayerFixture {
 export function playerFixture(league: LeagueState, matchday: number): PlayerFixture | undefined {
   const teams = league.levels[league.playerLevel];
   if (!teams) return undefined;
-  const us = teams.findIndex((t) => t.name === C.playerClubName);
+  const us = teams.findIndex((t) => t.id === league.playerClubId);
   if (us < 0) return undefined;
 
   for (const fixture of matchdayFixtures(league, league.playerLevel, matchday)) {
@@ -306,11 +361,11 @@ export function playMatchday(
       if (!home || !away) continue;
 
       // Our own style only opens up OUR fixture. Two AI clubs play a normal game.
-      const isOurs = home.name === C.playerClubName || away.name === C.playerClubName;
+      const isOurs = home.id === league.playerClubId || away.id === league.playerClubId;
       const result = simulateFixture(
         rng,
-        strengthOf(home, playerStrength),
-        strengthOf(away, playerStrength),
+        strengthOf(home, league.playerClubId, playerStrength),
+        strengthOf(away, league.playerClubId, playerStrength),
         isOurs ? goalChance : 1
       );
       fixture.homeGoals = result.homeGoals;
@@ -319,8 +374,8 @@ export function playMatchday(
       applyResult(teams, fixture);
       report.played++;
 
-      const weAreHome = home.name === C.playerClubName;
-      if (weAreHome || away.name === C.playerClubName) {
+      const weAreHome = home.id === league.playerClubId;
+      if (weAreHome || away.id === league.playerClubId) {
         const goalsFor = weAreHome ? result.homeGoals : result.awayGoals;
         const goalsAgainst = weAreHome ? result.awayGoals : result.homeGoals;
         report.player = {
@@ -337,8 +392,16 @@ export function playMatchday(
   return report;
 }
 
-function strengthOf(team: LeagueTeam, playerStrength?: number): number {
-  return team.name === C.playerClubName && playerStrength !== undefined ? playerStrength : team.strength;
+/**
+ * The strength a club takes into a fixture.
+ *
+ * Ours comes from the eleven we actually picked, when matchday has published
+ * it. Identified by id: comparing names would stop recognising our own club the
+ * moment the player renamed it in the editor — which is the first thing anyone
+ * does — and the symptom would be the squad silently ceasing to matter.
+ */
+function strengthOf(team: LeagueTeam, playerClubId: string, playerStrength?: number): number {
+  return team.id === playerClubId && playerStrength !== undefined ? playerStrength : team.strength;
 }
 
 // ---------------------------------------------------------------- season end
@@ -366,7 +429,7 @@ export interface SeasonOutcome {
 export function seasonOutcome(league: LeagueState): SeasonOutcome {
   const level = league.playerLevel;
   const teams = league.levels[level] ?? [];
-  const rank = rankOf(teams, C.playerClubName);
+  const rank = rankOfId(teams, league.playerClubId);
   const bottom = teams.length - C.relegationPlaces;
 
   return {
@@ -429,7 +492,7 @@ export function applyPromotionRelegation(league: LeagueState): Movement[] {
   for (const teams of league.levels) for (const team of teams) resetTeam(team);
   league.fixtures = league.levels.map((teams) => generateFixtures(teams.length));
 
-  const found = league.levels.findIndex((teams) => teams.some((t) => t.name === C.playerClubName));
+  const found = league.levels.findIndex((teams) => teams.some((t) => t.id === league.playerClubId));
   if (found >= 0) league.playerLevel = found;
 
   return movements;
@@ -451,4 +514,34 @@ export function levelName(level: number): string {
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
+}
+
+
+/**
+ * Make the club the player chose at career start their club in the league.
+ *
+ * Without this the choice was decorative: you picked SC Ziegelhütte, saw a
+ * toast welcoming you to it, and then played the whole season as a hardcoded
+ * "FC Anstoß Pro". The carousel, the crests and the flavour lines all led to a
+ * confirm screen and stopped there.
+ *
+ * Replaces the club occupying our slot rather than appending, so the division
+ * stays the right size.
+ */
+export function adoptClub(
+  league: LeagueState,
+  club: { id: string; name: string },
+  level: number
+): boolean {
+  const teams = league.levels[level];
+  if (!teams || teams.length === 0) return false;
+
+  const existing = teams.findIndex((t) => t.id === club.id);
+  const slot = existing >= 0 ? existing : 0;
+  const held = teams[slot]!;
+
+  teams[slot] = { ...held, id: club.id, name: club.name };
+  league.playerLevel = level;
+  league.playerClubId = club.id;
+  return true;
 }

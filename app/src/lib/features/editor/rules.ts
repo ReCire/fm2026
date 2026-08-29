@@ -10,6 +10,16 @@ import type { Attributes } from '../squad/attributes';
  * deleting a key rather than restoring a backup — which means it cannot fail.
  */
 
+/**
+ * A club as the editor sees it.
+ *
+ * Deliberately structural rather than tied to `StartClub` or `LeagueTeam`: the
+ * editor edits whatever has an id and a name, which is what let it move from
+ * the start-screen roster to the league without changing a rule. It edited the
+ * wrong set for a while — fourteen clubs the player never met, while the
+ * seventeen they played every week were untouchable — because those were the
+ * only clubs that existed as content.
+ */
 export interface NamedClub {
   id: string;
   name: string;

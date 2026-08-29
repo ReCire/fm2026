@@ -36,10 +36,11 @@ describe('provide/query ordering', () => {
     runTick(registry, strong, 'matchday');
     runTick(registry, weak, 'matchday');
 
-    const s = strong.modules.league.levels[strong.modules.league.playerLevel]!
-      .find((t) => t.name === 'FC Anstoß Pro')!;
-    const w = weak.modules.league.levels[weak.modules.league.playerLevel]!
-      .find((t) => t.name === 'FC Anstoß Pro')!;
+    const ours = (g: GameState) =>
+      g.modules.league.levels[g.modules.league.playerLevel]!
+        .find((t) => t.id === g.modules.league.playerClubId)!;
+    const s = ours(strong);
+    const w = ours(weak);
 
     // If the lineup mattered, a 95-rated eleven would not post the identical
     // scoreline as a 25-rated one on the same seed.

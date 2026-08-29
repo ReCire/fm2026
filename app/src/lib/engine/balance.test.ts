@@ -37,7 +37,7 @@ function seasonFinish(seed: number, delta: number): number {
 
   for (let i = 0; i < 34; i++) runTick(registry, g, 'matchday');
   const table = standings(g.modules.league.levels[g.modules.league.playerLevel] ?? []);
-  return table.findIndex((r) => r.team.name === 'FC Anstoß Pro') + 1;
+  return table.findIndex((r) => r.team.id === g.modules.league.playerClubId) + 1;
 }
 
 /*
@@ -125,7 +125,7 @@ describe('tactical styles trade mean for variance', () => {
     g.modules.matchday.style = style;
     for (let i = 0; i < 34; i++) runTick(registry, g, 'matchday');
     const us = (g.modules.league.levels[g.modules.league.playerLevel] ?? [])
-      .find((t) => t.name === 'FC Anstoß Pro')!;
+      .find((t) => t.id === g.modules.league.playerClubId)!;
     return us.won * 3 + us.drawn;
   }
 
@@ -180,7 +180,7 @@ describe('tactical styles trade mean for variance', () => {
       g.modules.matchday.style = style;
       for (let i = 0; i < 34; i++) runTick(registry, g, 'matchday');
       const us = (g.modules.league.levels[g.modules.league.playerLevel] ?? [])
-        .find((t) => t.name === 'FC Anstoß Pro')!;
+        .find((t) => t.id === g.modules.league.playerClubId)!;
       return us.goalsFor + us.goalsAgainst;
     };
     expect(goals('offensiv')).toBeGreaterThan(goals('defensiv'));

@@ -5,7 +5,7 @@ import {
   levelName,
   playMatchday,
   playerFixture,
-  rankOf,
+  rankOfId,
   seasonOutcome
 } from './rules';
 import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
@@ -73,7 +73,7 @@ export default defineModule({
           opponent: us.opponent
         });
 
-        const rank = rankOf(league.levels[league.playerLevel] ?? [], leagueContent.playerClubName);
+        const rank = rankOfId(league.levels[league.playerLevel] ?? [], league.playerClubId);
         emit({
           source: 'league',
           severity: us.result === 'win' ? 'good' : us.result === 'loss' ? 'bad' : 'info',

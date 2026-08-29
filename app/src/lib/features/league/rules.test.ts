@@ -13,7 +13,7 @@ import {
   playMatchday,
   playerFixture,
   points,
-  rankOf,
+  rankOf, rankOfId,
   seasonOutcome,
   standings
 } from './rules';
@@ -32,12 +32,15 @@ function team(
   goalsFor: number,
   goalsAgainst: number
 ): LeagueTeam {
-  return { name, strength: 60, played: won + drawn + lost, won, drawn, lost, goalsFor, goalsAgainst };
+  // Test ids are derived from the name for readability only. Production ids
+  // deliberately are NOT — see LeagueTeamSchema.
+  return { id: `t-${name}`, name, strength: 60, played: won + drawn + lost, won, drawn, lost, goalsFor, goalsAgainst };
 }
 
 function handMade(levels: LeagueTeam[][], playerLevel: number): LeagueState {
   return {
     playerLevel,
+    playerClubId: `t-${US}`,
     levels,
     fixtures: levels.map((t) => generateFixtures(t.length)),
     inEurope: false
@@ -105,8 +108,35 @@ describe('determinism', () => {
     expect(league(42)).toEqual(league(42));
   });
 
+  /**
+   * Designed clubs occupy the FIRST slots of their division and are the same in
+   * every world — that is the point of designing them. Only the generated
+   * remainder varies by seed, so that is what this checks.
+   */
   it('builds a different pyramid from a different seed', () => {
-    expect(league(42).levels[0]![0]!.name).not.toBe(league(43).levels[0]![0]!.name);
+    const generatedSlot = (s: LeagueState) => s.levels[0]!.at(-1)!.name;
+    expect(generatedSlot(league(42))).not.toBe(generatedSlot(league(43)));
+  });
+
+  it('places the designed clubs identically in every world', () => {
+    expect(league(42).levels[0]![0]!.name).toBe(league(43).levels[0]![0]!.name);
+  });
+
+  it('gives every club an id that is not its name', () => {
+    for (const team of league(7).levels.flat()) {
+      expect(team.id, team.name).toBeTruthy();
+      expect(team.id, team.name).not.toBe(team.name);
+    }
+  });
+
+  it('gives generated clubs the same ids from the same seed, so an edit survives a restart', () => {
+    const ids = (s: LeagueState) => s.levels.flat().map((t) => t.id);
+    expect(ids(league(11))).toEqual(ids(league(11)));
+  });
+
+  it('never issues the same id twice', () => {
+    const ids = league(5).levels.flat().map((t) => t.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('produces the identical fixture list from the same seed, by club name', () => {
@@ -152,12 +182,27 @@ describe('buildPyramid', () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
-  it('places our club in the starting division and nowhere else', () => {
+  it('identifies our club by id, in the starting division and nowhere else', () => {
     const state = league(2);
     expect(state.playerLevel).toBe(C.startLevel);
-    const found = state.levels.flat().filter((t) => t.name === US);
+    const found = state.levels.flat().filter((t) => t.id === state.playerClubId);
     expect(found).toHaveLength(1);
-    expect(state.levels[C.startLevel]!.some((t) => t.name === US)).toBe(true);
+    expect(state.levels[C.startLevel]!.some((t) => t.id === state.playerClubId)).toBe(true);
+  });
+
+  /**
+   * The bug this whole change exists to fix: renaming your own club must not
+   * stop the game finding it. Every lookup used to compare names against a
+   * constant, so the first thing anyone does in the editor would have broken
+   * fixture resolution.
+   */
+  it('still finds our club after it has been renamed', () => {
+    const state = league(2);
+    const us = state.levels.flat().find((t) => t.id === state.playerClubId)!;
+    us.name = 'FC Bayern München';
+    const found = state.levels.flat().filter((t) => t.id === state.playerClubId);
+    expect(found).toHaveLength(1);
+    expect(found[0]!.name).toBe('FC Bayern München');
   });
 
   it('keeps each division inside its own strength band', () => {
@@ -241,7 +286,7 @@ describe('the table', () => {
     expect(table).toHaveLength(C.teamsPerLevel);
     expect(table.map((r) => r.pos)).toEqual([...Array(C.teamsPerLevel)].map((_, i) => i + 1));
     expect(table.every((r) => r.points === 0 && r.goalDifference === 0 && r.team.played === 0)).toBe(true);
-    expect(rankOf(state.levels[state.playerLevel]!, US)).toBeGreaterThan(0);
+    expect(rankOfId(state.levels[state.playerLevel]!, state.playerClubId)).toBeGreaterThan(0);
   });
 
   it('reports rank 0 for a club that is not in the division', () => {
@@ -251,7 +296,8 @@ describe('the table', () => {
 
   it('falls back to a plausible strength for an unknown opponent', () => {
     const state = league(1);
-    expect(opponentStrength(state, US)).toBe(state.levels[state.playerLevel]!.find((t) => t.name === US)!.strength);
+    const ourTeam = state.levels[state.playerLevel]!.find((t) => t.id === state.playerClubId)!;
+    expect(opponentStrength(state, ourTeam.name)).toBe(ourTeam.strength);
     expect(opponentStrength(state, 'FC Gibtsnicht')).toBe(C.unknownOpponentStrength);
   });
 });
@@ -313,7 +359,7 @@ describe('playMatchday', () => {
     const weak = league(8);
     playSeason(strong, 5, 99);
     playSeason(weak, 5, 20);
-    const ours = (s: LeagueState) => s.levels[s.playerLevel]!.find((t) => t.name === US)!;
+    const ours = (s: LeagueState) => s.levels[s.playerLevel]!.find((t) => t.id === s.playerClubId)!;
     expect(points(ours(strong))).toBeGreaterThan(points(ours(weak)));
   });
 });
@@ -477,6 +523,6 @@ describe('applyPromotionRelegation', () => {
     applyPromotionRelegation(state);
 
     expect(state.playerLevel).toBe(expected);
-    expect(state.levels[state.playerLevel]!.some((t) => t.name === US)).toBe(true);
+    expect(state.levels[state.playerLevel]!.some((t) => t.id === state.playerClubId)).toBe(true);
   });
 });

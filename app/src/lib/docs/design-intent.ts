@@ -564,6 +564,41 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (all four constraints)'
   },
 
+  // --------------------------------------------------------------- league --
+  {
+    id: 'league.clubsHaveIds',
+    constant: 'LeagueTeam.id, LeagueState.playerClubId',
+    value: 'generated from the seeded RNG, never derived from the name',
+    rationale:
+      'An identity has to survive being renamed, or it was never an identity. Ids come from the seeded stream so the same seed yields the same ids and an edit survives restarting a career; designed clubs carry fixed ids and are portable across worlds, while generated ones are necessarily seed-local because "the club in slot 7" means nothing in someone else\'s game.',
+    failureMode:
+      'Twelve lookups compared names against a constant. Renaming your own club — the first thing anyone does in an editor — would have stopped the game resolving your own fixture, silently, and the symptom would have been the squad ceasing to matter. A name-derived id has the same defect one layer up: an edit pack keyed on names applies to whichever club happens to be called that in the recipient\'s world.',
+    module: 'league',
+    source: 'fm-03-design (the constraint), architecture (found the twelve)'
+  },
+  {
+    id: 'league.generatedClubsStayPlain',
+    constant: 'designed clubs as a minority',
+    value: 'roughly a third crafted, the rest deliberately forgettable',
+    rationale:
+      'A club called "Dynamo Regensburg" with no crest and no story is a BLANK SLATE THAT INVITES REPLACEMENT, which is exactly what shipping an editor is for. A handful of crafted clubs give the division texture; the rest stay plain so the pencil feels welcome.',
+    failureMode:
+      'Crafted identity works slightly against the editor\'s purpose — nobody wants to overwrite a club they have grown fond of. So do not make the generated names charming: plausible and plain is the target, and a flavour line on a generated club stops it being a placeholder. Equally, none at all and the division has no character to anchor it.',
+    module: 'league',
+    source: 'fm-03-design (Creative Director) — corrected architecture\'s framing'
+  },
+  {
+    id: 'onboarding.adoptTheChosenClub',
+    constant: 'startCareer / adoptClub',
+    value: 'the club picked at career start becomes the club in the league',
+    rationale:
+      'One place where the start of a career is defined, so a surface can call it without knowing which modules must be told.',
+    failureMode:
+      'The choice used to reach a confirm screen and stop. You picked SC Ziegelhütte, got a toast welcoming you to it, and played the whole game as a hardcoded FC Anstoß Pro — the carousel, the crests and the flavour lines were decoration on a decision the game never read. Eighth instance of the same shape, found while fixing the seventh, in the same feature.',
+    module: 'onboarding',
+    source: 'architecture'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',
