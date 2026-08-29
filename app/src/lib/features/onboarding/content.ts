@@ -55,23 +55,31 @@ export const onboardingContent: OnboardingContent = OnboardingContentSchema.pars
     { id: 'hafenkrone', name: 'SC Hafenkrone',      short: 'HFK', city: 'Bremerhaven',        leagueLevel: 0, colours: ['#0E3F6B', '#E8B923'], flavour: 'Seit 1904 am Wasser. Der Wind kommt immer von vorn.' },
     { id: 'marktstadt', name: 'VfB Marktstadt',     short: 'MKT', city: 'Stuttgart-Nord',     leagueLevel: 0, colours: ['#B3121A', '#F2EFE7'], flavour: 'Drei Meisterschaften, alle vor 1988. Man erinnert dich täglich daran.' },
     { id: 'steinfeld',  name: 'Borussia Steinfeld', short: 'STF', city: 'Mönchen-Steinfeld',  leagueLevel: 0, colours: ['#0B6E3A', '#F2EFE7'], flavour: 'Ein Werksverein, der sich seit vierzig Jahren als Traditionsverein bezeichnet.' },
+    { id: 'sturmwacht', name: 'SV Sturmwacht', short: 'STW', city: 'Kiel-Holtenau', leagueLevel: 0, colours: ['#12315B', '#F0DFA8'], flavour: 'Zwei Pokalfinals verloren, beide im Elfmeterschießen, beide erwähnt man besser nicht.' },
+    { id: 'kesselgrund', name: 'FC Kesselgrund', short: 'KGR', city: 'Stuttgart-Ost', leagueLevel: 0, colours: ['#6E1436', '#E7D6C0'], flavour: 'Der Aufsichtsrat tagt seit 1998 im selben Hinterzimmer und hat sich seither nicht geeinigt.' },
 
     // Liga 2
     { id: 'ostwall',    name: '1. FC Ostwall',      short: 'OWL', city: 'Leipzig-Ost',        leagueLevel: 1, colours: ['#1D2B5C', '#C9A227'], flavour: 'Zweimal aufgestiegen, zweimal abgestiegen, einmal insolvent.' },
     { id: 'rothenbach', name: 'SV Rothenbach',      short: 'RTB', city: 'Kaiserslautern',     leagueLevel: 1, colours: ['#7A1220', '#E5DCC5'], flavour: 'Der Betzenberg ist nicht weit. Man hört ihn an guten Tagen.' },
     { id: 'kupferberg', name: 'FC Kupferberg',      short: 'KPB', city: 'Bochum-Süd',         leagueLevel: 1, colours: ['#1F6F78', '#EFE3CF'], flavour: 'Die Zeche ist zu, der Verein nicht.' },
+    { id: 'nordhafen', name: 'SV Nordhafen', short: 'NHF', city: 'Rostock-Warnow', leagueLevel: 1, colours: ['#134E4A', '#EDD9A8'], flavour: 'Der Verein hat mehr Trainer verschlissen als der Hafen Kräne hat.' },
+    { id: 'talbrueck', name: 'SpVgg Talbrück', short: 'TBR', city: 'Wuppertal-Süd', leagueLevel: 1, colours: ['#4B2E77', '#E9DCC4'], flavour: 'Ein Stadion am Hang. Die Gästekurve steht sechs Meter tiefer und merkt es erst zur Halbzeit.' },
 
     // Liga 3
     { id: 'lindenau',   name: 'SpVgg Lindenau',     short: 'LIN', city: 'Leipzig-Lindenau',   leagueLevel: 2, colours: ['#2E5B34', '#EFE3C2'], flavour: 'Gegründet von Setzern und Druckern. Die Kurve textet bis heute selbst.' },
     { id: 'bergheide',  name: 'TSV Bergheide',      short: 'BGH', city: 'Wuppertal',          leagueLevel: 2, colours: ['#4A2D5E', '#D9C68A'], flavour: 'Der steilste Rasen der Liga. Auswärtsteams beschweren sich seit 1961.' },
     { id: 'altesaline', name: 'SV Alte Saline',     short: 'SAL', city: 'Lüneburg',           leagueLevel: 2, colours: ['#8A4B1E', '#EDE0C8'], flavour: 'Salz, Solebäder, ein Stadion neben dem Kurpark.' },
     { id: 'deichtor',   name: 'FC Deichtor',        short: 'DTR', city: 'Emden',              leagueLevel: 2, colours: ['#123C56', '#9BC4D8'], flavour: 'Bei Sturmflut fällt das Training aus. Das steht so in der Satzung.' },
+    { id: 'moorbach', name: 'TSV Moorbach', short: 'MRB', city: 'Oldenburger Land', leagueLevel: 2, colours: ['#2F5233', '#E8DFC0'], flavour: 'Der Platz steht dreimal im Jahr unter Wasser. Man plant inzwischen damit.' },
+    { id: 'sandhalde', name: 'FC Sandhalde', short: 'SDH', city: 'Duisburg-Nord', leagueLevel: 2, colours: ['#8C4A12', '#EFE2CA'], flavour: 'Auf dem Gelände einer Kiesgrube gebaut. Die Nordkurve senkt sich seit Jahren um einen Zentimeter pro Saison.' },
 
     // Liga 4
     { id: 'ziegelhuette', name: 'SC Ziegelhütte',   short: 'ZGH', city: 'Fürth-West',         leagueLevel: 3, colours: ['#5C1F2E', '#D8C9A8'], flavour: 'Vereinsheim größer als die Haupttribüne. Beides original.' },
     { id: 'grubenrand', name: 'SV Grubenrand',      short: 'GRB', city: 'Gelsenkirchen-Nord', leagueLevel: 3, colours: ['#2B4A6F', '#E3D7B8'], flavour: 'Zwölfhundert Mitglieder, achthundert davon im selben Fanclub.' },
     { id: 'auenpark',   name: 'FC Auenpark',        short: 'AUE', city: 'Magdeburg',          leagueLevel: 3, colours: ['#3E6B2A', '#EAE0C4'], flavour: 'Der Platz gehört der Stadt, der Rest gehört den Mitgliedern.' },
-    { id: 'blechhalle', name: 'TSV Blechhalle',     short: 'BLH', city: 'Ingolstadt',         leagueLevel: 3, colours: ['#6B4A1E', '#E8DCC0'], flavour: 'Die Halle steht noch. Der Sponsor, der sie gebaut hat, nicht.' }
+    { id: 'blechhalle', name: 'TSV Blechhalle',     short: 'BLH', city: 'Ingolstadt',         leagueLevel: 3, colours: ['#6B4A1E', '#E8DCC0'], flavour: 'Die Halle steht noch. Der Sponsor, der sie gebaut hat, nicht.' },
+    { id: 'kaltenberg', name: 'SC Kaltenberg', short: 'KBG', city: 'Oberfranken', leagueLevel: 3, colours: ['#1C4E6B', '#E6E0CE'], flavour: 'Höchstgelegener Sportplatz der Liga. Im November trainiert hier niemand freiwillig.' },
+    { id: 'eisenhuette', name: 'SV Eisenhütte', short: 'EHT', city: 'Brandenburg-Ost', leagueLevel: 3, colours: ['#5A2A1E', '#E3D5B4'], flavour: 'Das Werk gibt es nicht mehr, den Verein schon. Er trägt weiter dessen Farben.' },
   ],
   avatars: [
     { id: 'av-01', label: 'Kurzer Bart, Trainingsjacke' },
