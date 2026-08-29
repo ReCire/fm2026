@@ -20,6 +20,7 @@ import transfer from './features/transfer/module';
 import stadium from './features/stadium/module';
 import staff from './features/staff/module';
 import calendar from './features/calendar/module';
+import history from './features/history/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -33,6 +34,7 @@ const declared: readonly ModuleDef[] = [
   calendar,
   transfer,
   staff,
+  history,
   editor
 ];
 
