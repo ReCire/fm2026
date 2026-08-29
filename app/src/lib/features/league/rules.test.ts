@@ -13,13 +13,19 @@ import {
   playMatchday,
   playerFixture,
   points,
-  rankOf, rankOfId,
+  rankOfId,
   seasonOutcome,
   standings
 } from './rules';
 
 const C = leagueContent;
-const US = C.playerClubName;
+/*
+ * A display name for fixtures only. There is deliberately no content constant
+ * for "the player's club" any more: while one existed, it read like the obvious
+ * way to ask which club is ours, and three surfaces reached for it and got a
+ * different answer than the table. Identity is `league.playerClubId`.
+ */
+const US = 'FC Testverein';
 
 const league = (seed = 1) => createLeague(createRng(seed));
 
@@ -276,7 +282,7 @@ describe('the table', () => {
     const stored = [team('Letzter', 0, 0, 3, 0, 9), team('Erster', 3, 0, 0, 9, 0)];
     const before = stored.map((t) => t.name);
     standings(stored);
-    rankOf(stored, 'Erster');
+    rankOfId(stored, 't-Erster');
     expect(stored.map((t) => t.name)).toEqual(before);
   });
 
@@ -290,8 +296,8 @@ describe('the table', () => {
   });
 
   it('reports rank 0 for a club that is not in the division', () => {
-    expect(rankOf([], US)).toBe(0);
-    expect(rankOf([team('A', 0, 0, 0, 0, 0)], 'Niemand')).toBe(0);
+    expect(rankOfId([], 'anything')).toBe(0);
+    expect(rankOfId([team('A', 0, 0, 0, 0, 0)], 't-Niemand')).toBe(0);
   });
 
   it('falls back to a plausible strength for an unknown opponent', () => {

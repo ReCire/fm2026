@@ -622,6 +622,29 @@ export const designIntent = defineIntent([
     source: 'fm-03-design (proposed), architecture (built)'
   },
 
+  {
+    id: 'league.identityIsNotAName',
+    constant: 'playerClubName — deleted, not deprecated',
+    value: 'the content constant is gone; only league.playerClubId remains',
+    rationale:
+      'While a constant called playerClubName existed it read like the obvious way to ask which club is ours, so people reached for it — including in files a sweep of rules and engine never touched. Deleting it makes the wrong answer UNAVAILABLE rather than discouraged, which is the same argument as a discovered registry beating a remembered one. rankOf(name) went with it, superseded by rankOfId and dead in production.',
+    failureMode:
+      'Thirteen instances of this class. The last one had three surfaces giving three different answers to "which club am I": the table said 15th on 2 points, the chips directly above it said "Platz —, Punkte 0", and the header said something else again. Every line was individually correct — they were asking different questions. A hardcoded name literal is now a build failure, since that is the only route left.',
+    module: 'league',
+    source: 'fm-03-design (found it by playing; proposed the deletion)'
+  },
+  {
+    id: 'design.playTheGame',
+    constant: 'how these were found',
+    value: 'nine of nine by running it; none by reading it',
+    rationale:
+      'Eight were found by running a feature, one by opening a route, and the last by playing three matchdays and looking at a number. Not one was found by inspection or by audit.',
+    failureMode:
+      'The reason is structural rather than a matter of diligence: connectedness is not visible in either half on its own. A screen can be correct and a rule can be correct while the screen asks a different question than the rule answers — and reading either file shows nothing wrong. Worse than being connected to nothing is being connected to the wrong thing, because it looks connected.',
+    module: 'design',
+    source: 'fm-03-design'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

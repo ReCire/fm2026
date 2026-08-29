@@ -62,9 +62,6 @@ export const LeagueContentSchema = z
 
     /** Returned by `opponentStrength()` for a club that is in no division. */
     unknownOpponentStrength: z.number().int().min(1).max(99),
-
-    /** The player's club. Identified by name, exactly as the prototype did. */
-    playerClubName: z.string().min(1),
     /** Club name = one prefix + one city. 16 × 50 = 800 possible names. */
     prefixPool: z.array(z.string().min(1)).min(1),
     cityPool: z.array(z.string().min(1)).min(1)
@@ -138,8 +135,6 @@ export const leagueContent: LeagueContent = LeagueContentSchema.parse({
   homeAdvantage: 3,
 
   unknownOpponentStrength: 75,
-
-  playerClubName: 'FC Anstoß Pro',
   prefixPool: [
     'FC', 'SV', 'SpVgg', 'SC', 'VfB', 'VfL', 'SG', 'TSV',
     '1. FC', 'Borussia', 'Fortuna', 'Dynamo', 'Rot-Weiß', 'Blau-Weiß',

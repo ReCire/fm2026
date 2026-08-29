@@ -55,6 +55,20 @@ const COLOUR_PROP = /(^|[;{\s])color\s*:\s*var\(\s*--([a-z0-9-]+)\s*[,)]/gi;
  */
 const DYNAMIC_TOKEN = /var\(\s*--\{/g;
 
+/**
+ * A club identified by its NAME rather than its id.
+ *
+ * This class has now been found thirteen times, most recently as three
+ * surfaces giving three different answers to "which club am I" — the table said
+ * 15th, the chips above it said "Platz —", and the header said something else
+ * again. Every line was individually correct; they asked different questions.
+ *
+ * The content constant that made it easy is gone, so the only remaining route
+ * is a hardcoded string. Names are display text and change the moment someone
+ * uses the editor; identity is `league.playerClubId`.
+ */
+const CLUB_NAME_LITERAL = /(===|!==|\bincludes\(|\bfind\()\s*(['"`])(FC Anstoß Pro|FC Anstoss Pro)\2/g;
+
 /** Every `var(--name)` read, so undefined ones can be caught. */
 const TOKEN_USE = /var\(\s*--([a-z0-9-]+)\s*([,)])/gi;
 /** Every `--name:` definition, wherever it is declared. */
@@ -208,6 +222,22 @@ for await (const file of walk(SRC)) {
       rule: 'determinism',
       message: 'Math.random() in a rules file. Take an `rng: Rng` argument instead — a season must replay from its seed.'
     });
+  }
+
+  // Rule 8: identifying a club by its display name.
+  if (!rel.includes('.test.')) {
+    for (const m of code.matchAll(CLUB_NAME_LITERAL)) {
+      if (precededByIgnore(text, m.index)) continue;
+      problems.push({
+        file: rel,
+        line: lineOf(code, m.index),
+        rule: 'club-by-name',
+        message:
+          'A club is being identified by its display name. Names change the moment ' +
+          'the player uses the editor — compare against league.playerClubId, or ' +
+          'the team id, instead.'
+      });
+    }
   }
 
   // Rule 7: a `var(--x)` that resolves to nothing.

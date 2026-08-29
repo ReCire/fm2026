@@ -203,10 +203,6 @@ export function standings(teams: readonly LeagueTeam[]): TableRow[] {
     .map((team, i) => ({ pos: i + 1, team, points: points(team), goalDifference: goalDifference(team) }));
 }
 
-/** 1-based position of a club in its division, or 0 if it is not in it. */
-export function rankOf(teams: readonly LeagueTeam[], name: string): number {
-  return standings(teams).find((r) => r.team.name === name)?.pos ?? 0;
-}
 
 /** `getOpponentStrength()`: search every division, fall back to a plausible club. */
 export function opponentStrength(league: LeagueState, name: string): number {
