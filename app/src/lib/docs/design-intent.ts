@@ -645,6 +645,29 @@ export const designIntent = defineIntent([
     source: 'fm-03-design'
   },
 
+  {
+    id: 'stadium.homeGamesOnly',
+    constant: 'gate receipts',
+    value: 'posted on home matchdays only — which the code never checked',
+    rationale:
+      'Seventeen home games a season, not thirty-four.',
+    failureMode:
+      'The comment said "Home games only" and there was no check. The club took gate receipts every matchday, roughly +158k against a 15k wage bill in Liga 4, and the balance went from 150k to 780k in four games. No financial decision in the game could matter, because running out of money was impossible. Tenth instance of the class, and the first where a COMMENT asserted behaviour the code did not have — the artifact saying one thing and containing another, in a place nothing checks.',
+    module: 'stadium',
+    source: 'architecture (found by playing four matchdays and watching the number)'
+  },
+  {
+    id: 'core.autosaveOnCommit',
+    constant: 'persistence',
+    value: 'load at boot, write on every committed tick',
+    rationale:
+      'A tick is the unit the game already treats as a commit, so it is the right granularity: writing on every attribute drag would put IndexedDB in the way of a slider.',
+    failureMode:
+      'save.ts was written months ago, thoroughly tested, and called by NOTHING. The adversarial review named it — "the entire IndexedDB layer is dead code" — and the finding was recorded and not acted on. A page reload took a career from matchday 5 back to matchday 1; on a phone, switching apps would do the same. Tested code that nothing calls is the same failure as an unwired stat, and a recorded finding that nothing schedules is the same failure again one level up.',
+    module: 'core',
+    source: 'adversarial review (found it), Eric (felt it), architecture (finally wired it)'
+  },
+
   // ---------------------------------------------------------------- design --
   {
     id: 'design.twoTokensPerDomain',

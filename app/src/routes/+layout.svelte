@@ -4,6 +4,8 @@
   // Nav shape comes from $lib/shell, so this file stays presentation. Which
   // modules appear and what counts as new are game-state decisions.
   import { navGroups, primaryNav, initTheme } from '$lib/shell';
+  import { load, save } from '$lib/state/persist.svelte';
+  import { onCommit } from '$lib/state/game.svelte';
   import { page } from '$app/state';
   import Toast from '$lib/ui/Toast.svelte';
   import ThemeControl from '$lib/ui/ThemeControl.svelte';
@@ -19,6 +21,16 @@
   const primary = $derived(primaryNav());
 
   $effect(() => { initTheme(); });
+
+  /*
+   * Load the career before anything renders a number, and autosave on every
+   * committed tick from then on. Without this a reload took a career back to
+   * matchday 1 — the strongest possible version of "nothing I do matters".
+   */
+  $effect(() => {
+    onCommit(() => save());
+    void load();
+  });
   const current = $derived(page.url.pathname.split('/')[1] ?? '');
 
   // The chosen club's identity, falling back before onboarding completes.

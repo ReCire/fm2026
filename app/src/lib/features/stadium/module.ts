@@ -16,13 +16,23 @@ export default defineModule({
     matchday: {
       phase: 'economy',
       order: 10,
-      run({ state, emit, provide }) {
+      consumes: ['league.isHome'],
+      run({ state, emit, provide, query }) {
         const stadium = state.modules.stadium;
         const { season, matchday } = state.meta;
 
-        // Home games only. Which side we are on is decided by the league
-        // module and read off the tick context, so stadium does not need to
-        // know how fixtures work.
+        /*
+         * Home games only — which this did NOT do.
+         *
+         * The comment claimed it and the code never checked, so the club took
+         * gate receipts thirty-four times a season instead of seventeen. In
+         * Liga 4 that is around +158k a matchday against a wage bill of 15k:
+         * the balance climbed from 150k to 780k in four games, and no financial
+         * decision in the game could matter because you could not run out of
+         * money. Found by playing four matchdays and watching the number.
+         */
+        if (!query<boolean>('league.isHome', false)) return;
+
         const att = attendance(stadium);
         const income = ticketIncome(stadium);
 

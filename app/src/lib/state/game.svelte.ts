@@ -74,7 +74,24 @@ export function advance(kind: TickKind = 'matchday'): TickResult {
   }
 
   lastTick.result = result;
+
+  /*
+   * Autosave on every committed tick. Fire-and-forget: a save that is still
+   * writing must never hold up the next decision, and a failure surfaces
+   * through saveStatus rather than by throwing into a click handler.
+   */
+  void autosave();
+
   return result;
+}
+
+/**
+ * Set by the persistence layer at boot. Indirect so the engine and the store
+ * stay free of storage concerns, and so tests can run ticks without IndexedDB.
+ */
+let autosave: () => Promise<unknown> = async () => {};
+export function onCommit(fn: () => Promise<unknown>): void {
+  autosave = fn;
 }
 
 /**
