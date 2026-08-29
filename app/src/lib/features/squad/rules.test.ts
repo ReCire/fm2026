@@ -131,7 +131,9 @@ describe('applyPostMatch', () => {
     applyPostMatch(s, createRng(11));
 
     expect(starter.fitness).toBe(90 - squadContent.fitnessLossPerMatch);
-    expect(bench.fitness).toBe(50 + squadContent.fitnessRecoveryPerMatch);
+    // The match only spends fitness. The week is what puts it back — see
+    // training/rules.ts. Two systems recovering it pinned the squad at 90+.
+    expect(bench.fitness).toBe(50);
   });
 
   it('never drops a starter below 10 fitness', () => {

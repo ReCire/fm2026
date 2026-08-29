@@ -19,6 +19,7 @@ import squad from './features/squad/module';
 import transfer from './features/transfer/module';
 import stadium from './features/stadium/module';
 import staff from './features/staff/module';
+import training from './features/training/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -26,6 +27,7 @@ const declared: readonly ModuleDef[] = [
   progression,
   finance,
   squad,
+  training,
   stadium,
   league,
   matchday,

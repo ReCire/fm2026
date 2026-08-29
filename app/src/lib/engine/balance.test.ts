@@ -22,6 +22,25 @@ import { standings } from '$lib/features/league/rules';
  */
 const registry = new Registry(modules);
 
+/**
+ * A season, played the way a player plays it: a training week, then the match
+ * it was preparing for, thirty-four times.
+ *
+ * This harness ran matchdays only for as long as the matchday was the game's
+ * only tick. The moment fitness recovery moved into the week, a season of bare
+ * matchdays drained every squad to the floor and four balance tests failed —
+ * correctly. They were measuring a game nobody plays.
+ *
+ * The rule this codebase keeps re-learning: when a harness disagrees with the
+ * product, fix the harness, never the threshold.
+ */
+export function playSeason(g: GameState, matchdays = 34): void {
+  for (let i = 0; i < matchdays; i++) {
+    runTick(registry, g, 'week');
+    runTick(registry, g, 'matchday');
+  }
+}
+
 function seasonFinish(seed: number, delta: number): number {
   const rng = createRng(seed);
   const mods: Record<string, unknown> = {};
@@ -35,7 +54,7 @@ function seasonFinish(seed: number, delta: number): number {
   const avg = teams.reduce((s, t) => s + t.strength, 0) / teams.length;
   for (const p of g.modules.squad.players) p.attributes = uniform(Math.round(avg + delta));
 
-  for (let i = 0; i < 34; i++) runTick(registry, g, 'matchday');
+  playSeason(g);
   const table = standings(g.modules.league.levels[g.modules.league.playerLevel] ?? []);
   return table.findIndex((r) => r.team.id === g.modules.league.playerClubId) + 1;
 }
@@ -123,7 +142,7 @@ describe('tactical styles trade mean for variance', () => {
     applyNarrative(g.modules.progression, narratives[0]!);
     g.modules.progression.started = true;
     g.modules.matchday.style = style;
-    for (let i = 0; i < 34; i++) runTick(registry, g, 'matchday');
+    playSeason(g);
     const us = (g.modules.league.levels[g.modules.league.playerLevel] ?? [])
       .find((t) => t.id === g.modules.league.playerClubId)!;
     return us.won * 3 + us.drawn;
@@ -178,7 +197,7 @@ describe('tactical styles trade mean for variance', () => {
       applyNarrative(g.modules.progression, narratives[0]!);
       g.modules.progression.started = true;
       g.modules.matchday.style = style;
-      for (let i = 0; i < 34; i++) runTick(registry, g, 'matchday');
+      playSeason(g);
       const us = (g.modules.league.levels[g.modules.league.playerLevel] ?? [])
         .find((t) => t.id === g.modules.league.playerClubId)!;
       return us.goalsFor + us.goalsAgainst;

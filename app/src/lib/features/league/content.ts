@@ -36,6 +36,23 @@ export const LeagueContentSchema = z
     teamsPerLevel: z.number().int().min(2),
     /** Strength window above `baseStrength`, so a division is not uniform. */
     strengthSpread: z.number().int().min(1),
+  /**
+   * How far above its band a division's clubs can develop, and how fast.
+   *
+   * AI clubs used to be frozen for the life of a career while the player's
+   * squad trained every week. One season of ordinary training put a level side
+   * eight points clear of a division that had not moved, so a manager who did
+   * nothing but press the button finished fifth — and by season two the
+   * pyramid meant nothing at all.
+   *
+   * `developHeadroom` is set so each level's ceiling is exactly the next
+   * level's floor: master your division and you arrive in the one above as a
+   * competitive newcomer, which is the promotion story the pyramid is for.
+   * The chance is proportional to the REMAINING gap, so growth decelerates the
+   * way a player's does past `diminishFrom` — nobody runs away with it.
+   */
+  developHeadroom: z.number().int().min(0),
+  developRate: z.number().min(0).max(1),
 
     pointsForWin: z.number().int().min(0),
     pointsForDraw: z.number().int().min(0),
@@ -101,6 +118,8 @@ export const leagueContent: LeagueContent = LeagueContentSchema.parse({
 
   teamsPerLevel: 18,
   strengthSpread: 6,
+  developHeadroom: 4,
+  developRate: 0.06,
 
   pointsForWin: 3,
   pointsForDraw: 1,

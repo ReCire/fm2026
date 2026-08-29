@@ -38,7 +38,6 @@ export const SquadContentSchema = z.object({
    * is the middle.
    */
   fitnessLossPerMatch: z.number().int().min(0),
-  fitnessRecoveryPerMatch: z.number().int().min(0),
   /**
    * How far fitness can swing a rating, 0..1, measured AGAINST A BASELINE.
    *
@@ -94,7 +93,6 @@ export const squadContent: SquadContent = SquadContentSchema.parse({
   fitnessWeight: 0.35,
   fitnessBaseline: 70,
   fitnessLossPerMatch: 12,
-  fitnessRecoveryPerMatch: 21,
   injuryBaseRisk: 0.055,
   tiredFitnessThreshold: 55,
   tiredInjuryMultiplier: 1.8

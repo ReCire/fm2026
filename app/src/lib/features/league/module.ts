@@ -6,8 +6,7 @@ import {
   playMatchday,
   playerFixture,
   rankOfId,
-  seasonOutcome
-} from './rules';
+  seasonOutcome, developClubs } from './rules';
 import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
 import { postToLedger, formatMoney } from '../finance/module';
 
@@ -21,6 +20,18 @@ export default defineModule({
   state: { schema: LeagueSchema, create: createLeague, version: LEAGUE_VERSION },
 
   hooks: {
+    /*
+     * Everyone else trains too.
+     *
+     * `world` — last in the tick, after nothing that reads a table strength
+     * this week. Without this the rest of the pyramid was frozen for the life
+     * of a career while the player's squad improved every single week.
+     */
+    week: {
+      phase: 'world',
+      order: 10,
+      run({ state, rng }) { developClubs(state.modules.league, rng); }
+    },
     /**
      * The whole pyramid plays its round in the `sim` phase — before anything
      * reacts to it. Stadium needs to know whether we were at home before it

@@ -84,3 +84,20 @@ export function uniform(value: number): Attributes {
   const v = Math.max(1, Math.min(99, Math.round(value)));
   return { technik: v, tempo: v, kraft: v, uebersicht: v, mentalitaet: v };
 }
+
+/**
+ * What a player can be coached on.
+ *
+ * Defined here rather than in `training` because it is a property OF A PLAYER —
+ * it belongs to them, moves with them when they are sold, and disappears when
+ * they retire. Training held it in a `Record<playerId, Focus>` for one draft,
+ * which meant every departed player left an entry behind forever and two places
+ * could disagree about what a man was working on.
+ */
+export const FOCUS = ['allgemein', ...ATTRIBUTES] as const;
+export type Focus = (typeof FOCUS)[number];
+
+export const FOCUS_LABEL: Record<Focus, string> = {
+  allgemein: 'Allgemein',
+  ...ATTRIBUTE_LABEL
+};

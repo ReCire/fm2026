@@ -211,10 +211,18 @@ export function applyPostMatch(
   const outcome: MatchdayOutcome = { injuries: [], recovered: [] };
 
   for (const p of squad.players) {
+    /*
+     * The match SPENDS fitness. It does not put any back.
+     *
+     * A bench player used to gain `fitnessRecoveryPerMatch` here, which was
+     * right while the matchday was the only tick in the game. Once training
+     * gained its own week, two systems were recovering the same number and the
+     * squad sat pinned above 90 — fitness was still displayed, still tested,
+     * and no longer a constraint on anything. Recovery is the week's job now;
+     * see training/content.ts.
+     */
     if (squad.lineup.includes(p.id)) {
       p.fitness = Math.max(10, p.fitness - loss);
-    } else {
-      p.fitness = Math.min(100, p.fitness + c.fitnessRecoveryPerMatch);
     }
 
     if (p.injured > 0) {

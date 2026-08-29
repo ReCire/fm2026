@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Rng } from '$lib/engine/rng';
 import { POSITIONS } from './positions';
-import { AttributesSchema } from './attributes';
+import { AttributesSchema, FOCUS } from './attributes';
 import { squadContent } from './content';
 import { createPlayer } from './rules';
 import { uniform } from './attributes';
@@ -27,7 +27,8 @@ export const PlayerSchema = z.object({
   /** Matchdays remaining. 0 = available. */
   injured: z.number().int().min(0),
   suspended: z.number().int().min(0),
-  individualFocus: z.string()
+  /** What this player works on in training. See attributes.ts. */
+  individualFocus: z.enum(FOCUS)
 });
 export type Player = z.infer<typeof PlayerSchema>;
 

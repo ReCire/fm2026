@@ -33,8 +33,17 @@ function newGame(seedText: string, withStaff: string[] = []): GameState {
   return g;
 }
 
+/*
+ * A week, then the match it prepared for — the loop the player actually plays.
+ * Running bare matchdays skipped every recovery in the game and drained both
+ * squads to the fitness floor, where a co-trainer's +2 changed nothing and the
+ * test read as "the co-trainer does not work".
+ */
 const play = (g: GameState, n: number) => {
-  for (let i = 0; i < n; i++) runTick(registry, g, 'matchday');
+  for (let i = 0; i < n; i++) {
+    runTick(registry, g, 'week');
+    runTick(registry, g, 'matchday');
+  }
 };
 const starterFitness = (g: GameState) => {
   const sq = g.modules.squad;

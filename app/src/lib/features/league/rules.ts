@@ -541,3 +541,41 @@ export function adoptClub(
   league.playerClubId = club.id;
   return true;
 }
+
+/**
+ * How strong a club in this division can become through its own work.
+ *
+ * Set so each level's ceiling is the next level's floor. Win your division and
+ * you arrive in the one above as a newcomer who belongs there — which is what
+ * a pyramid is supposed to feel like.
+ */
+export function developmentTarget(level: number): number {
+  const band = C.levels[level];
+  if (!band) return 99;
+  return band.baseStrength + C.strengthSpread + C.developHeadroom;
+}
+
+/**
+ * A training week for everyone else.
+ *
+ * The player's club is skipped: its strength comes from its actual squad
+ * through the bus, and writing to the stored table value here would give it a
+ * second, contradictory source — the failure this codebase keeps having.
+ *
+ * The chance is proportional to the gap left, so a division improves quickly
+ * while it is behind and barely at all once it has arrived. That mirrors
+ * `diminishFrom` on the player's side, so neither runs away from the other.
+ */
+export function developClubs(league: LeagueState, rng: Rng): void {
+  league.levels.forEach((teams, level) => {
+    const target = developmentTarget(level);
+    for (const team of teams) {
+      if (team.id === league.playerClubId) continue;
+      const gap = target - team.strength;
+      if (gap <= 0) continue;
+      if (rng.chance(gap * C.developRate)) {
+        team.strength = clamp(team.strength + 1, 1, 99);
+      }
+    }
+  });
+}
