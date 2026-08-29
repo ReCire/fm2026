@@ -1,6 +1,8 @@
 <script lang="ts">
   /** Structure only. Visual language belongs to the Creative Director. */
   import { game, advance } from '$lib/state/game.svelte';
+  import { teamById } from '../league/rules';
+  import { resolveClub } from '../editor/rules';
   import { Panel, Button, StatChip, Bar, fromEvent } from '$lib/ui';
   import { FORMATIONS, STYLES, TALKS } from './state';
   import {
@@ -11,6 +13,17 @@
   import { playerFixture } from '../league/rules';
 
   const m = $derived(game.modules.matchday);
+  /* Fourteenth by-name club reference. The report printed a hardcoded
+     "FC Anstoß Pro" beside the score while the club was SC Ziegelhütte —
+     visible in the one panel the player reads most closely. */
+  const clubName = $derived(
+    (() => {
+      const t = teamById(game.modules.league, game.modules.league.playerClubId);
+      return t ? resolveClub(game.modules.editor, {
+        id: t.id, name: t.name, short: '', city: '', colours: ['#000000', '#ffffff'] as const
+      }).name : 'Dein Verein';
+    })()
+  );
   const squad = $derived(game.modules.squad);
   const league = $derived(game.modules.league);
 
@@ -32,6 +45,31 @@
     for (const e of advance('matchday').events) fromEvent(e);
   }
 </script>
+
+{#if m.lastReport}
+  {@const r = m.lastReport}
+  {@const o = outcomeOf(r)}
+  <!-- Above the next fixture, deliberately. The result you just produced
+       outranks a decision you have not made yet — it was previously third in
+       the order, 1296px down an 812px screen, so you scrolled past the setup
+       for the NEXT match to find out how the last one went. Nobody scrolls to
+       find out if they won. -->
+  <Panel title="Spielbericht" accent={o === 'win' ? 'primary' : o === 'loss' ? 'danger' : 'accent'}
+         meta="Spieltag {r.matchday}">
+    <p class="outcome">
+      <!-- Glyph and word, not colour: a result must read in greyscale, and it
+           is the one thing on the screen nobody should have to decode. -->
+      <i class="glyph" aria-hidden="true">{o === 'win' ? '▲' : o === 'loss' ? '▼' : '■'}</i>
+      {o === 'win' ? 'Sieg' : o === 'loss' ? 'Niederlage' : 'Unentschieden'}
+    </p>
+    <p class="score">
+      <span class="side">{r.isHome ? clubName : r.opponent}</span>
+      <strong class="figure">{r.isHome ? scoreline(r) : `${r.goalsAgainst}:${r.goalsFor}`}</strong>
+      <span class="side">{r.isHome ? r.opponent : clubName}</span>
+    </p>
+    <p class="where">{r.isHome ? 'Heimspiel' : 'Auswärts'} · Stärke {r.ourStrength} gegen {r.opponentStrength}</p>
+  </Panel>
+{/if}
 
 <Panel title="Nächstes Spiel" accent="accent" meta="Spieltag {game.meta.matchday}">
   {#if fixture}
@@ -97,24 +135,25 @@
   </fieldset>
 </Panel>
 
-{#if m.lastReport}
-  {@const r = m.lastReport}
-  <Panel title="Spielbericht" accent={outcomeOf(r) === 'win' ? 'primary' : outcomeOf(r) === 'loss' ? 'danger' : 'accent'}
-         meta="Spieltag {r.matchday}">
-    <p class="score">
-      <span>{r.isHome ? 'FC Anstoß Pro' : r.opponent}</span>
-      <strong class="tabular">{r.isHome ? scoreline(r) : `${r.goalsAgainst}:${r.goalsFor}`}</strong>
-      <span>{r.isHome ? r.opponent : 'FC Anstoß Pro'}</span>
-    </p>
-    <div class="chips">
-      <StatChip label="Unsere Stärke" value={r.ourStrength} doc="matchday.report" />
-      <StatChip label="Gegner" value={r.opponentStrength} doc="matchday.opponent" />
-    </div>
-  </Panel>
-{/if}
-
 <style>
   .fixture { margin-bottom: var(--s3); font-size: var(--fs-body); }
+
+  .outcome {
+    display: flex; align-items: center; gap: var(--s2);
+    font-size: var(--fs-title); font-weight: 800; color: var(--text-main);
+    margin-bottom: var(--s2);
+  }
+  .score {
+    display: flex; align-items: center; justify-content: center; gap: var(--s3);
+    text-align: center; margin-bottom: var(--s2);
+  }
+  .score .side { flex: 1; font-size: var(--fs-body); color: var(--text-muted); line-height: var(--lh-tight); }
+  .score .figure {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-size: var(--fs-display); font-weight: 800; color: var(--text-main);
+    flex: none;
+  }
+  .where { font-size: var(--fs-caption); color: var(--text-dim); text-align: center; }
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); margin-bottom: var(--s3); }
   .problems { list-style: none; margin: 0 0 var(--s3); padding: 0; }
   .problems li { color: var(--accent-ink); font-size: var(--fs-caption); padding: 2px 0; }
