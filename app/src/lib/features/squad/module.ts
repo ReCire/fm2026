@@ -59,8 +59,8 @@ export default defineModule({
   hooks: {
     matchday: [{
       phase: 'post',
-      consumes: ['squad.fitnessLoss', 'squad.injuryRisk', 'squad.injuryDuration'],
-      run({ state, rng, emit, factor }) {
+      consumes: ['squad.fitnessLoss', 'squad.injuryRisk', 'squad.injuryDuration', 'squad.moraleFloor'],
+      run({ state, rng, emit, factor, total }) {
         const squad = state.modules.squad;
 
         if (squad.lineup.length < 11) squad.lineup = autoLineup(squad);
@@ -75,6 +75,17 @@ export default defineModule({
           injuryDurationMultiplier: factor('squad.injuryDuration')
         });
 
+
+        /*
+         * A morale floor, if anything has bought one. Applied after the match
+         * rather than clamped at every write: a floor is a promise about where
+         * you end up, not a rule that has to be threaded through every place
+         * morale moves.
+         */
+        const floor = total('squad.moraleFloor');
+        if (floor > 0) {
+          for (const p of squad.players) p.morale = Math.max(p.morale, floor);
+        }
 
         for (const { player, matchdays } of outcome.injuries) {
           emit({
@@ -101,9 +112,10 @@ export default defineModule({
           post-match effects above. Two phases, one module, no coupling. */
       phase: 'economy',
       order: 20,
-      run({ state, emit }) {
+      consumes: ['squad.wageBill'],
+      run({ state, emit, factor }) {
         const squad = state.modules.squad;
-        const bill = wageBill(squad);
+        const bill = Math.round(wageBill(squad) * factor('squad.wageBill'));
         postToLedger(state.modules.finance, {
           season: state.meta.season,
           matchday: state.meta.matchday,

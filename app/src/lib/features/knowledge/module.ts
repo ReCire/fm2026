@@ -1,7 +1,19 @@
 import { defineModule } from '$lib/engine/module';
+import type { GameState } from '$lib/engine/state';
 import { KnowledgeSchema, createKnowledge, KNOWLEDGE_VERSION } from './state';
 import { ownedEffects, CONTRIBUTED } from './rules';
 import { knowledgeContent } from './content';
+
+/** One implementation, run on every tick a module might read an effect on. */
+function contributeEffects({ state, modify, addTo }: {
+  state: GameState;
+  modify: (key: string, factor: number) => void;
+  addTo: (key: string, amount: number) => void;
+}): void {
+  const { totals, factors } = ownedEffects(state.modules.knowledge);
+  for (const [key, value] of totals) addTo(key, value);
+  for (const [key, value] of factors) modify(key, value);
+}
 
 export default defineModule({
   id: 'knowledge',
@@ -30,12 +42,27 @@ export default defineModule({
       phase: 'pre',
       order: 1,
       contributes: CONTRIBUTED,
-      run({ state, modify, addTo }) {
-        const { totals, factors } = ownedEffects(state.modules.knowledge);
-        for (const [key, value] of totals) addTo(key, value);
-        for (const [key, value] of factors) modify(key, value);
-      }
+      run: contributeEffects
     },
+
+    /*
+     * The same contribution on the week.
+     *
+     * A club does not forget what it knows between Saturdays, and the registry
+     * proved the point: `training` consumes `training.devPerSeason` on the WEEK
+     * tick, and with knowledge contributing only on matchday there was no
+     * producer for it — the boot check refused to start rather than let a
+     * doctrine node silently do nothing for the tick it was written for.
+     *
+     * Every tick a module might read an effect on needs the effect present.
+     */
+    week: [
+      {
+        phase: 'pre',
+        order: 1,
+        contributes: CONTRIBUTED,
+        run: contributeEffects
+      },
 
     /*
      * Wissenspunkte accrue with time served, not with success.
@@ -45,23 +72,24 @@ export default defineModule({
      * tree of hard choices is for. A struggling club still learns — slowly, and
      * that is the point.
      */
-    week: {
-      phase: 'world',
-      order: 50,
-      run({ state, emit }) {
-        const k = state.modules.knowledge;
-        if (state.meta.matchday % knowledgeContent.pointEveryMatchdays !== 0) return;
-        k.points += 1;
-        k.earned += 1;
-        emit({
-          source: 'knowledge',
-          severity: 'good',
-          title: 'Ein Wissenspunkt',
-          detail: `${k.points} verfügbar.`,
-          goto: 'knowledge'
-        });
+      {
+        phase: 'world',
+        order: 50,
+        run({ state, emit }) {
+          const k = state.modules.knowledge;
+          if (state.meta.matchday % knowledgeContent.pointEveryMatchdays !== 0) return;
+          k.points += 1;
+          k.earned += 1;
+          emit({
+            source: 'knowledge',
+            severity: 'good',
+            title: 'Ein Wissenspunkt',
+            detail: `${k.points} verfügbar.`,
+            goto: 'knowledge'
+          });
+        }
       }
-    },
+    ],
 
     seasonEnd: {
       phase: 'world',

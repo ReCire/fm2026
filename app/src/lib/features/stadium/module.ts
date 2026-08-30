@@ -36,7 +36,7 @@ export default defineModule({
     matchday: {
       phase: 'economy',
       order: 10,
-      consumes: ['league.isHome'],
+      consumes: ['league.isHome', 'stadium.fanGain'],
       /*
        * Declared, not merely called.
        *
@@ -48,7 +48,7 @@ export default defineModule({
        * exists to prevent. Found by a merch module trying to do it properly.
        */
       provides: ['stadium.attendance'],
-      run({ state, emit, provide, query }) {
+      run({ state, emit, provide, query, total }) {
         const stadium = state.modules.stadium;
         const { season, matchday } = state.meta;
 
@@ -63,6 +63,16 @@ export default defineModule({
          * money. Found by playing four matchdays and watching the number.
          */
         if (!query<boolean>('league.isHome', false)) return;
+
+        /*
+         * Fan mood, moved. Worth saying plainly: nothing else in the game
+         * touches this number — it has sat at 75 since the module was written,
+         * so results do not yet change the atmosphere and a doctrine node is
+         * the first thing that ever will. That is a gap in stadium, not in the
+         * node.
+         */
+        const gain = total('stadium.fanGain');
+        if (gain !== 0) stadium.fans = Math.max(0, Math.min(100, stadium.fans + gain));
 
         const att = attendance(stadium);
         const income = ticketIncome(stadium);

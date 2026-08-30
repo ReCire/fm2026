@@ -97,7 +97,7 @@ describe('the dormancy gate', () => {
   it('every mapped key names a bus key that is spelled like one', () => {
     for (const [fx, effect] of Object.entries(EFFECTS)) {
       expect(effect!.key, `${fx} maps to a key with no namespace`).toMatch(/^[a-z]+\.[a-zA-Z]+$/);
-      expect(['factor', 'total']).toContain(effect!.arity);
+      expect(['factor', 'total', 'discount', 'max']).toContain(effect!.arity);
     }
   });
 
@@ -307,6 +307,81 @@ describe('the gate does not wave through its own blind spot', () => {
       for (const key of fx) {
         expect(EFFECTS[key as keyof typeof EFFECTS], `${node.id}: ${key} is unmapped`).toBeTruthy();
         expect(consumed.has(EFFECTS[key as keyof typeof EFFECTS]!.key)).toBe(true);
+      }
+    }
+  });
+});
+
+describe('the four arities', () => {
+  /*
+   * Three of these summed would be wrong in a way that still runs. The arity is
+   * the difference between a node doing what its own label says and a node
+   * doing the opposite of it.
+   */
+  const owning = (...ids: string[]) => {
+    const k = createKnowledge(createRng(1));
+    k.owned.push(...ids);
+    return ownedEffects(k);
+  };
+  const withFx = (key: string) =>
+    knowledgeNodes.filter((n) => (n.fx as Record<string, number>)?.[key] !== undefined);
+
+  it('a discount lowers the thing its label says it lowers', () => {
+    // `transferDiscount: 0.08` reads "−8% Ablösesummen". As a plain factor it
+    // would apply as ×1.08 and RAISE the fee the node advertises reducing.
+    const nodes = withFx('transferDiscount');
+    if (nodes.length === 0) return;
+    const { factors } = owning(nodes[0]!.id);
+    expect(factors.get('transfer.feeFactor')!).toBeLessThan(1);
+  });
+
+  it('a floor takes the highest, never the sum', () => {
+    const nodes = withFx('moraleFloor');
+    if (nodes.length < 2) return;
+    const values = nodes.slice(0, 2).map((n) => (n.fx as Record<string, number>).moraleFloor!);
+    const { totals } = owning(nodes[0]!.id, nodes[1]!.id);
+    expect(totals.get('squad.moraleFloor')).toBe(Math.max(...values));
+    expect(totals.get('squad.moraleFloor')).not.toBe(values[0]! + values[1]!);
+  });
+
+  it('totals do stack, because two bonuses are two bonuses', () => {
+    const nodes = withFx('strength').filter((n) => isLive(n, consumed));
+    if (nodes.length < 2) return;
+    const values = nodes.slice(0, 2).map((n) => (n.fx as Record<string, number>).strength!);
+    const { totals } = owning(nodes[0]!.id, nodes[1]!.id);
+    expect(totals.get('squad.strengthBonus')).toBe(values[0]! + values[1]!);
+  });
+
+  it('factors compound rather than add', () => {
+    const nodes = withFx('injuryRisk');
+    if (nodes.length < 2) return;
+    const values = nodes.slice(0, 2).map((n) => (n.fx as Record<string, number>).injuryRisk!);
+    const { factors } = owning(nodes[0]!.id, nodes[1]!.id);
+    expect(factors.get('squad.injuryRisk')!).toBeCloseTo((1 + values[0]!) * (1 + values[1]!), 6);
+  });
+});
+
+describe('an effect reaches every tick that reads it', () => {
+  /*
+   * `training` consumes `training.devPerSeason` on the WEEK tick. Contributing
+   * only on matchday left no producer for it, and the boot check refused to
+   * start — correctly. A club does not forget what it knows between Saturdays.
+   */
+  it('contributes on every tick kind some module consumes an effect on', () => {
+    const kinds = ['matchday', 'week'] as const;
+    for (const kind of kinds) {
+      const consumedHere = new Set(
+        registry.hooks(kind).flatMap(({ hook }) => hook.consumes ?? [])
+      );
+      const contributedHere = new Set(
+        registry.hooks(kind)
+          .filter(({ module }) => module.id === 'knowledge')
+          .flatMap(({ hook }) => hook.contributes ?? [])
+      );
+      for (const effect of Object.values(EFFECTS)) {
+        if (!consumedHere.has(effect!.key)) continue;
+        expect(contributedHere, `${effect!.key} is read on "${kind}" with nothing producing it`)
+          .toContain(effect!.key);
       }
     }
   });

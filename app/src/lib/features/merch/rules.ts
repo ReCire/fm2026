@@ -48,6 +48,10 @@ export interface SellOptions {
   leagueLevel: number;
   /** The `merch.online` factor from the bus. 1 with nobody hired. */
   onlineFactor: number;
+  /** `merch.demand` — how many people want something. 1 by default. */
+  demandFactor?: number;
+  /** `merch.margin` — what each sale is worth. 1 by default. */
+  marginFactor?: number;
   rng: Rng;
 }
 
@@ -70,7 +74,10 @@ export function sellMatchday(merch: MerchState, opts: SellOptions): SellResult {
   const crowdUnits = opts.attendance * c.crowdUnitsPerFan * resultFactor;
   const onlineUnits = onlineBaseline(opts.leagueLevel) * opts.onlineFactor;
   const noise = 1 + opts.rng.float(-c.variance, c.variance);
-  const totalUnits = (crowdUnits + onlineUnits) * noise;
+  // Demand scales what people want; margin scales what each sale is worth.
+  // Two separate levers, so a doctrine that makes the shop busier is a
+  // different node from one that makes it more profitable.
+  const totalUnits = (crowdUnits + onlineUnits) * noise * (opts.demandFactor ?? 1);
 
   let revenue = 0;
   let unitsSold = 0;
@@ -84,7 +91,8 @@ export function sellMatchday(merch: MerchState, opts: SellOptions): SellResult {
     const sold = Math.max(0, Math.min(item.stock, demand));
 
     item.stock -= sold;
-    item.lastSales = { units: sold, revenue: sold * item.price, missed: Math.max(0, demand - sold) };
+    const takings = Math.round(sold * item.price * (opts.marginFactor ?? 1));
+    item.lastSales = { units: sold, revenue: takings, missed: Math.max(0, demand - sold) };
 
     revenue += item.lastSales.revenue;
     unitsSold += sold;

@@ -144,12 +144,20 @@ export function signListing(
 ): Signing | undefined {
   const listing = findListing(transfer, listingId);
   if (!listing) return undefined;
-  if (available < listing.fee) return undefined;
+
+  /*
+   * What the club actually pays, after anything that negotiates on its behalf.
+   * Cached on state rather than read from the bus, because a signing happens
+   * when the player clicks and the bus lives for exactly one tick — see
+   * `feeFactor` in state.ts.
+   */
+  const fee = Math.round(listing.fee * (transfer.feeFactor ?? 1));
+  if (available < fee) return undefined;
 
   squad.players.push(listing.player);
   transfer.market = transfer.market.filter((l) => l.id !== listingId);
   transfer.freeAgents = transfer.freeAgents.filter((l) => l.id !== listingId);
-  return { player: listing.player, fee: listing.fee };
+  return { player: listing.player, fee };
 }
 
 // ---------------------------------------------------------------------------

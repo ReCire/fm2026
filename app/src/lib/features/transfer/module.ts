@@ -1,5 +1,5 @@
 import { defineModule } from '$lib/engine/module';
-import { TransferSchema, createTransfer, TRANSFER_VERSION } from './state';
+import { TransferSchema, createTransfer, TRANSFER_VERSION, migrateTransfer } from './state';
 import { refreshMarket, isRefreshDue, expireOffers, canReceiveOffer, generateOffer, autoAnswerOffers } from './rules';
 import { transferContent } from './content';
 // The sanctioned cross-module surface: a narrow public API plus a declared
@@ -15,7 +15,10 @@ export default defineModule({
   nav: { group: 'Sport', icon: '🔁', order: 20 },
   requires: ['finance', 'squad'],
 
-  state: { schema: TransferSchema, create: createTransfer, version: TRANSFER_VERSION },
+  state: {
+    schema: TransferSchema, create: createTransfer,
+    version: TRANSFER_VERSION, migrate: migrateTransfer
+  },
 
   /*
    * An offer is the clearest `now` in the game: it expires, it is worth money,
@@ -93,8 +96,11 @@ export default defineModule({
     matchday: {
       phase: 'world',
       order: 10,
-      run({ state, rng, emit, query }) {
+      consumes: ['transfer.feeFactor'],
+      run({ state, rng, emit, query, factor }) {
         const transfer = state.modules.transfer;
+        // Cached for the screen, which cannot read a bus that lives one tick.
+        transfer.feeFactor = factor('transfer.feeFactor');
         const squad = state.modules.squad;
 
         // Both of these belong to modules that do not exist yet. Asking through

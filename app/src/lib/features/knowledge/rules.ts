@@ -21,19 +21,41 @@ import type { KnowledgeState } from './state';
  * the way the content's own labels read them — `-0.15` renders as "15% less"
  * and is applied as a multiplier of `0.85`.
  */
+/**
+ * Four arities, because three of them summed would be wrong.
+ *
+ *  - `total`    absolute and additive. Two +2s make +4.
+ *  - `factor`   a fractional delta the way the content's labels read it:
+ *               `+0.15` renders "15% more" and applies as `× 1.15`.
+ *  - `discount` the same, inverted, for keys whose label already says minus —
+ *               `transferDiscount: 0.08` reads "−8% Ablösesummen" and must
+ *               apply as `× 0.92`. Treating it as a factor would make every
+ *               discount node RAISE the fee it advertises reducing.
+ *  - `max`      a floor. `moraleFloor: 60` means morale never drops below 60,
+ *               and two such nodes at 50 and 60 give a floor of 60 — not 110.
+ *               Summing a floor is the arity bug that looks like it works.
+ */
 export interface Effect {
   key: string;
-  arity: 'factor' | 'total';
+  arity: 'factor' | 'total' | 'discount' | 'max';
 }
 
 export const EFFECTS: Partial<Record<FxKey, Effect>> = {
-  strength:       { key: 'squad.strengthBonus',   arity: 'total' },
-  homeStrength:   { key: 'matchday.homeStrength', arity: 'total' },
-  fitnessLoss:    { key: 'squad.fitnessLoss',     arity: 'factor' },
-  injuryRisk:     { key: 'squad.injuryRisk',      arity: 'factor' },
-  injuryDuration: { key: 'squad.injuryDuration',  arity: 'factor' },
-  onlineBoost:    { key: 'merch.online',          arity: 'factor' },
-  sponsorMod:     { key: 'sponsors.income',       arity: 'factor' }
+  strength:          { key: 'squad.strengthBonus',        arity: 'total' },
+  homeStrength:      { key: 'matchday.homeStrength',      arity: 'total' },
+  fitnessLoss:       { key: 'squad.fitnessLoss',          arity: 'factor' },
+  injuryRisk:        { key: 'squad.injuryRisk',           arity: 'factor' },
+  injuryDuration:    { key: 'squad.injuryDuration',       arity: 'factor' },
+  onlineBoost:       { key: 'merch.online',               arity: 'factor' },
+  sponsorMod:        { key: 'sponsors.income',            arity: 'factor' },
+  goalChance:        { key: 'matchday.goalChanceBonus',   arity: 'factor' },
+  moraleFloor:       { key: 'squad.moraleFloor',          arity: 'max' },
+  wageMod:           { key: 'squad.wageBill',             arity: 'factor' },
+  transferDiscount:  { key: 'transfer.feeFactor',         arity: 'discount' },
+  merchDemand:       { key: 'merch.demand',               arity: 'factor' },
+  merchMargin:       { key: 'merch.margin',               arity: 'factor' },
+  fanGain:           { key: 'stadium.fanGain',            arity: 'total' },
+  devPerSeason:      { key: 'training.devPerSeason',      arity: 'total' }
 };
 
 /** Every bus key this module can write. Declared statically on the hook. */
@@ -188,11 +210,19 @@ export function ownedEffects(state: KnowledgeState): { totals: Map<string, numbe
     for (const [rawKey, value] of Object.entries(node.fx ?? {})) {
       const effect = EFFECTS[rawKey as FxKey];
       if (!effect || typeof value !== 'number') continue;
-      if (effect.arity === 'total') {
-        totals.set(effect.key, (totals.get(effect.key) ?? 0) + value);
-      } else {
-        // A fractional delta, applied the way its own label reads it.
-        factors.set(effect.key, (factors.get(effect.key) ?? 1) * (1 + value));
+      switch (effect.arity) {
+        case 'total':
+          totals.set(effect.key, (totals.get(effect.key) ?? 0) + value);
+          break;
+        case 'max':
+          // A floor. The highest one wins; they do not stack.
+          totals.set(effect.key, Math.max(totals.get(effect.key) ?? 0, value));
+          break;
+        case 'discount':
+          factors.set(effect.key, (factors.get(effect.key) ?? 1) * (1 - value));
+          break;
+        default:
+          factors.set(effect.key, (factors.get(effect.key) ?? 1) * (1 + value));
       }
     }
   }

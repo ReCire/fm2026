@@ -56,7 +56,7 @@ export default defineModule({
        * cannot come back.
        */
       order: 20,
-      consumes: ['league.level', 'league.result', 'merch.online', 'stadium.attendance'],
+      consumes: ['league.level', 'league.result', 'merch.online', 'merch.demand', 'merch.margin', 'stadium.attendance'],
       run({ state, rng, emit, query, factor }) {
         const merch = state.modules.merch;
         const { season, matchday } = state.meta;
@@ -77,6 +77,8 @@ export default defineModule({
           won,
           leagueLevel,
           onlineFactor,
+          demandFactor: factor('merch.demand', 1),
+          marginFactor: factor('merch.margin', 1),
           rng
         });
         if (revenue <= 0) return;

@@ -67,6 +67,16 @@ export const TransferSchema = z.object({
    */
   negotiationCursor: z.number().int().min(0),
   /**
+   * What the club currently pays for a signing, as a multiplier.
+   *
+   * Cached from the bus every matchday because a signing happens when the
+   * player clicks, outside any tick — and the context bus lives for exactly one
+   * tick. Reading it live from the screen is impossible; recomputing it there
+   * would mean the screen owning a second copy of the rule, which is how the
+   * matchday screen came to show 60 while the match used 62.
+   */
+  feeFactor: z.number().min(0),
+  /**
    * Monotonic id source. The prototype minted ids with
    * `Math.random().toString(36)`, which is neither reproducible from a seed nor
    * collision-proof; a counter is both.
@@ -88,10 +98,17 @@ export function createTransfer(rng: Rng): TransferState {
     offers: [],
     sinceRefresh: 0,
     negotiationCursor: 0,
+    feeFactor: 1,
     nextId: 1
   };
   refreshMarket(transfer, rng, { leagueLevel: transferContent.defaultLeagueLevel });
   return transfer;
 }
 
-export const TRANSFER_VERSION = 1;
+/** v2: caches the fee multiplier, which a screen cannot read off the bus. */
+export const TRANSFER_VERSION = 2;
+
+export function migrateTransfer(old: unknown, _from: number): TransferState {
+  const base = old as TransferState;
+  return { ...base, feeFactor: base.feeFactor ?? 1 };
+}

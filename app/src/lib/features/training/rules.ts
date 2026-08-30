@@ -87,7 +87,21 @@ export interface WeekOutcome {
  * way matchday applies its morale delta — and returns what it did so the
  * screen can show it instead of announcing a number that moved off-screen.
  */
-export function trainWeek(training: TrainingState, squad: SquadState, rng: Rng): WeekOutcome {
+export function trainWeek(
+  training: TrainingState,
+  squad: SquadState,
+  rng: Rng,
+  /**
+   * Extra strength per player per SEASON, from the doctrine.
+   *
+   * Converted to an independent per-week roll at `devPerSeason / 34`, so a node
+   * labelled "+2 Stärke-Entwicklung pro Spieler und Saison" delivers exactly
+   * two points a season in expectation. Folding it into `gainChance` as a
+   * multiplier would have been easier and would have made the label a lie —
+   * the promised figure has to be the delivered one.
+   */
+  devPerSeason = 0
+): WeekOutcome {
   const outcome: WeekOutcome = { changes: [], recovered: [] };
   const rest = restFor(training.intensity);
 
@@ -118,6 +132,14 @@ export function trainWeek(training: TrainingState, squad: SquadState, rng: Rng):
       if (!rng.chance(gainChance(player, attribute, training.intensity, personal) * share)) continue;
       player.attributes[attribute] += 1;
       record(training, outcome, player, attribute, 1);
+    }
+
+    if (devPerSeason > 0 && rng.chance(devPerSeason / 34)) {
+      const attribute = focus === 'allgemein' ? rng.pick(ATTRIBUTES) : focus;
+      if (player.attributes[attribute] < 99) {
+        player.attributes[attribute] += 1;
+        record(training, outcome, player, attribute, 1);
+      }
     }
 
     if (rng.chance(declineChance(player))) {

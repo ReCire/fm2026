@@ -42,8 +42,8 @@ export default defineModule({
         order: 10,
         provides: ['squad.strength', 'matchday.modifiers', 'matchday.goalChance'],
         contributes: ['squad.fitnessLoss'],
-        consumes: ['squad.strengthBonus', 'matchday.homeStrength'],
-        run({ state, emit, provide, modify, total }) {
+        consumes: ['squad.strengthBonus', 'matchday.homeStrength', 'matchday.goalChanceBonus'],
+        run({ state, emit, provide, modify, total, factor }) {
           const squad = state.modules.squad;
           const m = state.modules.matchday;
 
@@ -78,7 +78,10 @@ export default defineModule({
           // fitness coach and a doctrine will want to move the same number, and
           // none of us should have to know the others exist.
           modify('squad.fitnessLoss', fitnessMultiplier(m));
-          provide('matchday.goalChance', goalChance(m));
+          // Tactics decide the base; the doctrine multiplies it. Contributed
+          // rather than provided, because more than one system will want to
+          // move this and none of them should know about the others.
+          provide('matchday.goalChance', goalChance(m) * factor('matchday.goalChanceBonus'));
 
           const available = squad.players.filter(isAvailable).length;
           if (available < 11) {
