@@ -14,24 +14,51 @@ New features are not.
 
 ## Who owns what, inside `app/`
 
-The split is by **seam**, not by folder. Both sessions work in the same feature
+The split is by **seam**, not by folder. Three sessions work in the same feature
 directories at the same time; they touch different files in them.
 
-| | fm-03-design owns | architecture owns |
-|---|---|---|
-| **A feature** | `Screen.svelte`, `content.ts`, `docs.ts` | `module.ts`, `state.ts`, `rules.ts`, `rules.test.ts` |
-| **Shared code** | `src/lib/ui/`, `src/lib/design/`, `src/lib/graphics/` | `src/lib/engine/`, `src/lib/state/`, `src/lib/shell/`, `src/lib/docs/registry.ts` |
-| **The app shell** | `src/routes/` markup and styles | `src/lib/shell/` — which modules appear, what is reachable, what is new |
-| **Everything else** | game design, balance, copy, accessibility, motion | `modules.ts`, `scripts/`, `.github/`, `content/` schemas |
+| | fm-03-design owns | senior-frontend owns | architecture owns |
+|---|---|---|---|
+| **A feature** | `Screen.svelte`, `content.ts`, `docs.ts` — except matchday | `matchday/Screen.svelte`, `matchday/LiveMatch.svelte` | `module.ts`, `state.ts`, `rules.ts`, `rules.test.ts` |
+| **Shared code** | `design/tokens.css`, `src/lib/graphics/` | `src/lib/ui/` | `src/lib/engine/`, `src/lib/state/`, `src/lib/shell/`, `src/lib/docs/registry.ts` |
+| **The app shell** | — | all of `src/routes/`, `+layout.svelte` included | `src/lib/shell/` — which modules appear, what is reachable, what is new |
+| **Everything else** | game design, balance, copy, German | primitives, chrome, mobile craft, motion | `modules.ts`, `scripts/`, `.github/`, `content/` schemas |
+
+Matchday's two files sit with senior-frontend permanently rather than as a
+loan. It is the centrepiece Eric named — the match you watch — it was written
+as structure with the visual language deliberately left out, and nobody else was
+going to reach it soon.
+
+`+layout.svelte` went across whole, including the attention badges, rather than
+being split by intent. The floating tab bar is most of that file's work, and
+"you own the chrome, I own the badges inside it" is precisely the
+convention-not-a-seam problem.
 
 Why that line: **`rules.ts` is how a mechanic computes, `content.ts` is what the
 numbers are.** Splitting there is what lets balance be retuned without an
 engineer and refactored without a designer. `Screen.svelte` follows the design
 side because it is presentation; the logic it calls lives in `rules.ts`.
 
-`src/routes/+layout.svelte` is presentation and belongs to design; the data it
-renders comes from `src/lib/shell/`. A convention about which half of one file
-you may edit is not a seam — a seam has to be something you can `git log`.
+`src/routes/+layout.svelte` is presentation; the data it renders comes from
+`src/lib/shell/`. A convention about which half of one file you may edit is not
+a seam — **a seam has to be something you can `git log`.**
+
+Why `ui/` and `routes/` split away from the rest of design: primitives and
+chrome are craft, feature screens are mostly game design and German copy. Two
+different jobs that happened to share a folder.
+
+`design/tokens.css` stays with fm-03-design and is the one file allowed to
+define a colour. Its values carry audits in their own comments — `--text-2` sits
+deliberately off-spec because the spec's value measured 3.56:1, and `--pos-ink`
+and `--neg-ink` are 137° apart so that red against green is never the only
+channel. A change made on aesthetic grounds would silently undo a measurement,
+and the docs gate cannot see intent. Anyone may propose a token; its owner
+applies it.
+
+**Lending a file is allowed; taking one is not.** A screen's owner may hand a
+specific file to another session when they will not get to it — say so in the
+commit body, so the exception is in the log rather than in somebody's memory.
+That is the release valve that stops the seam turning into a queue.
 
 **Nobody edits `src/lib/modules.ts` except architecture.** It is the one global
 list and the one place a merge conflict would actually hurt.
@@ -53,14 +80,32 @@ for two people to move fast in one directory.
 ## Git
 
 **Agents commit. Only Eric pushes.** He pushes mid-flight on purpose, to test
-the live build on his phone while work continues, so `main` may move under you.
+the live build on his phone while work continues.
 
-1. **Stage explicitly.** `git add <paths>`, never `-A` or `.`.
-2. **Commit under your own identity**, per command, so nothing shared changes:
+His push does NOT move anything under you — it sends local `main` to the
+remote and leaves the working tree exactly as it was. What moves under you is
+**another session committing**, which happens constantly. Assume the tree has
+changed since you last looked at it.
+
+1. **Stage explicitly.** `git add <paths>`, never `-A` or `.`. With three
+   sessions in one tree, `-A` sweeps up somebody else's half-written file and
+   commits it under your name. `git status` will routinely show work that is
+   not yours; leave it alone.
+
+2. **Never `stash`, `checkout`, `restore` or `clean` a path you do not own.**
+   Not even to check something. I stashed a peer's in-flight component to see
+   whether a type error was mine, and the stash took an untracked file of
+   theirs with it — recovered, but only because I noticed within a minute.
+   There is no version of that which is worth the answer you get.
+
+   If you need to know whether a failure is yours, read the file. Do not move
+   it.
+3. **Commit under your own identity**, per command, so nothing shared changes:
 
    ```bash
-   git -c user.name="fm-03-design" -c user.email="fm-03@local" commit -m "…"
-   git -c user.name="architecture"  -c user.email="arch@local"  commit -m "…"
+   git -c user.name="fm-03-design"   -c user.email="fm-03@local"    commit -m "…"
+   git -c user.name="senior-frontend" -c user.email="frontend@local" commit -m "…"
+   git -c user.name="architecture"    -c user.email="arch@local"     commit -m "…"
    ```
 
    Without this every commit reads as `ReCire`, including Eric's, and nobody can
