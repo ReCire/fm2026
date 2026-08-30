@@ -200,17 +200,36 @@
   {#if fixtures.length === 0}
     <p class="legend">Für diesen Spieltag ist kein Spielplan hinterlegt.</p>
   {:else}
+    <!--
+      Two stacked rows per fixture, not "Heim vs Auswärts" across one line.
+
+      Three columns gave each club a third of the width, so "Borussia
+      Mönchengladbach" was an ellipsis on every phone and the score sat between
+      two truncations. Stacked, each club gets the full width, the two goal
+      figures line up as a scoreboard column, and the crest does the scanning.
+
+      This is how every football app on a phone lays out a fixture, and the
+      reason is the same everywhere: club names are long and screens are narrow.
+    -->
     <ul class="fixtures">
       {#each fixtures as fixture, index (index)}
-        <li
-          class:us={idAt(fixture.home) === league.playerClubId ||
-            idAt(fixture.away) === league.playerClubId}
-        >
-          <span class="home">{nameAt(fixture.home)}</span>
-          <strong class="tabular">
-            {fixture.played ? `${fixture.homeGoals}:${fixture.awayGoals}` : 'vs'}
-          </strong>
-          <span class="away">{nameAt(fixture.away)}</span>
+        {@const homeId = idAt(fixture.home)}
+        {@const awayId = idAt(fixture.away)}
+        {@const done = fixture.played}
+        {@const homeWon = done && (fixture.homeGoals ?? 0) > (fixture.awayGoals ?? 0)}
+        {@const awayWon = done && (fixture.awayGoals ?? 0) > (fixture.homeGoals ?? 0)}
+        <li class:us={homeId === league.playerClubId || awayId === league.playerClubId}>
+          <div class="side" class:won={homeWon} class:lost={done && awayWon}>
+            <Crest name={nameAt(fixture.home)} colours={coloursFor(homeId)} size={20} plain />
+            <span class="team">{nameAt(fixture.home)}</span>
+            <span class="goals tabular">{done ? fixture.homeGoals : ''}</span>
+          </div>
+          <div class="side" class:won={awayWon} class:lost={done && homeWon}>
+            <Crest name={nameAt(fixture.away)} colours={coloursFor(awayId)} size={20} plain />
+            <span class="team">{nameAt(fixture.away)}</span>
+            <span class="goals tabular">{done ? fixture.awayGoals : ''}</span>
+          </div>
+          {#if !done}<span class="pending">noch nicht gespielt</span>{/if}
         </li>
       {/each}
     </ul>
@@ -243,20 +262,39 @@
   .key.promotion { background: var(--primary); }
   .key.relegation { background: var(--danger); }
 
-  .fixtures { list-style: none; display: grid; gap: var(--s1); }
+  .fixtures { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
   .fixtures li {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: var(--s2);
-    padding: var(--s2) var(--s2);
+    padding: var(--s2) var(--s3);
     background: var(--bg-inset);
     border: 1px solid var(--border);
+    border-left: 3px solid transparent;
     border-radius: var(--r-sm);
-    font-size: var(--fs-caption);
   }
-  .fixtures li.us { border-color: var(--primary-ink); }
-  .fixtures .home { text-align: right; }
-  .fixtures .away { text-align: left; color: var(--text-muted); }
-  .fixtures strong { color: var(--accent-ink); }
+  .fixtures li.us { border-left-color: var(--primary); }
+
+  .side {
+    display: grid;
+    grid-template-columns: 20px 1fr auto;
+    align-items: center; gap: var(--s2);
+    min-height: 30px;
+  }
+  .team {
+    font-size: var(--fs-body);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: var(--text-muted);
+  }
+  .goals { font-size: var(--fs-body); color: var(--text-muted); }
+
+  /*
+   * The winner in weight, the loser dimmed. Not green and red: a fixture list
+   * is read as a block and eighteen coloured rows is a bag of sweets — and a
+   * draw would need a third colour that means "neither", which no palette has.
+   */
+  .side.won .team, .side.won .goals { color: var(--text-main); font-weight: 800; }
+  .side.lost .team, .side.lost .goals { opacity: .72; }
+
+  .pending {
+    display: block; padding-top: var(--s1);
+    font-size: var(--fs-caption); color: var(--text-dim);
+  }
 </style>

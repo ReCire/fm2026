@@ -1,7 +1,7 @@
 <script lang="ts">
   import { strengthOf } from './rules';
   import { game } from '$lib/state/game.svelte';
-  import { Panel, Button, Bar, DataTable, toast } from '$lib/ui';
+  import { Panel, Button, Bar, DataTable, Leaderboard, toast } from '$lib/ui';
   import { autoLineup, wageBill, teamStrength, isAvailable, rating } from './rules';
   import { formatMoney } from '../finance/rules';
 
@@ -25,6 +25,49 @@
   </div>
   <Button doc="squad.autoLineup" onclick={setLineup} explain />
 </Panel>
+
+<!--
+  Who has actually done the work.
+
+  The squad table answers "how good is he", which is a scouting question. This
+  answers "what has he done here", which is the one a manager asks in the third
+  season — and it is the only place in the game where a player's career is
+  visible as a career rather than as five current attributes.
+
+  Top three then everything, the Sportschau pattern: three boards at three rows
+  is a glance, three boards at twenty-two rows is a scroll.
+-->
+{#if squad.players.some((p) => p.record.matches > 0)}
+  <Panel title="Bestenliste" accent="primary" meta="{squad.players.length} Spieler">
+    <Leaderboard
+      title="Einsätze"
+      unit="Spiele"
+      entries={squad.players.map((p) => ({
+        id: p.id, name: p.name, sub: p.pos, value: p.record.matches, row: p
+      }))}
+    />
+    <Leaderboard
+      title="Weiße Westen"
+      unit="Spiele ohne Gegentor"
+      entries={squad.players
+        .filter((p) => p.pos === 'TW' || p.pos === 'ABW')
+        .map((p) => ({ id: p.id, name: p.name, sub: p.pos, value: p.record.cleanSheets, row: p }))}
+      empty="Noch kein Spiel ohne Gegentor."
+    />
+    <Leaderboard
+      title="Weiteste Entwicklung"
+      unit="Punkte"
+      entries={squad.players.map((p) => ({
+        id: p.id,
+        name: p.name,
+        sub: `${p.record.debutStrength} → ${strengthOf(p)}`,
+        value: strengthOf(p) - p.record.debutStrength,
+        row: p
+      }))}
+      format={(v) => (v > 0 ? `+${v}` : String(v))}
+    />
+  </Panel>
+{/if}
 
 <Panel title="Spieler" accent="accent">
   <DataTable
