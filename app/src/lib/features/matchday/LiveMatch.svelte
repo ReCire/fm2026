@@ -12,8 +12,15 @@
   const live = $derived(game.modules.matchday.live);
   const minute = $derived(live?.minute ?? 0);
   /* Newest first. The beat that just arrived is the one being read; a feed
-     that appends downward asks the player to chase it. */
-  const shown = $derived(live ? [...beatsUpTo(live.beats, minute)].reverse() : []);
+     that appends downward asks the player to chase it.
+
+     Carrying the index because it is the only guaranteed-unique key: two
+     fillers can legitimately land on the same minute with the same text, and
+     a `minute + kind + text` key crashed the whole feed with
+     `each_key_duplicate` when they did. */
+  const shown = $derived(
+    live ? beatsUpTo(live.beats, minute).map((beat, i) => ({ beat, i })).reverse() : []
+  );
   const score = $derived<[number, number]>(live ? scoreAt(live.beats, minute) : [0, 0]);
   const finished = $derived(minute >= 90);
   /* Recomputed from state, not stored: the question IS the scoreboard at 45,
@@ -127,11 +134,11 @@
     <!-- aria-live="polite" rather than assertive: a goal should be announced
          after the current phrase, not on top of it. -->
     <ol class="feed" aria-live="polite" aria-label="Spielverlauf">
-      {#each shown as b (b.minute + b.kind + b.text)}
-        <li class={toneOf(b)} class:goal={b.kind === 'goal'}>
-          <span class="m tabular">{b.minute}'</span>
-          <i class="g" aria-hidden="true">{GLYPH[b.kind]}</i>
-          <span class="t">{b.text}</span>
+      {#each shown as { beat, i } (i)}
+        <li class={toneOf(beat)} class:goal={beat.kind === 'goal'}>
+          <span class="m tabular">{beat.minute}'</span>
+          <i class="g" aria-hidden="true">{GLYPH[beat.kind]}</i>
+          <span class="t">{beat.text}</span>
         </li>
       {/each}
     </ol>

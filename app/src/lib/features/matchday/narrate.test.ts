@@ -177,3 +177,43 @@ describe('continueFrom', () => {
     }
   });
 });
+
+describe('the feed can always be rendered', () => {
+  /*
+   * The live view keys its list, and a keyed each with a repeat tears the
+   * whole feed down at runtime — `each_key_duplicate`, mid-match, with the
+   * score on screen. Two fillers drawing the same minute AND the same text is
+   * rare enough to pass every manual look and certain enough to happen to a
+   * player. Found by playing five matchdays in a row.
+   *
+   * The view now keys by index, so a repeat can no longer crash it. This holds
+   * the data honest anyway: two identical lines in the feed read as a bug even
+   * when nothing breaks. A goal sharing its minute with the whistle after it is
+   * fine and deliberately still allowed — a 90th-minute winner is the best beat
+   * in football.
+   */
+  it('never produces two identical beats', () => {
+    for (let seed = 0; seed < 80; seed++) {
+      for (const [us, them] of [[0, 0], [3, 2], [5, 0], [1, 4]] as const) {
+        const beats = narrate(createRng(seed), {
+          ourGoals: us, theirGoals: them, ourName: 'Wir', theirName: 'Sie', edge: 8
+        });
+        const keys = beats.map((b) => `${b.minute}|${b.kind}|${b.text}`);
+        expect(new Set(keys).size, `seed ${seed} for ${us}:${them}`).toBe(keys.length);
+      }
+    }
+  });
+
+  it('still produces no identical beats after the second half is told again', () => {
+    for (let seed = 0; seed < 60; seed++) {
+      const base = narrate(createRng(seed), {
+        ourGoals: 1, theirGoals: 1, ourName: 'Wir', theirName: 'Sie', edge: 0
+      });
+      const out = continueFrom(createRng(seed + 500), base, 45, {
+        ourGoals: 3, theirGoals: 2, ourName: 'Wir', theirName: 'Sie', edge: 6
+      });
+      const keys = out.map((b) => `${b.minute}|${b.kind}|${b.text}`);
+      expect(new Set(keys).size, `seed ${seed}`).toBe(keys.length);
+    }
+  });
+});

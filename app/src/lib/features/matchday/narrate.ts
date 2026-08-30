@@ -133,13 +133,22 @@ function buildWindow(rng: Rng, w: WindowInput): Beat[] {
   const chanceCount = Math.max(1, Math.round(rng.int(4, 8) * share));
   const ourShare = Math.max(0.2, Math.min(0.8, 0.5 + w.edge / 60));
 
+  /*
+   * At most one CHANCE or FOUL per minute. Two of them in the same minute
+   * reads as a glitch rather than as a busy match, and when two also drew the
+   * same text the feed's keys collided and Svelte tore the whole list down
+   * mid-match. Goals win the minute; the whistles are free to share one, because
+   * a 90th-minute winner followed by full time is the best beat in football.
+   */
+  const taken = new Set<number>(scored.map((g) => g.minute));
   const filler: { minute: number; ours: boolean; kind: BeatKind }[] = [];
   for (let i = 0; i < chanceCount; i++) {
-    filler.push({
-      minute: rng.int(Math.max(2, w.from + 1), FULL_TIME - 1),
-      ours: rng.chance(ourShare),
-      kind: rng.chance(0.7) ? 'chance' : 'foul'
-    });
+    const minute = rng.int(Math.max(2, w.from + 1), FULL_TIME - 1);
+    const ours = rng.chance(ourShare);
+    const kind: BeatKind = rng.chance(0.7) ? 'chance' : 'foul';
+    if (taken.has(minute)) continue;
+    taken.add(minute);
+    filler.push({ minute, ours, kind });
   }
 
   const beats: Beat[] = [];
