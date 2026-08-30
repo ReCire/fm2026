@@ -5,6 +5,7 @@
   import { Panel, Button, StatChip, fromEvent } from '$lib/ui';
   import { formatMoney, matchdayNet, breakdown } from '$lib/features/finance/rules';
   import { attendance, capacity } from '$lib/features/stadium/rules';
+  import { allAttention } from '$lib/shell';
   import { wageBill, teamStrength } from '$lib/features/squad/rules';
 
   const finance = $derived(game.modules.finance);
@@ -13,6 +14,10 @@
 
   const lastNet = $derived(matchdayNet(finance, game.meta.season, game.meta.matchday - 1));
   const lastBreakdown = $derived(breakdown(finance, game.meta.season, game.meta.matchday - 1));
+
+  const waiting = $derived(allAttention());
+  const now = $derived(waiting.filter((w) => w.item.urgency === 'now'));
+  const soon = $derived(waiting.filter((w) => w.item.urgency === 'soon'));
 
   function playMatchday() {
     const result = advance('matchday');
@@ -23,6 +28,48 @@
     if (!undo()) return;
   }
 </script>
+
+<!--
+  What is waiting, before anything else on the screen.
+
+  The nav badges are a count and a hover. A count tells you a department has
+  something; it cannot tell you whether it is worth the trip, and the hover that
+  would is not available on a phone — which is the device this game is for. So
+  the badge sends you to find out, which is the errand it was supposed to save.
+
+  Urgency is carried by the two headings rather than by a colour or a dot: the
+  structure says which is which, it survives greyscale, and it reads correctly
+  to anyone who cannot see the difference between an amber pip and a red one.
+
+  Rendered only when something is actually waiting. A panel that says "nothing
+  to do" every week is a panel players learn to scroll past, and it would take
+  the weeks that DO have something with it.
+
+  Not `accent="danger"`, which is what it wanted to be: this panel holds both
+  urgencies at once, so a permanently alarming heading over a list that is
+  usually routine housekeeping is crying wolf on the player's own dashboard.
+  The two section headings say which is which; the panel itself stays neutral.
+-->
+{#if waiting.length > 0}
+  <Panel title="Was wartet" accent="primary" meta="{waiting.length} offen">
+    {#if now.length}
+      <p class="urgency">Jetzt</p>
+      <ul class="waiting">
+        {#each now as w (w.moduleId + w.item.id)}
+          <li><a href="/{w.moduleId}"><span class="dept">{w.title}</span>{w.item.label}</a></li>
+        {/each}
+      </ul>
+    {/if}
+    {#if soon.length}
+      <p class="urgency">Demnächst</p>
+      <ul class="waiting">
+        {#each soon as w (w.moduleId + w.item.id)}
+          <li><a href="/{w.moduleId}"><span class="dept">{w.title}</span>{w.item.label}</a></li>
+        {/each}
+      </ul>
+    {/if}
+  </Panel>
+{/if}
 
 <Panel title="Zentrale" accent="accent" meta="Saison {game.meta.season}">
   <div class="chips">
@@ -88,4 +135,28 @@
   .sources li { display: flex; justify-content: space-between; padding: var(--s1) 0; border-bottom: 1px solid var(--border); }
   .sources em { font-style: normal; color: var(--primary-ink); }
   .sources .neg { color: var(--danger-ink); }
+  .urgency {
+    margin: var(--s4) 0 var(--s2);
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .urgency:first-child { margin-top: 0; }
+  .waiting { list-style: none; margin: 0; padding: 0; }
+  .waiting li { border-bottom: 1px solid var(--border); }
+  .waiting li:last-child { border-bottom: 0; }
+  .waiting a {
+    display: block;
+    padding: var(--s3) 0;
+    color: var(--text-main);
+    text-decoration: none;
+  }
+  .waiting a:hover, .waiting a:focus-visible { text-decoration: underline; }
+  .dept {
+    display: block;
+    font-size: var(--fs-caption);
+    color: var(--text-muted);
+  }
 </style>

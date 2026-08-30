@@ -15,6 +15,32 @@ export default defineModule({
 
   state: { schema: MerchSchema, create: createMerch, version: MERCH_VERSION },
 
+  /*
+   * `missed` is the whole point. "Nur noch 12 Stück" is a fact the player has
+   * to convert into a consequence themselves; buyers turned away last matchday
+   * is the consequence, already counted, in money they can picture.
+   */
+  attention: (state) => {
+    const items = Object.entries(state.modules.merch.items);
+    const turnedAway = items.reduce((n, [, i]) => n + i.lastSales.missed, 0);
+    const empty = items.filter(([, i]) => i.stock === 0).length;
+    const out = [];
+    if (turnedAway > 0) {
+      out.push({
+        id: 'merch.missed',
+        urgency: 'now' as const,
+        label: `${turnedAway} Käufer standen am Spieltag vor leeren Regalen`
+      });
+    } else if (empty > 0) {
+      out.push({
+        id: 'merch.empty',
+        urgency: 'soon' as const,
+        label: `${empty} Artikel ausverkauft — am Spieltag verkaufst du sie nicht`
+      });
+    }
+    return out;
+  },
+
   hooks: {
     matchday: {
       phase: 'economy',

@@ -12,6 +12,26 @@ export default defineModule({
 
   state: { schema: StadiumSchema, create: createStadium, version: STADIUM_VERSION },
 
+  /*
+   * Not "you could afford an expansion" — that is true for most of a career
+   * and is a nudge to spend, not a thing waiting on you. A sold-out ground
+   * turning people away is money you are actively losing every home game, and
+   * it is the only stadium state the player cannot see from anywhere else.
+   */
+  attention: (state) => {
+    const s = state.modules.stadium;
+    const seats = capacity(s);
+    const wanted = attendance(s);
+    if (wanted <= seats) return [];
+    return [
+      {
+        id: 'stadium.soldout',
+        urgency: 'soon' as const,
+        label: `Ausverkauft — rund ${wanted - seats} Zuschauer passen nicht ins Stadion`
+      }
+    ];
+  },
+
   hooks: {
     matchday: {
       phase: 'economy',

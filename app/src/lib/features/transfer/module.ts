@@ -16,6 +16,27 @@ export default defineModule({
 
   state: { schema: TransferSchema, create: createTransfer, version: TRANSFER_VERSION },
 
+  /*
+   * An offer is the clearest `now` in the game: it expires, it is worth money,
+   * and ignoring it is a decision you did not know you were making.
+   */
+  attention: (state) => {
+    const { offers } = state.modules.transfer;
+    if (offers.length === 0) return [];
+    const closing = offers.filter((o) => o.expiresIn <= 1).length;
+    const best = offers.reduce((a, b) => (b.currentBid > a.currentBid ? b : a));
+    return [
+      {
+        id: 'transfer.offers',
+        urgency: closing > 0 ? ('now' as const) : ('soon' as const),
+        label:
+          offers.length === 1
+            ? `Angebot über ${formatMoney(best.currentBid)} für ${best.playerName} — unbeantwortet`
+            : `${offers.length} Angebote unbeantwortet, das höchste über ${formatMoney(best.currentBid)}`
+      }
+    ];
+  },
+
   hooks: {
     /**
      * World phase: this is the outside world acting on the club, not a

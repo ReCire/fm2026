@@ -1,6 +1,7 @@
 import { defineModule } from '$lib/engine/module';
 import { YouthSchema, createYouth, YOUTH_VERSION } from './state';
 import { ageProspects } from './rules';
+import { capacity } from './rules';
 
 export default defineModule({
   id: 'youth',
@@ -10,6 +11,23 @@ export default defineModule({
   requires: ['finance', 'squad'],
 
   state: { schema: YouthSchema, create: createYouth, version: YOUTH_VERSION },
+
+  /*
+   * A full academy is not a full cupboard, it is a stopped conveyor: scouting
+   * is blocked, and nothing tells the player why except this. Graduation is
+   * automatic at season end, so the decision is whether to build.
+   */
+  attention: (state) => {
+    const y = state.modules.youth;
+    if (y.prospects.length < capacity(y.level)) return [];
+    return [
+      {
+        id: 'youth.full',
+        urgency: 'soon' as const,
+        label: 'Akademie voll — bis zum Saisonende wird kein Talent mehr gesichtet'
+      }
+    ];
+  },
 
   hooks: {
     /*

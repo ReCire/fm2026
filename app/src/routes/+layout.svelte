@@ -73,12 +73,19 @@
             href="/{m.id}"
             class:active={current === m.id}
             onclick={() => (drawerOpen = false)}
+            aria-label={m.open.length
+              ? `${m.title} — ${m.open.map((o) => o.label).join('. ')}`
+              : undefined}
           >
             <i class="rule" aria-hidden="true"></i>{m.title}
             {#if m.isNew}<span class="new">neu</span>{/if}
-            <!-- A count, not a dot: "3" is worth a trip and a dot is not. The
-                 title carries the same information for a screen reader, since
-                 a badge that only reads as "3" says nothing. -->
+            <!-- A count, not a dot: "3" is worth a trip and a dot is not.
+                 `title` is the sighted-desktop affordance only — it needs a
+                 hover this app mostly does not have, so it cannot be the only
+                 route to the text. The link's aria-label carries the actual
+                 labels, and the Zentrale lists them in full for everyone else:
+                 a badge you can only decode by travelling to it has not saved
+                 anybody a trip. -->
             {#if m.open.length}
               <span
                 class="open"

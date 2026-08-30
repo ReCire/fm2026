@@ -15,6 +15,37 @@ export default defineModule({
 
   state: { schema: SponsorsSchema, create: createSponsors, version: SPONSORS_VERSION },
 
+  /*
+   * Only flagged when there is something to sign. A club with no sponsor and
+   * no offers has nothing to decide here, and a badge over an empty screen is
+   * how a player learns to stop trusting badges.
+   */
+  attention: (state) => {
+    const s = state.modules.sponsors;
+    if (s.active === null && s.offers.length > 0) {
+      return [
+        {
+          id: 'sponsors.unsigned',
+          urgency: 'now' as const,
+          label:
+            s.offers.length === 1
+              ? 'Ein Sponsorenangebot liegt vor, der Verein hat keinen Hauptsponsor'
+              : `${s.offers.length} Sponsorenangebote liegen vor, der Verein hat keinen Hauptsponsor`
+        }
+      ];
+    }
+    if (s.active && s.active.matchdaysRemaining <= 6) {
+      return [
+        {
+          id: 'sponsors.running-out',
+          urgency: s.active.matchdaysRemaining <= 2 ? ('now' as const) : ('soon' as const),
+          label: `${s.active.name} läuft aus — die Anschlussfinanzierung steht nicht`
+        }
+      ];
+    }
+    return [];
+  },
+
   hooks: {
     matchday: {
       phase: 'economy',

@@ -1,6 +1,7 @@
 import { defineModule } from '$lib/engine/module';
 import { StaffSchema, createStaff, STAFF_VERSION } from './state';
 import { contributions, wageBill, employed } from './rules';
+import { STAFF_ROLES } from './content';
 import { postToLedger } from '../finance/module';
 import { gatedBy } from '../progression/rules';
 
@@ -13,6 +14,25 @@ export default defineModule({
   gate: gatedBy('staff'),
 
   state: { schema: StaffSchema, create: createStaff, version: STAFF_VERSION },
+
+  /*
+   * Fires once in a career and then never again: a club running with no
+   * coaching staff at all, while the money to hire someone is sitting there.
+   * Deliberately not "N affordable vacancies" — that is permanently true and
+   * would put a badge on this department forever.
+   */
+  attention: (state) => {
+    if (employed(state.modules.staff).length > 0) return [];
+    const cheapest = Math.min(...STAFF_ROLES.map((r) => r.cost));
+    if (state.modules.finance.money < cheapest) return [];
+    return [
+      {
+        id: 'staff.none',
+        urgency: 'soon' as const,
+        label: 'Kein Trainerstab angestellt, obwohl das Budget reicht'
+      }
+    ];
+  },
 
   hooks: {
     matchday: [

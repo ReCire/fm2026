@@ -21,6 +21,32 @@ export default defineModule({
 
   state: { schema: TrainingSchema, create: createTraining, version: TRAINING_VERSION },
 
+  /*
+   * Hard training with a treatment room already full is the decision the
+   * player is most likely to be making by accident: intensity is set once and
+   * then forgotten, and the injuries arrive weeks later looking like bad luck.
+   */
+  attention: (state) => {
+    const t = state.modules.training;
+    const injured = state.modules.squad.players.filter((p) => p.injured > 0).length;
+    const out = [];
+    if (t.intensity === 'hart' && injured >= 3) {
+      out.push({
+        id: 'training.grinding',
+        urgency: 'now' as const,
+        label: `Hartes Training bei ${injured} Verletzten`
+      });
+    }
+    if (t.teamFocus === 'allgemein' && t.weeks >= 4) {
+      out.push({
+        id: 'training.unfocused',
+        urgency: 'soon' as const,
+        label: 'Kein Trainingsschwerpunkt — die Woche entwickelt niemanden gezielt'
+      });
+    }
+    return out;
+  },
+
   hooks: {
     week: {
       phase: 'sim',

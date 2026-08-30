@@ -1,6 +1,7 @@
 import { defineModule } from '$lib/engine/module';
 import { ContractsSchema, createContracts, CONTRACTS_VERSION } from './state';
 import { tickContracts } from './rules';
+import { contractsContent } from './content';
 
 /**
  * A contract is a property OF A PLAYER — see squad/state.ts. This module only
@@ -14,6 +15,30 @@ export default defineModule({
   requires: ['finance', 'squad'],
 
   state: { schema: ContractsSchema, create: createContracts, version: CONTRACTS_VERSION },
+
+  /*
+   * The one department where doing nothing is itself the decision. A contract
+   * you never look at does not lapse into a problem — it lapses into a player
+   * walking out for nothing, which is a transfer fee you paid and will not get
+   * back. So the label names the loss, not the date.
+   */
+  attention: (state) => {
+    const expiring = state.modules.squad.players.filter(
+      (p) => p.contractMatchdays > 0 && p.contractMatchdays <= contractsContent.warnAtMatchdays
+    );
+    if (expiring.length === 0) return [];
+    const soonest = Math.min(...expiring.map((p) => p.contractMatchdays));
+    return [
+      {
+        id: 'contracts.expiring',
+        urgency: soonest <= 3 ? ('now' as const) : ('soon' as const),
+        label:
+          expiring.length === 1
+            ? `${expiring[0]!.name} geht ablösefrei, wenn du nicht verlängerst`
+            : `${expiring.length} Spieler gehen ablösefrei, wenn du nicht verlängerst`
+      }
+    ];
+  },
 
   hooks: {
     /*
