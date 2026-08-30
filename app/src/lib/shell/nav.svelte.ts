@@ -1,6 +1,6 @@
 import { registry, game } from '$lib/state/game.svelte';
-import { isUnlocked, markSeen, unseen } from '$lib/features/progression/rules';
-import type { ModuleDef } from '$lib/engine/module';
+import { isUnlocked, isDelegated, markSeen, unseen } from '$lib/features/progression/rules';
+import type { ModuleDef, OpenItem } from '$lib/engine/module';
 
 /**
  * What the shell should show, as data.
@@ -18,6 +18,8 @@ export interface NavEntry {
   group: string;
   /** Opened but not yet visited — drives the "new" affordance. */
   isNew: boolean;
+  /** What is waiting on the player in there. Empty when nothing is. */
+  open: OpenItem[];
 }
 
 export interface NavGroup {
@@ -40,8 +42,40 @@ function toEntry(m: ModuleDef, fresh: string[]): NavEntry {
     title: m.title,
     icon: m.nav?.icon ?? '',
     group: m.nav?.group ?? '',
-    isNew: fresh.includes(m.id)
+    isNew: fresh.includes(m.id),
+    open: attentionFor(m)
   };
+}
+
+/**
+ * What one department is waiting on, filtered by the two rules every module
+ * would otherwise have to remember.
+ *
+ * Enforced HERE rather than inside each `attention()` because the one that
+ * forgets is the bug — and a locked department that badges itself, or a
+ * delegated one that keeps nagging, are both exactly the wrong signal. An
+ * executive taking over should feel like an inbox going quiet.
+ */
+export function attentionFor(m: ModuleDef): OpenItem[] {
+  if (!m.attention) return [];
+  if (m.gate && !m.gate(game)) return [];
+  if (game.modules.progression && isDelegated(game, m.id)) return [];
+  try {
+    return m.attention(game);
+  } catch (err) {
+    // A badge is not worth a white screen. Report and carry on.
+    console.error(`[attention] module "${m.id}" threw`, err);
+    return [];
+  }
+}
+
+/** Everything waiting on the player, most urgent first. For a summary surface. */
+export function allAttention(): { moduleId: string; title: string; item: OpenItem }[] {
+  const rows: { moduleId: string; title: string; item: OpenItem }[] = [];
+  for (const m of visible()) {
+    for (const item of attentionFor(m)) rows.push({ moduleId: m.id, title: m.title, item });
+  }
+  return rows.sort((a, b) => (a.item.urgency === b.item.urgency ? 0 : a.item.urgency === 'now' ? -1 : 1));
 }
 
 /** Grouped and ordered, for the sidebar. */

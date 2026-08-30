@@ -1,4 +1,5 @@
 import { defineModule } from '$lib/engine/module';
+import { wageBill } from '../squad/rules';
 import { FinanceSchema, createFinance, FINANCE_VERSION } from './state';
 import { post, loanInterest } from './rules';
 import { financeContent } from './content';
@@ -13,6 +14,33 @@ export default defineModule({
     schema: FinanceSchema,
     create: createFinance,
     version: FINANCE_VERSION
+  },
+
+  /*
+   * Now that the club can actually run out of money, this is the department
+   * most worth interrupting the player about — and for a year it could not have
+   * been, because gate receipts were twenty times the wage bill and the balance
+   * only ever went up.
+   */
+  attention: (state) => {
+    const f = state.modules.finance;
+    const items = [];
+    if (f.money < 0) {
+      items.push({
+        id: 'finance.overdrawn',
+        urgency: 'now' as const,
+        label: `Konto überzogen — ${Math.round(f.money).toLocaleString('de-DE')} €`
+      });
+    } else if (f.money < wageBill(state.modules.squad) * 4) {
+      // Four matchdays of wages: enough warning to sell someone, rather than a
+      // notice that arrives once it is already too late to act on.
+      items.push({
+        id: 'finance.thin',
+        urgency: 'soon' as const,
+        label: 'Rücklagen decken keine vier Spieltage Gehalt mehr'
+      });
+    }
+    return items;
   },
 
   hooks: {

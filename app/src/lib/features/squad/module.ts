@@ -1,6 +1,6 @@
 import { defineModule } from '$lib/engine/module';
 import { SquadSchema, createSquad, SQUAD_VERSION } from './state';
-import { applyPostMatch, autoLineup, wageBill, teamStrength } from './rules';
+import { applyPostMatch, autoLineup, wageBill, teamStrength, isAvailable } from './rules';
 import { postToLedger } from '../finance/module';
 
 export default defineModule({
@@ -11,6 +11,50 @@ export default defineModule({
   requires: ['finance'],
 
   state: { schema: SquadSchema, create: createSquad, version: SQUAD_VERSION },
+
+  /*
+   * The reference implementation of `attention`. Two things to copy:
+   *
+   * Each line names a DECISION, not a fact. "3 Spieler verletzt" tells you
+   * something true and leaves you to work out whether it matters; "Kader unter
+   * Mindestbesetzung" tells you there is something to do. The badge is a call
+   * to the screen, so it has to be worth the trip.
+   *
+   * And it returns nothing when nothing is waiting. A department that always
+   * carries a badge has taught the player to ignore badges.
+   */
+  attention: (state) => {
+    const squad = state.modules.squad;
+    const items = [];
+    const available = squad.players.filter(isAvailable).length;
+
+    if (available < 11) {
+      items.push({
+        id: 'squad.short',
+        urgency: 'now' as const,
+        label: `Kader unter Mindestbesetzung — nur ${available} einsatzbereit`
+      });
+    }
+    if (squad.lineup.length < 11) {
+      items.push({
+        id: 'squad.lineup',
+        urgency: 'now' as const,
+        label: 'Keine Aufstellung für das nächste Spiel'
+      });
+    }
+    if (!squad.captainId) {
+      items.push({ id: 'squad.captain', urgency: 'soon' as const, label: 'Kein Kapitän benannt' });
+    }
+    const tired = squad.players.filter((p) => p.injured === 0 && p.fitness < 55).length;
+    if (tired >= 5) {
+      items.push({
+        id: 'squad.tired',
+        urgency: 'soon' as const,
+        label: `${tired} Spieler ausgelaugt — Trainingsintensität prüfen`
+      });
+    }
+    return items;
+  },
 
   hooks: {
     matchday: [{

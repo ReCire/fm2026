@@ -76,6 +76,16 @@
           >
             <i class="rule" aria-hidden="true"></i>{m.title}
             {#if m.isNew}<span class="new">neu</span>{/if}
+            <!-- A count, not a dot: "3" is worth a trip and a dot is not. The
+                 title carries the same information for a screen reader, since
+                 a badge that only reads as "3" says nothing. -->
+            {#if m.open.length}
+              <span
+                class="open"
+                class:now={m.open.some((o) => o.urgency === 'now')}
+                title={m.open.map((o) => o.label).join(' · ')}
+              >{m.open.length}</span>
+            {/if}
           </a>
         {/each}
       {/each}
@@ -97,7 +107,10 @@
            thumb distance with an 11px label, the mark IS the affordance and
            the word is the fallback. -->
       <a href="/{m.id}" class:on={current === m.id}>
-        <span class="ico" aria-hidden="true">{m.icon}</span>
+        <span class="ico" aria-hidden="true">
+          {m.icon}
+          {#if m.open.some((o) => o.urgency === 'now')}<i class="pip" aria-hidden="true"></i>{/if}
+        </span>
         <span class="lbl">{m.title}</span>
       </a>
     {/each}
@@ -159,6 +172,35 @@
     font-size: var(--fs-caption);
     font-weight: 700;
     color: var(--primary-ink);
+  }
+
+  /* A count in the sidebar, a pip on the tab bar. Both carry the SAME fact at
+     the size each surface has room for; neither is the only channel, because
+     the title attribute and the screen behind it both say it in words. */
+  .open {
+    margin-left: auto;
+    min-width: 1.5rem;
+    text-align: center;
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg-inset);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    padding: 0 6px;
+  }
+  .open.now {
+    color: var(--on-fill-alt);
+    background: var(--danger);
+    border-color: var(--danger);
+  }
+  .tabbar .ico { position: relative; }
+  .pip {
+    position: absolute; top: -2px; right: -4px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--danger); border: 1px solid var(--bg-sidebar);
   }
 
   /* Landscape on a notched phone: viewport-fit=cover means the notch and the

@@ -14,6 +14,22 @@ export type Phase = (typeof PHASES)[number];
 
 export type TickKind = 'matchday' | 'week' | 'seasonStart' | 'seasonEnd';
 
+/**
+ * Something in a department that is waiting on the player.
+ *
+ * Two urgencies, deliberately, not three. A third level ("idle", "someday")
+ * always fills up with things that are not actually waiting, and once every
+ * department carries a badge the badges stop meaning anything.
+ */
+export interface OpenItem {
+  /** Stable across renders, so "seen" can be tracked later without guessing. */
+  id: string;
+  /** `now` blocks or costs you something this week; `soon` is worth a look. */
+  urgency: 'now' | 'soon';
+  /** The decision, in the player's words. Shown in the drawer, not truncated. */
+  label: string;
+}
+
 /** Who is running a department instead of the player, if anyone. */
 export interface DelegationInfo {
   executiveId: string;
@@ -163,6 +179,32 @@ export interface ModuleDef<Id extends string = string, S = unknown> {
    * Omitted means always available.
    */
   gate?: (state: GameState) => boolean;
+
+  /**
+   * What is waiting on the player in this department, right now.
+   *
+   * A third arity alongside `provides` and `contributes`: one producer per
+   * department, and the consumer is the SHELL rather than another feature. It
+   * is how a nav entry earns a badge.
+   *
+   * The prototype had one table of thirteen closures reaching into every
+   * global — `squad.filter(p => p.contracts <= 1)`, `game.money < 0`,
+   * `Object.keys(factories)` — a single file that had to know all nineteen
+   * departments, and that broke every time one of them changed shape. Inverting
+   * it means each feature answers for itself and nothing imports everything.
+   *
+   * Rules, so that a badge always means the same thing:
+   *
+   *  - Pure and cheap. It runs on render, not on a tick, and it must not write.
+   *  - A LOCKED module is never asked, and a DELEGATED one never answers —
+   *    both are enforced by the shell rather than by each module remembering,
+   *    because the one that forgets is the bug. That is also what makes hiring
+   *    an executive feel like an inbox going quiet.
+   *  - Say what the player should DECIDE, not what is true. "3 Spieler
+   *    verletzt" is a fact; "Kader unter Mindestbesetzung" is a decision.
+   *  - Return nothing when there is nothing. A permanent badge is wallpaper.
+   */
+  attention?: (state: GameState) => OpenItem[];
 
   /**
    * What this department does when an executive runs it instead of the player.
