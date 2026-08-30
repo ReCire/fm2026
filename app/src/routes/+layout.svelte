@@ -114,16 +114,20 @@
            thumb distance with an 11px label, the mark IS the affordance and
            the word is the fallback. -->
       <a href="/{m.id}" class:on={current === m.id}>
-        <span class="ico" aria-hidden="true">
-          {m.icon}
-          {#if m.open.some((o) => o.urgency === 'now')}<i class="pip" aria-hidden="true"></i>{/if}
+        <span class="cell">
+          <span class="ico" aria-hidden="true">
+            {m.icon}
+            {#if m.open.some((o) => o.urgency === 'now')}<i class="pip" aria-hidden="true"></i>{/if}
+          </span>
+          <span class="lbl">{m.title}</span>
         </span>
-        <span class="lbl">{m.title}</span>
       </a>
     {/each}
     <button class="more" aria-label="Weitere Bereiche" onclick={() => (drawerOpen = true)}>
-      <span class="ico" aria-hidden="true">☰</span>
-      <span class="lbl">Mehr</span>
+      <span class="cell">
+        <span class="ico" aria-hidden="true">☰</span>
+        <span class="lbl">Mehr</span>
+      </span>
     </button>
   </nav>
 
@@ -209,6 +213,15 @@
     width: 7px; height: 7px; border-radius: 50%;
     background: var(--danger); border: 1px solid var(--bg-sidebar);
   }
+  /* The active cell gets its own capsule inside the bar, sized to its
+     content rather than the full flex column — the Sportschau tab bar
+     highlights the icon+label, not the whole thumb-width slot around it. */
+  .tabbar .cell {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; padding: var(--s1) var(--s3);
+    border-radius: 999px;
+  }
+  .tabbar a.on .cell { background: var(--primary-glow); }
 
   /* Landscape on a notched phone: viewport-fit=cover means the notch and the
      rounded corners overlay the page, so content needs the horizontal insets
@@ -235,22 +248,31 @@
     .sidebar.open { transform: none; }
     .scrim { display: block; position: fixed; inset: 0; z-index: 299; background: color-mix(in srgb, var(--bg-body) 78%, transparent); border: none; }
 
-    main { padding-bottom: calc(72px + var(--safe-bottom)); }
+    /* Clearance for a bar that no longer sits flush against the edge: its own
+       height plus the margin that lifts it off the bottom on both sides. */
+    main { padding-bottom: calc(70px + var(--s4) + var(--safe-bottom)); }
 
+    /* The floating pill. Sportschau's bottom nav is an island over the
+       content, not a strip fused to the screen edge — margin on all three
+       free sides is what makes it read as floating rather than docked. */
     .tabbar {
       display: flex;
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
-      background: color-mix(in srgb, var(--bg-header) 94%, transparent);
-      backdrop-filter: blur(14px);
-      border-top: 1px solid var(--border);
-      padding-bottom: var(--safe-bottom);
-      padding-left: var(--safe-left);
-      padding-right: var(--safe-right);
+      position: fixed; z-index: 300;
+      left: calc(var(--s3) + var(--safe-left));
+      right: calc(var(--s3) + var(--safe-right));
+      bottom: calc(var(--s3) + var(--safe-bottom));
+      gap: 2px;
+      padding: var(--s1);
+      background: color-mix(in srgb, var(--bg-header) 90%, transparent);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: var(--shadow-lift);
     }
     .tabbar a, .tabbar button {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 2px; padding: var(--s2) 2px;
-      min-height: 54px;
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      min-height: var(--tap);
       background: none; border: none; cursor: pointer;
       color: var(--text-dim); text-decoration: none;
     }

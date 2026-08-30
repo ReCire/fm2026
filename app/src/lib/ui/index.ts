@@ -9,5 +9,6 @@ export { default as Toast } from './Toast.svelte';
 export { default as DataTable } from './DataTable.svelte';
 export { default as Leaderboard } from './Leaderboard.svelte';
 export { default as Tabs } from './Tabs.svelte';
+export { default as Segmented } from './Segmented.svelte';
 export type { Column } from './table';
 export { toast, fromEvent, toasts, dismiss } from './toasts.svelte';

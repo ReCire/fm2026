@@ -55,6 +55,21 @@
         "--strictPort"
       ],
       "port": 5199
+    },
+    {
+      "name": "anstoss-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "app",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5177",
+        "--strictPort"
+      ],
+      "port": 5177
     }
   ]
 }
