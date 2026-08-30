@@ -46,6 +46,9 @@ export const LiveSchema = z.object({
        recognises validated happily and then rendered no glyph — the save
        said it was fine and the screen disagreed. */
     kind: z.enum(BEAT_KINDS),
+    /* Who scored. Optional: a goal narrated before anyone picked a side has no
+       owner, and an old save has none either. */
+    scorerId: z.string().optional(),
     ours: z.boolean(),
     text: z.string(),
     score: z.tuple([z.number().int(), z.number().int()])

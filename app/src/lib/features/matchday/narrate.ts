@@ -22,11 +22,21 @@ export type BeatKind = (typeof BEAT_KINDS)[number];
 export interface Beat {
   minute: number;
   kind: BeatKind;
+  /** Who scored, when the beat is a goal and a squad was supplied. */
+  scorerId?: string;
   /** True when it is our club doing it. */
   ours: boolean;
   text: string;
   /** Running score after this beat. */
   score: [number, number];
+}
+
+/** Someone who might score, weighted by how likely he is to. */
+export interface Scorer {
+  id: string;
+  name: string;
+  /** Relative likelihood. A striker outweighs a centre-back many times over. */
+  weight: number;
 }
 
 export interface NarrationInput {
@@ -36,6 +46,15 @@ export interface NarrationInput {
   theirName: string;
   /** Ours minus theirs. Drives how much of the play runs our way. */
   edge: number;
+  /**
+   * The eleven that might get on the scoresheet, weighted.
+   *
+   * Optional, because a match can be narrated before anyone has picked a side —
+   * the fallback is the old anonymous "Tor für X". With it, a goal names
+   * somebody, which is the difference between a scoreline and a match report,
+   * and the only way a career can ever have a top scorer.
+   */
+  scorers?: readonly Scorer[];
 }
 
 const FULL_TIME = 90;
@@ -93,8 +112,36 @@ export function narrate(rng: Rng, input: NarrationInput): Beat[] {
     ourName: input.ourName,
     theirName: input.theirName,
     edge: input.edge,
+    scorers: input.scorers,
     kickoff: true
   });
+}
+
+/**
+ * Who scores each of this side's goals, in order.
+ *
+ * Weighted rather than uniform: a match where the goalkeeper is as likely as
+ * the centre-forward reads as a random name generator, and the top-scorer list
+ * it feeds would be noise. A player can score twice — deliberately, because a
+ * brace is one of the few things a match report can give you that a scoreline
+ * cannot.
+ */
+function pickScorers(rng: Rng, squad: readonly Scorer[], count: number): Scorer[] {
+  if (squad.length === 0 || count <= 0) return [];
+  const total = squad.reduce((sum, s) => sum + Math.max(0, s.weight), 0);
+  if (total <= 0) return [];
+
+  const picked: Scorer[] = [];
+  for (let i = 0; i < count; i++) {
+    let roll = rng.float(0, total);
+    let chosen = squad[squad.length - 1]!;
+    for (const s of squad) {
+      roll -= Math.max(0, s.weight);
+      if (roll <= 0) { chosen = s; break; }
+    }
+    picked.push(chosen);
+  }
+  return picked;
 }
 
 interface WindowInput {
@@ -108,6 +155,7 @@ interface WindowInput {
   theirName: string;
   edge: number;
   kickoff: boolean;
+  scorers?: readonly Scorer[];
 }
 
 /**
@@ -118,6 +166,13 @@ interface WindowInput {
  * underneath the player who just watched it.
  */
 function buildWindow(rng: Rng, w: WindowInput): Beat[] {
+  /*
+   * Pick the scorers up front, so the RNG they consume does not depend on how
+   * many filler beats happened to be rolled first. A match must narrate
+   * identically from its seed whatever else changed around it.
+   */
+  const ourScorers = pickScorers(rng, w.scorers ?? [], w.addUs);
+
   const ourMinutes = goalMinutes(rng, w.addUs, w.from, FULL_TIME);
   const theirMinutes = goalMinutes(rng, w.addThem, w.from, FULL_TIME);
 
@@ -180,9 +235,14 @@ function buildWindow(rng: Rng, w: WindowInput): Beat[] {
 
     if (event.kind === 'goal') {
       if (event.ours) us++; else them++;
+      const scorer = event.ours ? ourScorers[us - 1] : undefined;
       beats.push({
         minute: event.minute, kind: 'goal', ours: event.ours,
-        text: event.ours ? `TOR für ${w.ourName}!` : `Tor für ${w.theirName}.`,
+        scorerId: scorer?.id,
+        // "Tor für Ziegelhütte" and "Weber trifft zum 2:1" are different games.
+        text: scorer
+          ? `TOR! ${scorer.name} trifft zum ${us}:${them}.`
+          : event.ours ? `TOR für ${w.ourName}!` : `Tor für ${w.theirName}.`,
         score: [us, them]
       });
     } else if (event.kind === 'chance') {
@@ -251,6 +311,7 @@ export function continueFrom(
       ourName: input.ourName,
       theirName: input.theirName,
       edge: input.edge,
+      scorers: input.scorers,
       kickoff: false
     })
   ].sort((a, b) => a.minute - b.minute);

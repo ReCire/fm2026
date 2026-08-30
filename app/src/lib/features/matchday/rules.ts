@@ -1,4 +1,6 @@
 import type { MatchdayState, Report, Formation, Style, Talk } from './state';
+import type { Player } from '../squad/state';
+import { strengthOf } from '../squad/rules';
 import { matchdayContent as C } from './content';
 
 /**
@@ -113,3 +115,32 @@ export function formLetters(m: MatchdayState, count = 5): string {
 export function describeFormation(f: Formation): string { return C.formation[f].label; }
 export function describeStyle(s: Style): string { return C.style[s].label; }
 export function describeTalk(t: Talk): string { return C.talk[t].label; }
+
+/**
+ * Who might score, and how likely each of them is.
+ *
+ * Weighted by position first and quality second. The position spread is wide on
+ * purpose — a keeper scoring as often as a striker would make the top-scorer
+ * list read as a random name generator, and the list is the whole reason this
+ * exists. Quality then separates the two forwards from each other.
+ *
+ * A defender still scores sometimes, because he does.
+ */
+const SCORING_WEIGHT: Record<string, number> = {
+  ST: 10,
+  MIT: 5,
+  ABW: 1.5,
+  TW: 0.05
+};
+
+export function scorersFor(squad: { players: readonly Player[]; lineup: readonly string[] }) {
+  return squad.players
+    .filter((p) => squad.lineup.includes(p.id))
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      // Quality tilts within a position rather than across it: a good defender
+      // is still far less likely to score than a poor striker.
+      weight: (SCORING_WEIGHT[p.pos] ?? 1) * (0.6 + strengthOf(p) / 100)
+    }));
+}

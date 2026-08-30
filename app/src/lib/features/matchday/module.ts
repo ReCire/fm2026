@@ -1,7 +1,10 @@
 import { defineModule } from '$lib/engine/module';
 import { MatchdaySchema, createMatchday, MATCHDAY_VERSION, migrateMatchday, type Report } from './state';
 import { narrate } from './narrate';
-import { effectiveStrength, modifiers, recordResult, moraleDelta, fitnessMultiplier, goalChance } from './rules';
+import {
+  effectiveStrength, modifiers, recordResult, moraleDelta,
+  fitnessMultiplier, goalChance, scorersFor
+} from './rules';
 import { autoLineup, teamStrength, isAvailable } from '../squad/rules';
 
 /** Our club's current display name, which the editor may have changed. */
@@ -142,7 +145,8 @@ export default defineModule({
               theirGoals: report.goalsAgainst,
               ourName: ourName(state),
               theirName: report.opponent,
-              edge: report.ourStrength - report.opponentStrength
+              edge: report.ourStrength - report.opponentStrength,
+              scorers: scorersFor(state.modules.squad)
             }),
             minute: 0,
             running: true,
@@ -153,6 +157,19 @@ export default defineModule({
             opponentStrength: report.opponentStrength,
             matchday: state.meta.matchday
           };
+
+          /*
+           * Goals go on the scorers' records, from the narration rather than
+           * from the simulation — because the narration is where a goal
+           * acquires an owner at all. The scoreline was decided first and is
+           * unchanged; this only says who got them.
+           */
+          const byId = new Map(state.modules.squad.players.map((p) => [p.id, p]));
+          for (const beat of m.live.beats) {
+            if (beat.kind !== 'goal' || !beat.scorerId) continue;
+            const scorer = byId.get(beat.scorerId);
+            if (scorer) scorer.record.goals += 1;
+          }
 
           // The team talk's cost lands now, a week after it was chosen.
           const delta = moraleDelta(m);

@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { narrate, beatsUpTo, scoreAt, continueFrom } from './narrate';
-import { createRng } from '$lib/engine/rng';
+import { createRng, seedFrom } from '$lib/engine/rng';
+import { Registry } from '$lib/engine/registry';
+import { runTick } from '$lib/engine/clock';
+import { modules } from '$lib/modules';
+import type { GameState, MetaState, ModuleStates } from '$lib/engine/state';
+import { applyNarrative } from '../progression/rules';
+import { narratives } from '../progression/content';
+
+const registry = new Registry(modules);
 
 const run = (ourGoals: number, theirGoals: number, edge = 0, seed = 1) =>
   narrate(createRng(seed), {
@@ -215,5 +223,147 @@ describe('the feed can always be rendered', () => {
       const keys = out.map((b) => `${b.minute}|${b.kind}|${b.text}`);
       expect(new Set(keys).size, `seed ${seed}`).toBe(keys.length);
     }
+  });
+});
+
+describe('a goal belongs to somebody', () => {
+  /*
+   * "Tor für Ziegelhütte" and "Weber trifft zum 2:1" are different games — and
+   * a top-scorer list, the second tab on any football stats screen, cannot
+   * exist without this. It is also what makes two talents in the catalogue
+   * expressible at all.
+   */
+  const squad = [
+    { id: 'st1', name: 'Stürmer Eins', weight: 10 },
+    { id: 'st2', name: 'Stürmer Zwei', weight: 9 },
+    { id: 'mit', name: 'Mittelfeld', weight: 5 },
+    { id: 'abw', name: 'Abwehr', weight: 1.5 },
+    { id: 'tw', name: 'Torwart', weight: 0.05 }
+  ];
+  const input = (ourGoals: number, theirGoals = 0, scorers = squad) => ({
+    ourGoals, theirGoals, ourName: 'Wir', theirName: 'Sie', edge: 0, scorers
+  });
+
+  it('names one of our own for every goal we score', () => {
+    for (let seed = 0; seed < 40; seed++) {
+      const beats = narrate(createRng(seed), input(3, 2));
+      const ours = beats.filter((b) => b.kind === 'goal' && b.ours);
+      expect(ours).toHaveLength(3);
+      for (const g of ours) {
+        expect(squad.map((s) => s.id), `seed ${seed}`).toContain(g.scorerId);
+        expect(g.text).toContain(squad.find((s) => s.id === g.scorerId)!.name);
+      }
+    }
+  });
+
+  /* We do not model the opposition's squad, so their goals stay anonymous
+     rather than being attributed to an invented name. */
+  it('leaves the opposition anonymous', () => {
+    const beats = narrate(createRng(5), input(1, 2));
+    for (const g of beats.filter((b) => b.kind === 'goal' && !b.ours)) {
+      expect(g.scorerId).toBeUndefined();
+    }
+  });
+
+  it('falls back to the old line when nobody has been picked', () => {
+    const beats = narrate(createRng(2), { ...input(2), scorers: undefined });
+    const goals = beats.filter((b) => b.kind === 'goal' && b.ours);
+    expect(goals.length).toBe(2);
+    for (const g of goals) {
+      expect(g.scorerId).toBeUndefined();
+      expect(g.text).toContain('Wir');
+    }
+  });
+
+  /*
+   * Weighted, not uniform. A keeper as likely as a striker would make the
+   * top-scorer list read as a random name generator, which is the one thing
+   * the list must not be.
+   */
+  it('gives the striker far more of them than the goalkeeper', () => {
+    const tally = new Map<string, number>();
+    for (let seed = 0; seed < 300; seed++) {
+      for (const g of narrate(createRng(seed), input(2))) {
+        if (g.kind === 'goal' && g.scorerId) {
+          tally.set(g.scorerId, (tally.get(g.scorerId) ?? 0) + 1);
+        }
+      }
+    }
+    expect(tally.get('st1') ?? 0).toBeGreaterThan((tally.get('abw') ?? 0) * 3);
+    expect(tally.get('tw') ?? 0).toBeLessThan((tally.get('st1') ?? 0) / 20);
+  });
+
+  it('lets one man score twice, because a brace is worth having', () => {
+    let braces = 0;
+    for (let seed = 0; seed < 200; seed++) {
+      const ids = narrate(createRng(seed), input(3))
+        .filter((b) => b.kind === 'goal' && b.ours)
+        .map((b) => b.scorerId);
+      if (new Set(ids).size < ids.length) braces++;
+    }
+    expect(braces, 'nobody ever scored twice in two hundred matches').toBeGreaterThan(0);
+  });
+
+  it('is deterministic, and does not shift when the filler does', () => {
+    const a = narrate(createRng(31), input(2, 1));
+    const b = narrate(createRng(31), input(2, 1));
+    expect(a).toEqual(b);
+  });
+
+  it('still ends on exactly the score it was given', () => {
+    for (let seed = 0; seed < 30; seed++) {
+      const beats = narrate(createRng(seed), input(4, 1));
+      expect(beats[beats.length - 1]!.score).toEqual([4, 1]);
+    }
+  });
+});
+
+describe('scorers add up to the scoreline', () => {
+  /*
+   * The invariant that keeps a top-scorer board honest: every goal the league
+   * table credits to the club is credited to exactly one player, and no player
+   * is credited a goal the table does not know about.
+   *
+   * Attribution runs over the NARRATION while the score comes from the
+   * simulation, so the two could drift apart without anything erroring — a
+   * scorers' list that quietly disagreed with the table would be worse than no
+   * list at all, because it looks authoritative.
+   */
+  it('over a full season, attributed goals equal the table', () => {
+    const seed = seedFrom('conservation');
+    const rng = createRng(seed);
+    const mods: Record<string, unknown> = {};
+    for (const m of registry.all) mods[m.id] = m.state.create(rng.fork(m.id));
+    const meta: MetaState = { seed, season: 1, matchday: 1, tick: 0, createdAt: 0, lastPlayedAt: 0 };
+    const g: GameState = { meta, modules: mods as unknown as ModuleStates };
+    applyNarrative(g.modules.progression, narratives[0]!);
+    g.modules.progression.started = true;
+
+    for (let i = 0; i < 34; i++) { runTick(registry, g, 'week'); runTick(registry, g, 'matchday'); }
+
+    const attributed = g.modules.squad.players.reduce((s, p) => s + p.record.goals, 0);
+    const table = g.modules.league.levels[g.modules.league.playerLevel]!
+      .find((t) => t.id === g.modules.league.playerClubId)!.goalsFor;
+
+    expect(attributed, 'the scorers list disagrees with the table').toBe(table);
+    expect(attributed, 'a whole season produced no goals at all').toBeGreaterThan(0);
+  });
+
+  it('produces a board with a clear top scorer, not a flat spread', () => {
+    const seed = seedFrom('board');
+    const rng = createRng(seed);
+    const mods: Record<string, unknown> = {};
+    for (const m of registry.all) mods[m.id] = m.state.create(rng.fork(m.id));
+    const meta: MetaState = { seed, season: 1, matchday: 1, tick: 0, createdAt: 0, lastPlayedAt: 0 };
+    const g: GameState = { meta, modules: mods as unknown as ModuleStates };
+    applyNarrative(g.modules.progression, narratives[0]!);
+    g.modules.progression.started = true;
+    for (let i = 0; i < 34; i++) { runTick(registry, g, 'week'); runTick(registry, g, 'matchday'); }
+
+    const ranked = [...g.modules.squad.players].sort((a, b) => b.record.goals - a.record.goals);
+    const top = ranked[0]!;
+    expect(top.record.goals, 'nobody stood out over a whole season').toBeGreaterThanOrEqual(6);
+    // A striker, not a centre-back who got lucky.
+    expect(['ST', 'MIT'], `the top scorer was a ${top.pos}`).toContain(top.pos);
   });
 });
