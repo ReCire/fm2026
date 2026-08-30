@@ -48,13 +48,39 @@ export interface UnlockResult {
  * narrative's sequence — so the order a player meets the game in is a design
  * decision recorded in content, not an accident of when they clicked something.
  */
+/**
+ * Which ids the ladder may actually open.
+ *
+ * Set at boot from the registry. A narrative's `unlockOrder` is partly a
+ * ROADMAP — it names departments that are designed but not built yet — and for
+ * weeks it named `rawMaterials`, `fans`, `holding` and `europe`, none of which
+ * exist. Progression walked the list, "unlocked" each one, and every real
+ * department behind it arrived three matchdays late. Nothing errored; the
+ * ladder was simply shorter than it read.
+ *
+ * Filtering at runtime rather than editing the content keeps the roadmap where
+ * a designer can write it, and makes a rung appear the day its module lands.
+ */
+let buildable: ReadonlySet<string> | null = null;
+export function setBuildableModules(ids: Iterable<string>): void {
+  buildable = new Set(ids);
+}
+const exists = (id: string) => buildable === null || buildable.has(id);
+
 export function unlockNext(p: ProgressionState, count = 1): UnlockResult {
   const opened: string[] = [];
-  for (let i = 0; i < count; i++) {
+  let guard = 0;
+  while (opened.length < count && guard++ < 100) {
     const next = nextUnlock(p);
     if (!next) break;
     p.unlocked.push(next);
-    opened.push(next);
+    /*
+     * A rung with nothing behind it is stepped OVER, not stood on. Marking it
+     * and continuing costs the player nothing; consuming the unlock would
+     * delay every real department behind it by three matchdays, which is what
+     * the ladder did for weeks while naming four modules that did not exist.
+     */
+    if (exists(next)) opened.push(next);
   }
   const narrative = narrativeById(p.narrativeId);
   const total = narrative?.unlockOrder.length ?? 0;

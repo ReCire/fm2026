@@ -200,9 +200,13 @@ describe('coverage', () => {
   it('every department that answers is exercised here', () => {
     const answering = registry.all.filter((m) => m.attention).map((m) => m.id);
     const covered = new Set(CASES.map((c) => c.module));
-    // squad and finance are the architect's reference pair and are covered by
-    // shell/attention.test.ts; everything else belongs to this file.
-    const exempt = new Set(['squad', 'finance']);
+    /*
+     * Exempt only where the department's OWN test file exercises its badge —
+     * squad and finance in shell/attention.test.ts, industry in its own
+     * rules.test.ts. The rule is that every answering department is tested
+     * somewhere, not that it is tested here.
+     */
+    const exempt = new Set(['squad', 'finance', 'industry']);
     const missing = answering.filter((id) => !covered.has(id) && !exempt.has(id));
     expect(missing, 'a department answers but nothing tests what it says').toEqual([]);
   });

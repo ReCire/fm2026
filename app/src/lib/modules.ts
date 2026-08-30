@@ -24,6 +24,7 @@ import calendar from './features/calendar/module';
 import history from './features/history/module';
 import sponsors from './features/sponsors/module';
 import merch from './features/merch/module';
+import industry from './features/industry/module';
 import youth from './features/youth/module';
 import contracts from './features/contracts/module';
 import cup from './features/cup/module';
@@ -50,6 +51,7 @@ const declared: readonly ModuleDef[] = [
   campus,
   sponsors,
   merch,
+  industry,
   history,
   editor
 ];

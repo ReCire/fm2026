@@ -5,7 +5,7 @@ import { installDocs } from '$lib/docs/registry';
 import type { GameState, MetaState, ModuleStates } from '$lib/engine/state';
 import type { TickKind } from '$lib/engine/module';
 import { modules } from '$lib/modules';
-import { delegationFor } from '$lib/features/progression/rules';
+import { delegationFor, setBuildableModules } from '$lib/features/progression/rules';
 import { pushSnapshot, popSnapshot, clearHistory } from './history.svelte';
 
 export const registry = new Registry(modules);
@@ -13,6 +13,13 @@ export const registry = new Registry(modules);
 // Docs are installed once at boot so components can resolve labels and
 // tooltips synchronously, without every screen importing every feature.
 installDocs(registry.docs());
+
+/*
+ * Progression's ladders name departments that are designed but not built yet.
+ * Telling it what actually exists lets a narrative carry a roadmap without a
+ * career silently spending an unlock slot on a door with nothing behind it.
+ */
+setBuildableModules(registry.all.map((m) => m.id));
 
 function freshMeta(seed: number): MetaState {
   return {

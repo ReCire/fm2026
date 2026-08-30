@@ -66,7 +66,9 @@ describe('registry', () => {
 
   it('leaves a disabled module out entirely', () => {
     const off = modules.map((m) =>
-      m.id === 'stadium' || m.id === 'merch' ? { ...m, enabled: () => false } : m
+      // industry requires merch, so switching merch off must switch it off too —
+      // otherwise the test is asserting a broken registry rather than a disabled one.
+      ['stadium', 'merch', 'industry'].includes(m.id) ? { ...m, enabled: () => false } : m
     );
     const r = new Registry(off);
     expect(r.byId.has('stadium')).toBe(false);
