@@ -1,5 +1,5 @@
 import { defineModule } from '$lib/engine/module';
-import { YouthSchema, createYouth, YOUTH_VERSION } from './state';
+import { YouthSchema, createYouth, YOUTH_VERSION, migrateYouth } from './state';
 import { ageProspects } from './rules';
 import { capacity } from './rules';
 
@@ -10,7 +10,7 @@ export default defineModule({
   nav: { group: 'Sport', icon: '🌱', order: 17 },
   requires: ['finance', 'squad'],
 
-  state: { schema: YouthSchema, create: createYouth, version: YOUTH_VERSION },
+  state: { schema: YouthSchema, create: createYouth, version: YOUTH_VERSION, migrate: migrateYouth },
 
   /*
    * A full academy is not a full cupboard, it is a stopped conveyor: scouting
@@ -47,6 +47,9 @@ export default defineModule({
           // Built by createPlayer at scouting time — pushed as-is, so a
           // graduate cannot drift from how every other player is made.
           squad.players.push(player);
+          // Counted where the graduation happens; a graduate is indistinguishable
+          // from any other squad player one line later.
+          youth.promoted += 1;
           emit({
             source: 'youth',
             severity: 'good',

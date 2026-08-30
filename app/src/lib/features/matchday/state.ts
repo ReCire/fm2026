@@ -80,7 +80,15 @@ export const MatchdaySchema = z.object({
   /** Kept so the report survives a reload; an event log does not. */
   lastReport: ReportSchema.nullable(),
   /** Most recent results, newest first. Capped. */
-  recent: z.array(ReportSchema).max(12)
+  recent: z.array(ReportSchema).max(12),
+  /**
+   * Competitive wins across the whole career.
+   *
+   * Counted rather than derived: the league table resets every season and
+   * `recent` is capped at twelve, so by matchday twenty of season two there is
+   * nowhere left to read this from.
+   */
+  careerWins: z.number().int().min(0)
 });
 export type MatchdayState = z.infer<typeof MatchdaySchema>;
 
@@ -91,11 +99,15 @@ declare module '$lib/engine/state' {
 }
 
 export function createMatchday(_rng: Rng): MatchdayState {
-  return { live: null, formation: '4-4-2', style: 'ausgeglichen', talk: 'ruhig', lastReport: null, recent: [] };
+  return {
+    live: null, formation: '4-4-2', style: 'ausgeglichen', talk: 'ruhig',
+    lastReport: null, recent: [], careerWins: 0
+  };
 }
 
 /** v3: the live match gains the half-time decision. */
-export const MATCHDAY_VERSION = 3;
+/** v4: counts career wins, which no surviving state could answer. */
+export const MATCHDAY_VERSION = 4;
 
 export function migrateMatchday(old: unknown, _from: number): MatchdayState {
   const base = old as Partial<MatchdayState>;
@@ -105,6 +117,9 @@ export function migrateMatchday(old: unknown, _from: number): MatchdayState {
     style: base.style ?? 'ausgeglichen',
     talk: base.talk ?? 'ruhig',
     lastReport: base.lastReport ?? null,
-    recent: base.recent ?? []
+    recent: base.recent ?? [],
+    // An old save cannot recover its history; starting at zero under-counts
+    // rather than inventing a number.
+    careerWins: base.careerWins ?? 0
   };
 }

@@ -1,6 +1,6 @@
 import { defineModule } from '$lib/engine/module';
 import { wageBill } from '../squad/rules';
-import { FinanceSchema, createFinance, FINANCE_VERSION } from './state';
+import { FinanceSchema, createFinance, FINANCE_VERSION, migrateFinance } from './state';
 import { post, loanInterest } from './rules';
 import { financeContent } from './content';
 
@@ -13,7 +13,8 @@ export default defineModule({
   state: {
     schema: FinanceSchema,
     create: createFinance,
-    version: FINANCE_VERSION
+    version: FINANCE_VERSION,
+    migrate: migrateFinance
   },
 
   /*
@@ -55,6 +56,18 @@ export default defineModule({
       run({ state, emit }) {
         const finance = state.modules.finance;
         const { season, matchday } = state.meta;
+
+        /*
+         * Recorded here because this hook runs last in the economy phase, after
+         * every module has posted its income and its costs — so the balance is
+         * final for the tick. Checking earlier would miss a club that went
+         * under only once the wages landed.
+         *
+         * Never cleared. "Ever in debt" is a fact about a career, not a state
+         * of the account, and the two are opposite stories on an identical
+         * balance sheet.
+         */
+        if (finance.money < 0 || finance.loanDebt > 0) finance.everInDebt = true;
 
         if (finance.loanDebt > 0) {
           const interest = loanInterest(finance.loanDebt, financeContent.loanRatePerMatchday);

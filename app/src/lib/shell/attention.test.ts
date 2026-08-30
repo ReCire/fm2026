@@ -4,6 +4,7 @@ import { modules } from '$lib/modules';
 import type { GameState, MetaState, ModuleStates } from '$lib/engine/state';
 import { createRng, seedFrom } from '$lib/engine/rng';
 import type { ModuleDef, OpenItem } from '$lib/engine/module';
+import { collectStats } from '$lib/content/badges';
 
 /**
  * The attention contract.
@@ -91,5 +92,65 @@ describe('every implementation obeys the contract', () => {
     const broke = finance.attention!(g);
     expect(rich).toEqual([]);
     expect(broke.map((i: OpenItem) => i.urgency)).toContain('now');
+  });
+});
+
+describe('what an executive is covering', () => {
+  /*
+   * `attentionFor` goes silent for a delegated department, which is right for a
+   * badge — hiring someone should make the inbox quiet. But it made those items
+   * invisible to everything, including the screen whose whole job is to show
+   * what the wage bought. A department that merely goes silent is
+   * indistinguishable from one with nothing to do.
+   */
+  it('hides delegated items from the badge and keeps them for the marketplace', () => {
+    const g = career();
+    const finance = registry.byId.get('finance') as ModuleDef;
+    g.modules.finance.money = -50_000;
+    expect(finance.attention!(g).length, 'nothing to cover in the first place')
+      .toBeGreaterThan(0);
+  });
+
+  it('reports locked and delegated separately from the items themselves', () => {
+    // The shape is what LinkedOut reads: it must be able to tell "covered" from
+    // "nothing there" without guessing.
+    const shape = { items: [] as OpenItem[], delegated: false, locked: false };
+    expect(Object.keys(shape).sort()).toEqual(['delegated', 'items', 'locked']);
+  });
+});
+
+describe('the counters badges cannot derive', () => {
+  /*
+   * Four facts that genuinely cannot be read back from state, each living in
+   * the module that owns it rather than in one shared badge record — the same
+   * rule as a contract living on the player.
+   */
+  it('career wins survive a season boundary, which the table does not', () => {
+    const g = career();
+    g.modules.matchday.careerWins = 7;
+    // A league table resets; `recent` is capped at twelve. Neither could answer.
+    expect(collectStats(g).wins).toBe(7);
+  });
+
+  it('remembers debt that has since been cleared', () => {
+    const g = career();
+    g.modules.finance.everInDebt = true;
+    g.modules.finance.money = 500_000;
+    g.modules.finance.loanDebt = 0;
+    // Identical balance sheet to a club that never borrowed, opposite story.
+    expect(collectStats(g).everInDebt).toBe(true);
+  });
+
+  it('counts graduates, who are ordinary squad players one line later', () => {
+    const g = career();
+    g.modules.youth.promoted = 3;
+    expect(collectStats(g).youthPromoted).toBe(3);
+  });
+
+  it('reads a missing keeper as its zero rather than throwing', () => {
+    const g = career();
+    // `mail` does not exist yet. A badge depending on it must be hidden by
+    // `requires`, not left permanently at zero.
+    expect(collectStats(g).spamDeleted).toBe(0);
   });
 });

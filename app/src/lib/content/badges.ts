@@ -55,6 +55,34 @@ export interface BadgeStats {
   everInDebt: boolean;
 }
 
+/**
+ * Read the four counters out of the modules that keep them.
+ *
+ * Each lives in its OWNER's state — `matchday.careerWins`, `youth.promoted`,
+ * `finance.everInDebt` — rather than in one shared badge record. Same rule as a
+ * player's contract living on the player: one home per fact, so two systems
+ * cannot disagree about it and nothing is left behind when a feature is
+ * deleted. This function is the only place that knows all four addresses.
+ *
+ * A counter whose keeper does not exist yet reads as its zero, which is why a
+ * badge that depends on one must also name that module in `requires` — a badge
+ * you can never earn should be hidden, not permanently at zero.
+ */
+export function collectStats(state: GameState): BadgeStats {
+  const m = state.modules as Partial<{
+    matchday: { careerWins: number };
+    youth: { promoted: number };
+    finance: { everInDebt: boolean };
+    mail: { spamDeleted: number };
+  }>;
+  return {
+    wins: m.matchday?.careerWins ?? 0,
+    youthPromoted: m.youth?.promoted ?? 0,
+    spamDeleted: m.mail?.spamDeleted ?? 0,
+    everInDebt: m.finance?.everInDebt ?? false
+  };
+}
+
 export const ZERO_STATS: BadgeStats = {
   wins: 0,
   youthPromoted: 0,

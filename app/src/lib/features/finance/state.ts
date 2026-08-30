@@ -20,6 +20,15 @@ export const FinanceSchema = z.object({
   transferBudget: z.number(),
   wageBudget: z.number(),
   loanDebt: z.number().min(0),
+  /**
+   * True once the club has ever been overdrawn or carried a loan.
+   *
+   * A counter rather than a derivation, because it cannot be derived: a club
+   * that cleared its debts and a club that never borrowed have identical
+   * balance sheets and opposite stories. Set during the tick, never on render,
+   * and never cleared — "ever" is the whole word.
+   */
+  everInDebt: z.boolean(),
   /** Capped ring buffer: a 20-season career must not grow unbounded. */
   ledger: z.array(LedgerEntrySchema).max(2000)
 });
@@ -38,8 +47,20 @@ export function createFinance(_rng: Rng): FinanceState {
     transferBudget: 100_000,
     wageBudget: 15_000,
     loanDebt: 0,
+    everInDebt: false,
     ledger: []
   };
 }
 
-export const FINANCE_VERSION = 1;
+/** v2: remembers whether the club was ever in the red. */
+export const FINANCE_VERSION = 2;
+
+export function migrateFinance(old: unknown, _from: number): FinanceState {
+  const base = old as FinanceState;
+  return {
+    ...base,
+    // A v1 save cannot say whether it was ever in debt, only whether it is now.
+    // Guessing "no" would hand a career a clean record it may not have earned.
+    everInDebt: base.everInDebt ?? (base.money < 0 || base.loanDebt > 0)
+  };
+}

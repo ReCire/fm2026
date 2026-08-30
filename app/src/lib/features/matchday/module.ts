@@ -121,6 +121,9 @@ export default defineModule({
           };
 
           recordResult(m, report);
+          // Counted where the result is decided, so it cannot disagree with the
+          // report it came from.
+          if (report.goalsFor > report.goalsAgainst) m.careerWins += 1;
 
           /*
            * Narrate the match that was just resolved.

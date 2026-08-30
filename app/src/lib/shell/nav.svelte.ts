@@ -69,6 +69,39 @@ export function attentionFor(m: ModuleDef): OpenItem[] {
   }
 }
 
+/**
+ * What a department has waiting, INCLUDING what an executive is covering.
+ *
+ * `attentionFor` returns nothing for a delegated department, which is right for
+ * a badge — hiring someone should make the inbox go quiet. But it made those
+ * items invisible to everything, including the screen whose whole job is to
+ * show the player what the wage bought. "Three things you no longer have to
+ * think about" is the proof; a department that merely goes silent is
+ * indistinguishable from a department with nothing to do.
+ *
+ * So the filter stays where it is and this reports around it. `delegated` says
+ * which of the two you are looking at.
+ */
+export function attentionDetail(m: ModuleDef): { items: OpenItem[]; delegated: boolean; locked: boolean } {
+  const locked = !!m.gate && !m.gate(game);
+  const delegated = !!game.modules.progression && isDelegated(game, m.id);
+  if (!m.attention || locked) return { items: [], delegated, locked };
+  try {
+    return { items: m.attention(game), delegated, locked };
+  } catch (err) {
+    console.error(`[attention] module "${m.id}" threw`, err);
+    return { items: [], delegated, locked };
+  }
+}
+
+/** What executives are covering right now, by department. For LinkedOut. */
+export function handledByExecutives(): { moduleId: string; title: string; items: OpenItem[] }[] {
+  return registry.all
+    .map((m) => ({ module: m, detail: attentionDetail(m) }))
+    .filter(({ detail }) => detail.delegated && detail.items.length > 0)
+    .map(({ module, detail }) => ({ moduleId: module.id, title: module.title, items: detail.items }));
+}
+
 /** Everything waiting on the player, most urgent first. For a summary surface. */
 export function allAttention(): { moduleId: string; title: string; item: OpenItem }[] {
   const rows: { moduleId: string; title: string; item: OpenItem }[] = [];

@@ -110,6 +110,19 @@ export function applyHalfTime(state: GameState, optionId: string): Option | null
     live.isHome ? finalThem : finalUs
   );
 
+  /*
+   * The career win count follows the amended result. A half-time call can turn
+   * a draw into a win or a win into a draw, and a badge that read a tally the
+   * scoreline no longer supported would be awarded for a match that did not
+   * happen that way.
+   */
+  if (m.lastReport && m.lastReport.matchday === live.matchday) {
+    const wasWin = m.lastReport.goalsFor > m.lastReport.goalsAgainst;
+    const isWin = finalUs > finalThem;
+    if (!wasWin && isWin) m.careerWins += 1;
+    if (wasWin && !isWin) m.careerWins = Math.max(0, m.careerWins - 1);
+  }
+
   // And the report, which is what the player reads afterwards.
   if (m.lastReport && m.lastReport.matchday === live.matchday) {
     m.lastReport.goalsFor = finalUs;
