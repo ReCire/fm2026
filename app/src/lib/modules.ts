@@ -22,6 +22,8 @@ import staff from './features/staff/module';
 import training from './features/training/module';
 import calendar from './features/calendar/module';
 import history from './features/history/module';
+import youth from './features/youth/module';
+import contracts from './features/contracts/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -30,6 +32,8 @@ const declared: readonly ModuleDef[] = [
   finance,
   squad,
   training,
+  youth,
+  contracts,
   stadium,
   league,
   matchday,

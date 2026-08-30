@@ -11,7 +11,7 @@ function player(over: Partial<Player> = {}): Player {
     id: 'p1', name: 'Test Spieler', pos: 'MIT',
     attributes: uniform(50), fitness: 70, morale: 70, age: 22,
     marketValue: 100_000, wage: 1000, trait: '—',
-    injured: 0, suspended: 0, individualFocus: 'allgemein',
+    injured: 0, suspended: 0, individualFocus: 'allgemein', contractMatchdays: 34,
     ...over
   };
 }

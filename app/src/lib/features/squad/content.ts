@@ -57,7 +57,22 @@ export const SquadContentSchema = z.object({
   injuryBaseRisk: z.number().min(0).max(1),
   /** Multiplier applied when a player starts below this fitness. */
   tiredFitnessThreshold: z.number().int(),
-  tiredInjuryMultiplier: z.number().min(1)
+  tiredInjuryMultiplier: z.number().min(1),
+  /**
+   * How many matchdays a fresh contract runs, at the moment a player is
+   * created.
+   *
+   * Lives here rather than in `contracts` because every path that mints a
+   * player — the starting squad, the transfer market, a youth graduate — goes
+   * through `createPlayer`, and a player without this would be a player
+   * without a contract. `contracts` owns the countdown and the renewal; squad
+   * only owns "what a brand new deal looks like". A season is 34 matchdays
+   * (18 teams, double round-robin), so this is roughly one to three seasons.
+   */
+  initialContract: z.object({
+    min: z.number().int().min(1),
+    max: z.number().int().min(1)
+  })
 });
 export type SquadContent = z.infer<typeof SquadContentSchema>;
 
@@ -95,5 +110,6 @@ export const squadContent: SquadContent = SquadContentSchema.parse({
   fitnessLossPerMatch: 12,
   injuryBaseRisk: 0.055,
   tiredFitnessThreshold: 55,
-  tiredInjuryMultiplier: 1.8
+  tiredInjuryMultiplier: 1.8,
+  initialContract: { min: 34, max: 102 }
 });
