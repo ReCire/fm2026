@@ -24,6 +24,8 @@ import calendar from './features/calendar/module';
 import history from './features/history/module';
 import sponsors from './features/sponsors/module';
 import merch from './features/merch/module';
+import youth from './features/youth/module';
+import contracts from './features/contracts/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -32,6 +34,8 @@ const declared: readonly ModuleDef[] = [
   finance,
   squad,
   training,
+  youth,
+  contracts,
   stadium,
   league,
   matchday,

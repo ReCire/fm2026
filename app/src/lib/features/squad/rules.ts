@@ -80,7 +80,8 @@ export function createPlayer(
     trait,
     injured: 0,
     suspended: 0,
-    individualFocus: 'allgemein'
+    individualFocus: 'allgemein',
+    contractMatchdays: rng.int(squadContent.initialContract.min, squadContent.initialContract.max)
   };
 }
 
