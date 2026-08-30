@@ -277,6 +277,66 @@ describe('a failing tick', () => {
     const game = freshGame();
     expect(runTick(registry, game, 'matchday').failed).toEqual([]);
   });
+
+  /*
+   * Writing a key you did not declare has to fail loudly.
+   *
+   * `assertContextWiring` orders consumers after producers by reading the
+   * `provides` / `contributes` arrays. A hook that writes a key without listing
+   * it is invisible to that check: the value still arrives, in whatever order
+   * the hooks happen to run, and any module that then declares it honestly in
+   * `consumes` makes the registry throw at boot because as far as it can tell
+   * nobody produces it. `stadium` shipped exactly that for months. The
+   * declaration has to be load-bearing, not documentation.
+   */
+  it('refuses to provide a key the hook did not declare', () => {
+    const sneaky = modules.map((m) =>
+      m.id === 'stadium'
+        ? {
+            ...m,
+            hooks: {
+              matchday: {
+                phase: 'economy' as const,
+                run({ provide }: { provide: (k: string, v: unknown) => void }) {
+                  provide('stadium.attendance', 1000);
+                }
+              }
+            }
+          }
+        : m
+    );
+    const r = new Registry(sneaky);
+    const game = freshGame();
+    const seed = createRng(1);
+    for (const m of r.all) (game.modules as any)[m.id] ??= m.state.create(seed);
+
+    const result = runTick(r, game, 'matchday');
+    expect(result.failed, 'an undeclared provide must fail the tick').toEqual(['stadium']);
+  });
+
+  it('refuses to contribute to a key the hook did not declare', () => {
+    const sneaky = modules.map((m) =>
+      m.id === 'stadium'
+        ? {
+            ...m,
+            hooks: {
+              matchday: {
+                phase: 'economy' as const,
+                run({ modify }: { modify: (k: string, f: number) => void }) {
+                  modify('squad.fitnessLoss', 0.5);
+                }
+              }
+            }
+          }
+        : m
+    );
+    const r = new Registry(sneaky);
+    const game = freshGame();
+    const seed = createRng(1);
+    for (const m of r.all) (game.modules as any)[m.id] ??= m.state.create(seed);
+
+    expect(runTick(r, game, 'matchday').failed).toEqual(['stadium']);
+  });
 });
 
 describe('rng stream separation', () => {

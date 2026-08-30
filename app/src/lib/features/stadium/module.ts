@@ -17,6 +17,17 @@ export default defineModule({
       phase: 'economy',
       order: 10,
       consumes: ['league.isHome'],
+      /*
+       * Declared, not merely called.
+       *
+       * `provide('stadium.attendance', …)` was here from the beginning and this
+       * line was not, so `assertContextWiring` could not see the producer: any
+       * module that honestly declared it in `consumes` made the registry throw
+       * at boot, and the only way to read the crowd was to query it
+       * undeclared — which is exactly the unchecked coupling the wiring test
+       * exists to prevent. Found by a merch module trying to do it properly.
+       */
+      provides: ['stadium.attendance'],
       run({ state, emit, provide, query }) {
         const stadium = state.modules.stadium;
         const { season, matchday } = state.meta;

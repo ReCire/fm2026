@@ -80,9 +80,34 @@ export function runTick(
       emit: (e) => events.push(e),
       query: <T>(key: string, fallback: T): T =>
         provided.has(key) ? (provided.get(key) as T) : fallback,
-      provide: (key, value) => provided.set(key, value),
-      modify: (key, f) => factors.set(key, (factors.get(key) ?? 1) * f),
-      addTo: (key, a) => totals.set(key, (totals.get(key) ?? 0) + a),
+      /*
+       * A key must be DECLARED to be written.
+       *
+       * `assertContextWiring` orders consumers after producers by reading the
+       * `provides` and `contributes` arrays — so a hook that calls
+       * `provide('stadium.attendance', …)` without listing it leaves the
+       * registry unable to see the producer at all. The value still arrived,
+       * quietly, in whatever order the hooks happened to run; and any module
+       * that then declared it honestly in `consumes` made the registry throw at
+       * boot, because as far as the check could tell nobody produced it. The
+       * only way to read the crowd was to cheat.
+       *
+       * That was live for months and was found by accident. Throwing here makes
+       * the declaration load-bearing instead of documentation: the tick fails,
+       * the caller rolls it back, and the message names the fix.
+       */
+      provide: (key, value) => {
+        assertDeclared(module.id, hook.provides, key, 'provides');
+        provided.set(key, value);
+      },
+      modify: (key, f) => {
+        assertDeclared(module.id, hook.contributes, key, 'contributes');
+        factors.set(key, (factors.get(key) ?? 1) * f);
+      },
+      addTo: (key, a) => {
+        assertDeclared(module.id, hook.contributes, key, 'contributes');
+        totals.set(key, (totals.get(key) ?? 0) + a);
+      },
       factor: (key, base = 1) => (factors.has(key) ? factors.get(key)! : base),
       total: (key, base = 0) => (totals.has(key) ? totals.get(key)! : base)
     };
@@ -127,4 +152,18 @@ export function runTick(
   }
 
   return { kind, events, failed, timings };
+}
+
+function assertDeclared(
+  moduleId: string,
+  declared: readonly string[] | undefined,
+  key: string,
+  field: 'provides' | 'contributes'
+): void {
+  if (declared?.includes(key)) return;
+  throw new Error(
+    `Module "${moduleId}" wrote "${key}" without declaring it. ` +
+    `Add "${key}" to this hook's \`${field}\` array — the registry orders ` +
+    `consumers after producers by reading it, and cannot see an undeclared one.`
+  );
 }
