@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Registry } from './registry';
-import { runTick } from './clock';
+import { runTick, previewPre } from './clock';
 import { createRng, seedFrom, mixSeed } from './rng';
 import { serialise, deserialise } from './save';
 import { modules } from '$lib/modules';
@@ -449,5 +449,52 @@ describe('delegation', () => {
       delegationFor: (id) => (id === 'stadium' ? { executiveId: 'x', competence: 1, hiredOnMatchday: 0 } : undefined)
     });
     expect(seen).toBeUndefined();
+  });
+});
+
+describe('previewing the pre phase', () => {
+  /*
+   * A screen cannot read the context bus — it lives for exactly one tick — so
+   * the matchday screen summed the squad and the tactics by hand and knew
+   * nothing about the backroom or the doctrine. It showed 60 while the match
+   * resolved at 62. Two surfaces, two answers.
+   */
+  it('reports what the tick would publish', () => {
+    const game = freshGame();
+    const preview = previewPre(registry, game);
+    const real = runTick(registry, game, 'matchday');
+    expect(real.failed).toEqual([]);
+    expect(preview.provided.get('squad.strength')).toBe(game.modules.matchday.lastReport?.ourStrength);
+  });
+
+  it('commits nothing — it is a dry run', () => {
+    const game = freshGame();
+    const before = JSON.stringify(game);
+    previewPre(registry, game);
+    expect(JSON.stringify(game), 'the preview wrote to the live game').toBe(before);
+  });
+
+  /*
+   * The live game is a Svelte rune proxy. `structuredClone` throws
+   * `DataCloneError` on one, which every unit test missed because they build
+   * plain objects — the browser threw on the first render instead.
+   */
+  it('survives a proxied state, which is what it is actually handed', () => {
+    const game = freshGame();
+    const proxied = new Proxy(game, {
+      get: (t, k) => Reflect.get(t, k),
+      set: (t, k, v) => Reflect.set(t, k, v)
+    });
+    expect(() => previewPre(registry, proxied)).not.toThrow();
+    expect(previewPre(registry, proxied).provided.get('squad.strength')).toBeTypeOf('number');
+  });
+
+  it('a locked module does not contribute to the preview either', () => {
+    const game = freshGame();
+    const locked = modules.map((m) => (m.id === 'knowledge' ? { ...m, gate: () => false } : m));
+    const r = new Registry(locked);
+    const seed = createRng(1);
+    for (const m of r.all) (game.modules as any)[m.id] ??= m.state.create(seed);
+    expect(() => previewPre(r, game)).not.toThrow();
   });
 });

@@ -1,0 +1,241 @@
+import type { FxKey, KnowledgeNode } from './content';
+import {
+  knowledgeNodes, nodeById, tierCost, leagueCostMultiplier, doctrineIds, FLAG_KEYS
+} from './content';
+import type { KnowledgeState } from './state';
+
+/**
+ * How a node's effect reaches the game.
+ *
+ * This table is the whole reason the tree is not decoration. The content names
+ * effects in the game's own language — `transferDiscount`, `injuryRisk` — while
+ * the modifier bus names them by their consumer: `squad.injuryRisk`,
+ * `matchday.homeStrength`. Those two vocabularies had NO overlap at all when
+ * the tree landed: measured, zero of fifty-three keys, which means all 140
+ * nodes would have been purchasable upgrades that changed nothing.
+ *
+ * So a node's effect is live only when its key appears here AND the bus key it
+ * maps to has a declared consumer. Both halves are checked; see `dormancyOf`.
+ *
+ * `total` keys are absolute (+3 strength). `factor` keys are fractional deltas
+ * the way the content's own labels read them — `-0.15` renders as "15% less"
+ * and is applied as a multiplier of `0.85`.
+ */
+export interface Effect {
+  key: string;
+  arity: 'factor' | 'total';
+}
+
+export const EFFECTS: Partial<Record<FxKey, Effect>> = {
+  strength:       { key: 'squad.strengthBonus',   arity: 'total' },
+  homeStrength:   { key: 'matchday.homeStrength', arity: 'total' },
+  fitnessLoss:    { key: 'squad.fitnessLoss',     arity: 'factor' },
+  injuryRisk:     { key: 'squad.injuryRisk',      arity: 'factor' },
+  injuryDuration: { key: 'squad.injuryDuration',  arity: 'factor' },
+  onlineBoost:    { key: 'merch.online',          arity: 'factor' },
+  sponsorMod:     { key: 'sponsors.income',       arity: 'factor' }
+};
+
+/** Every bus key this module can write. Declared statically on the hook. */
+export const CONTRIBUTED = [...new Set(Object.values(EFFECTS).map((e) => e!.key))];
+
+/**
+ * Information unlocks and effect bundles that some screen actually reads.
+ *
+ * Deliberately empty, and deliberately explicit. A node whose only effect is a
+ * `reveal` was passing the gate as "informational, therefore live" — five of
+ * them — even though nothing in the game reads a reveal yet. That is the same
+ * failure the gate exists to prevent, waved through by the gate itself: an
+ * upgrade sold for real money that shows the player nothing new.
+ *
+ * When a screen starts honouring one, add its key here and the nodes that carry
+ * it become purchasable. These cannot be derived from the registry the way bus
+ * keys can, because a reveal is consumed by a component rather than by a hook —
+ * so this list is the one place in the gate that must be maintained by hand,
+ * and it is short on purpose.
+ */
+export const REVEALS_READ: ReadonlySet<string> = new Set();
+export const GRANTS_READ: ReadonlySet<string> = new Set();
+
+export type Dormancy = 'live' | 'unmapped' | 'unread' | 'inert';
+
+/**
+ * Why a node cannot be bought yet, or `live` when it can.
+ *
+ * Four answers rather than a boolean, because "not yet wired" and "wired to
+ * something nobody reads" are different jobs for whoever fixes it:
+ *
+ *  - `unmapped` — an fx key with no entry in EFFECTS. Someone must decide which
+ *    bus key it belongs to and whether it multiplies or adds.
+ *  - `unread`  — mapped, but the bus key has no declared consumer. The feature
+ *    that would read it does not exist yet, or does not ask for it.
+ *  - `inert`   — no effects at all. A node that does nothing by construction.
+ */
+export function dormancyOf(node: KnowledgeNode, consumed: ReadonlySet<string>): Dormancy {
+  const fx = Object.keys(node.fx ?? {}) as FxKey[];
+  const flags = node.flags ?? [];
+  const reveals = node.reveal ?? [];
+  const grants = node.grants ? [node.grants] : [];
+  const informational = reveals.length > 0 || grants.length > 0;
+
+  if (fx.length === 0 && flags.length === 0 && !informational) return 'inert';
+  if (reveals.some((r) => !REVEALS_READ.has(r))) return 'unread';
+  if (grants.some((g) => !GRANTS_READ.has(g))) return 'unread';
+  if (fx.length === 0 && flags.length === 0) return 'live';
+
+  /*
+   * `unmapped` is checked FIRST because it is the more fundamental problem: a
+   * key with no bus mapping cannot be read by anyone, whereas an unread key at
+   * least knows where it wants to go. Checking flags first hid that — a node
+   * with both an unread flag and an unmapped key reported `unread`, sending
+   * whoever fixed it to wire a consumer for a key that had no destination.
+   */
+  if (fx.some((k) => !EFFECTS[k])) return 'unmapped';
+  // A flag is idempotent and never summed, so it needs a reader of its own name.
+  if (flags.some((f) => !consumed.has(f))) return 'unread';
+  if (fx.some((k) => !consumed.has(EFFECTS[k]!.key))) return 'unread';
+  return 'live';
+}
+
+export function isLive(node: KnowledgeNode, consumed: ReadonlySet<string>): boolean {
+  return dormancyOf(node, consumed) === 'live';
+}
+
+/** How many nodes of a doctrine the club owns. Drives `minRank` and `gate`. */
+export function rankOf(state: KnowledgeState, doctrine: string): number {
+  return state.owned.filter((id) => nodeById.get(id)?.doctrine === doctrine).length;
+}
+
+export function ranks(state: KnowledgeState): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const d of doctrineIds) out[d] = rankOf(state, d);
+  return out;
+}
+
+/**
+ * What a node costs, here, now.
+ *
+ * Wissenspunkte are flat — they are the scarcity that makes the tree a set of
+ * refusals, and a refusal that costs a rich club less is not a refusal. Money
+ * scales by division, so the bite stays constant across a fortyfold spread of
+ * starting balances. See `leagueCostMultiplier`.
+ */
+export function costOf(node: KnowledgeNode, leagueLevel: number): { points: number; money: number } {
+  const [points, money] = tierCost[node.tier] ?? [1, 0];
+  const mult = leagueCostMultiplier[leagueLevel] ?? 1;
+  return { points, money: Math.round(money * mult * (node.costMult ?? 1)) };
+}
+
+export interface BuyCheck {
+  ok: boolean;
+  /** Why not, in the player's words. Empty when ok. */
+  reason: string;
+}
+
+export function canBuy(
+  state: KnowledgeState,
+  node: KnowledgeNode,
+  opts: { money: number; leagueLevel: number; consumed: ReadonlySet<string> }
+): BuyCheck {
+  if (state.owned.includes(node.id)) return { ok: false, reason: 'Bereits erforscht.' };
+
+  /*
+   * The dormancy gate. A node whose effect reaches nothing must not be for
+   * sale — it would be the "computed, correct, connected to nothing" failure
+   * charged to the player at up to €750.000 a node.
+   */
+  if (!isLive(node, opts.consumed)) {
+    return { ok: false, reason: 'Noch nicht verfügbar — die Wirkung greift im Spiel noch nicht.' };
+  }
+
+  const missing = node.req.filter((r) => !state.owned.includes(r));
+  if (missing.length > 0) {
+    const names = missing.map((id) => nodeById.get(id)?.name ?? id).join(', ');
+    return { ok: false, reason: `Setzt voraus: ${names}.` };
+  }
+
+  if (node.minRank && rankOf(state, node.doctrine) < node.minRank) {
+    return { ok: false, reason: `Erfordert Rang ${node.minRank} in dieser Doktrin.` };
+  }
+
+  if (node.gate && node.pair) {
+    const [a, b] = node.pair;
+    if (rankOf(state, a) < node.gate || rankOf(state, b) < node.gate) {
+      return { ok: false, reason: `Erfordert Rang ${node.gate} in beiden Doktrinen.` };
+    }
+  }
+
+  const cost = costOf(node, opts.leagueLevel);
+  if (state.points < cost.points) {
+    const word = cost.points === 1 ? 'Wissenspunkt' : 'Wissenspunkte';
+    return { ok: false, reason: `${cost.points} ${word} nötig, ${state.points} vorhanden.` };
+  }
+  if (opts.money < cost.money) {
+    return { ok: false, reason: 'Der Verein kann sich das gerade nicht leisten.' };
+  }
+
+  return { ok: true, reason: '' };
+}
+
+/** All the fx a club's owned nodes add up to. */
+export function ownedEffects(state: KnowledgeState): { totals: Map<string, number>; factors: Map<string, number> } {
+  const totals = new Map<string, number>();
+  const factors = new Map<string, number>();
+
+  for (const id of state.owned) {
+    const node = nodeById.get(id);
+    if (!node) continue;
+    for (const [rawKey, value] of Object.entries(node.fx ?? {})) {
+      const effect = EFFECTS[rawKey as FxKey];
+      if (!effect || typeof value !== 'number') continue;
+      if (effect.arity === 'total') {
+        totals.set(effect.key, (totals.get(effect.key) ?? 0) + value);
+      } else {
+        // A fractional delta, applied the way its own label reads it.
+        factors.set(effect.key, (factors.get(effect.key) ?? 1) * (1 + value));
+      }
+    }
+  }
+  return { totals, factors };
+}
+
+/** Which flags the club has switched on. Idempotent — never counted. */
+export function ownedFlags(state: KnowledgeState): Set<string> {
+  const on = new Set<string>();
+  for (const id of state.owned) {
+    for (const flag of nodeById.get(id)?.flags ?? []) on.add(flag);
+  }
+  return on;
+}
+
+export function hasFlag(state: KnowledgeState, flag: (typeof FLAG_KEYS)[number]): boolean {
+  return ownedFlags(state).has(flag);
+}
+
+/** The tree, split by what can be bought. For the screen and for the report. */
+export function census(consumed: ReadonlySet<string>): Record<Dormancy, number> {
+  const out: Record<Dormancy, number> = { live: 0, unmapped: 0, unread: 0, inert: 0 };
+  for (const node of knowledgeNodes) out[dormancyOf(node, consumed)]++;
+  return out;
+}
+
+/**
+ * Research a node. Deducts both currencies and records it.
+ *
+ * Takes the finance state rather than a number so the money leaves through the
+ * ledger like every other cost in the game — a purchase that silently
+ * decremented a balance would be invisible in the one place the player looks to
+ * understand where their money went.
+ */
+export function research(
+  state: KnowledgeState,
+  node: KnowledgeNode,
+  leagueLevel: number,
+  charge: (amount: number, reason: string) => void
+): boolean {
+  const cost = costOf(node, leagueLevel);
+  state.points -= cost.points;
+  state.owned.push(node.id);
+  if (cost.money > 0) charge(-cost.money, `Doktrin: ${node.name}`);
+  return true;
+}

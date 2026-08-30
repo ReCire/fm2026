@@ -2103,3 +2103,18 @@ export const knowledgeNodes: KnowledgeNode[] = [...coreNodes, ...buildSynthesisN
 export const nodeById: ReadonlyMap<string, KnowledgeNode> = new Map(
   knowledgeNodes.map((n) => [n.id, n])
 );
+
+/**
+ * How fast the club learns.
+ *
+ * Deliberately slow. The full tree is 140 nodes costing several hundred
+ * Wissenspunkte, so at roughly sixteen a season nobody completes it — which is
+ * what keeps every purchase a choice about what to give up rather than a step
+ * along a queue.
+ */
+export const knowledgeContent = {
+  /** One point every N matchdays. */
+  pointEveryMatchdays: 3,
+  /** Awarded when a season closes, regardless of how it went. */
+  pointsPerSeason: 5
+} as const;

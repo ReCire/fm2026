@@ -101,6 +101,34 @@ export class Registry {
   }
 
   /** Hooks for one tick kind, flattened and already sorted into phase order. */
+  /**
+   * Every context key that some enabled module DECLARES it consumes.
+   *
+   * The registry already refuses to boot when a consumer is ordered before its
+   * producer, and the tick now throws on a write to a key the hook did not
+   * declare — so these declarations are load-bearing rather than documentation,
+   * and this set can be trusted as the answer to "does anything actually read
+   * this?".
+   *
+   * Which makes it the honest gate for content that ships ahead of its wiring:
+   * a knowledge node whose effects land on keys nobody reads is an upgrade that
+   * costs real money and does nothing, which is the failure this codebase keeps
+   * having, sold to the player 140 times over.
+   *
+   * Derived at boot rather than baked into content, so wiring a key makes its
+   * nodes live with no content edit and the flag cannot go stale in the
+   * direction of "marked dormant but actually works".
+   */
+  consumedKeys(): ReadonlySet<string> {
+    const keys = new Set<string>();
+    for (const kind of ['matchday', 'week', 'seasonStart', 'seasonEnd'] as const) {
+      for (const { hook } of this.hooks(kind)) {
+        for (const key of hook.consumes ?? []) keys.add(key);
+      }
+    }
+    return keys;
+  }
+
   hooks(kind: TickKind): { module: ModuleDef; phase: Phase; hook: Hook }[] {
     const out: { module: ModuleDef; phase: Phase; order: number; hook: Hook }[] = [];
     for (const m of this.all) {

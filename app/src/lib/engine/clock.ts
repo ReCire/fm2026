@@ -167,3 +167,75 @@ function assertDeclared(
     `consumers after producers by reading it, and cannot see an undeclared one.`
   );
 }
+
+/**
+ * What the `pre` phase WOULD publish, without committing anything.
+ *
+ * The context bus lives for exactly one tick, so a screen that wants to show
+ * the player how strong their side will be on Saturday cannot read it — and
+ * every screen that tried instead recomputed a subset by hand. The matchday
+ * screen showed 60 while the match itself used 62, because the screen summed
+ * the squad and the tactics and knew nothing about the doctrine node the player
+ * had just bought. Two surfaces, two answers, and the one on screen was the one
+ * the player believed.
+ *
+ * This runs the real hooks over a THROWAWAY COPY of the state and returns what
+ * they wrote. It cannot drift from the tick, because it is the tick — the same
+ * hooks in the same order, discarded instead of kept.
+ *
+ * `pre` only: it is the phase where strength, modifiers and costs are assembled,
+ * and stopping there means nothing is simulated, no money moves and no RNG
+ * stream is consumed for real.
+ */
+export interface Preview {
+  provided: ReadonlyMap<string, unknown>;
+  factors: ReadonlyMap<string, number>;
+  totals: ReadonlyMap<string, number>;
+}
+
+export function previewPre(registry: Registry, state: GameState, kind: TickKind = 'matchday'): Preview {
+  const provided = new Map<string, unknown>();
+  const factors = new Map<string, number>();
+  const totals = new Map<string, number>();
+
+  /*
+   * A deep copy, so a `pre` hook that writes (matchday fills an empty lineup)
+   * cannot touch the live game from a render.
+   *
+   * Through JSON rather than `structuredClone`, which throws `DataCloneError`
+   * on a Svelte rune proxy — the live game IS one. The unit tests passed
+   * because they build plain objects; the browser threw on first render. Game
+   * state is already required to survive a JSON round trip, because that is how
+   * it is saved, so this borrows an invariant rather than adding one.
+   */
+  const scratch: GameState = JSON.parse(
+    JSON.stringify({ meta: state.meta, modules: state.modules })
+  ) as GameState;
+
+  const hooks = registry
+    .hooks(kind)
+    .filter(({ module, phase }) => phase === 'pre' && (module.gate?.(state) ?? true));
+
+  for (const { module, hook } of hooks) {
+    const rng = createRng(mixSeed(scratch.meta.seed, `${module.id}#${kind}#${scratch.meta.tick}`));
+    try {
+      hook.run({
+        state: scratch,
+        rng,
+        kind,
+        emit: () => {},
+        query: <T>(key: string, fallback: T): T =>
+          provided.has(key) ? (provided.get(key) as T) : fallback,
+        provide: (key, value) => provided.set(key, value),
+        modify: (key, f) => factors.set(key, (factors.get(key) ?? 1) * f),
+        addTo: (key, a) => totals.set(key, (totals.get(key) ?? 0) + a),
+        factor: (key, base = 1) => (factors.has(key) ? factors.get(key)! : base),
+        total: (key, base = 0) => (totals.has(key) ? totals.get(key)! : base)
+      });
+    } catch {
+      // A preview must never break a screen. The real tick will report it.
+    }
+  }
+
+  return { provided, factors, totals };
+}

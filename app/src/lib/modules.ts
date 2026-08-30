@@ -27,6 +27,7 @@ import merch from './features/merch/module';
 import youth from './features/youth/module';
 import contracts from './features/contracts/module';
 import cup from './features/cup/module';
+import knowledge from './features/knowledge/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -44,6 +45,7 @@ const declared: readonly ModuleDef[] = [
   calendar,
   transfer,
   staff,
+  knowledge,
   sponsors,
   merch,
   history,

@@ -1,6 +1,7 @@
 <script lang="ts">
   /** Structure only. Visual language belongs to the Creative Director. */
-  import { game } from '$lib/state/game.svelte';
+  import { game, registry } from '$lib/state/game.svelte';
+  import { previewPre } from '$lib/engine/clock';
   import { currentStep, takeStep } from '$lib/shell';
   import LiveMatch from './LiveMatch.svelte';
   import { dismiss, skipToEnd, atInterval } from '$lib/state/live.svelte';
@@ -29,7 +30,22 @@
   const isHome = $derived(fixture?.isHome ?? true);
   const base = $derived(teamStrength(squad, false));
   const mods = $derived(modifiers(m, isHome));
-  const effective = $derived(effectiveStrength(m, base, isHome));
+  /*
+   * The number the SIMULATION will use, not a second guess at it.
+   *
+   * This chip summed the squad and the tactics and knew nothing about the
+   * backroom or the doctrine, so a player who bought a +2 node saw 60 here and
+   * watched the match resolve at 62. Two surfaces, two answers, and the wrong
+   * one was the one they were looking at.
+   *
+   * `previewPre` runs the real `pre` hooks over a throwaway copy of the state
+   * and reports what they published, so this cannot drift from the tick — it IS
+   * the tick, discarded instead of kept.
+   */
+  const effective = $derived(
+    previewPre(registry, game).provided.get('squad.strength') as number
+      ?? effectiveStrength(m, base, isHome)
+  );
 
   const available = $derived(squad.players.filter(isAvailable).length);
   const startingFitness = $derived(() => {
