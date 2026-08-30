@@ -13,6 +13,7 @@
 
 <script lang="ts" generics="T">
   import type { Snippet } from 'svelte';
+  import { rankEntries } from './rank';
 
   let {
     title,
@@ -49,25 +50,9 @@
    */
   let expanded = $state(false);
 
-  const ranked = $derived.by(() => {
-    const sorted = [...entries].sort((a, b) => (lowBest ? a.value - b.value : b.value - a.value));
-    /*
-     * Equal values share a rank, and the next one skips: 1, 2, 2, 4.
-     *
-     * Numbering them 1..n would quietly invent an order between two clubs that
-     * are level, and the table is the one place a reader trusts the number
-     * absolutely. This is also what real tables do, which is the stronger
-     * argument — a football reader notices immediately.
-     */
-    let lastValue: number | null = null;
-    let lastRank = 0;
-    return sorted.map((e, i) => {
-      const rank = lastValue !== null && e.value === lastValue ? lastRank : i + 1;
-      lastValue = e.value;
-      lastRank = rank;
-      return { ...e, rank };
-    });
-  });
+  /* Sorting and the tie rule live in `rank.ts` so they can be tested — an
+     off-by-one in the skip only shows when two entries happen to be level. */
+  const ranked = $derived(rankEntries(entries, lowBest));
 
   const shown = $derived(expanded ? ranked : ranked.slice(0, top));
   const hidden = $derived(Math.max(0, ranked.length - top));

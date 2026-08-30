@@ -1,6 +1,6 @@
 <script lang="ts">
   import { game } from '$lib/state/game.svelte';
-  import { Panel, StatChip, Button, DataTable, Leaderboard } from '$lib/ui';
+  import { Panel, StatChip, Button, DataTable, Leaderboard, Tabs } from '$lib/ui';
   import Crest from '$lib/graphics/Crest.svelte';
   import { coloursFor } from '$lib/graphics/clubColours';
   import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
@@ -73,6 +73,18 @@
   /** Nothing has been played yet, so every board would read zero across. */
   const anyPlayed = $derived(teams.some((t) => t.played > 0));
 
+  /*
+   * One view at a time.
+   *
+   * The screen was four stacked panels — summary, table, statistics, fixtures
+   * — which on a phone is close to a minute of scrolling to reach the bottom.
+   * Tabs turn "scroll past what you did not want" into "tap what you did".
+   *
+   * The summary stays ABOVE the strip because it answers "how am I doing",
+   * which is why you opened the screen, and because it is four chips.
+   */
+  let view = $state('tabelle');
+
   function stepMatchday(delta: number) {
     pickedMatchday = Math.max(1, Math.min(MATCHDAYS_PER_SEASON, matchday + delta));
   }
@@ -101,6 +113,17 @@
   </div>
 </Panel>
 
+<Tabs
+  label="Ligaansicht"
+  bind:active={view}
+  tabs={[
+    { id: 'tabelle', label: 'Tabelle' },
+    { id: 'spielplan', label: 'Spieltag' },
+    { id: 'statistik', label: 'Teamstatistik' }
+  ]}
+/>
+
+<div id="panel-tabelle" role="tabpanel" aria-labelledby="tab-tabelle" hidden={view !== 'tabelle'}>
 <Panel title="Tabelle" accent="accent" meta={levelName(level)}>
   <div class="levels">
     {#each leagueContent.levels as entry, index (entry.name)}
@@ -165,6 +188,7 @@
     {#if !isBottom}<span class="key relegation"></span> Abstieg{/if}
   </p>
 </Panel>
+</div>
 
 <!--
   Team statistics, as the Sportschau app does them: a title, three rows, and
@@ -174,6 +198,7 @@
   the end of. Eight at three rows each is a page. The full list is almost never
   what someone wants and is therefore exactly the wrong default.
 -->
+<div id="panel-statistik" role="tabpanel" aria-labelledby="tab-statistik" hidden={view !== 'statistik'}>
 {#if anyPlayed}
   <Panel title="Teamstatistik" accent="accent" meta={levelName(level)}>
     {#each boards as board (board.title)}
@@ -189,8 +214,14 @@
       </Leaderboard>
     {/each}
   </Panel>
+{:else}
+  <Panel title="Teamstatistik" accent="accent">
+    <p class="legend">Noch kein Spiel gespielt — es gibt nichts zu ranken.</p>
+  </Panel>
 {/if}
+</div>
 
+<div id="panel-spielplan" role="tabpanel" aria-labelledby="tab-spielplan" hidden={view !== 'spielplan'}>
 <Panel title="Spielplan" accent="accent" meta="Spieltag {matchday}">
   <div class="nav">
     <Button doc="league.fixtures" label="◀ Spieltag" variant="secondary" disabled={matchday <= 1} onclick={() => stepMatchday(-1)} />
@@ -235,6 +266,7 @@
     </ul>
   {/if}
 </Panel>
+</div>
 
 <style>
   /* A 3px marker on the rank rather than a tinted row — see the cell snippet. */
