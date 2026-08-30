@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   doctrines,
   doctrineIds,
+  doctrinesInOrder,
   affinity,
   affinityOf,
   coreNodes,
@@ -30,7 +31,24 @@ import {
 describe('doctrines', () => {
   it('are eight, ordered 1..8 with no gaps', () => {
     expect(doctrines).toHaveLength(8);
-    expect(doctrines.map((d) => d.order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect([...doctrines].map((d) => d.order).sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+  });
+
+  it('run pitch to crime, and every reader gets that order', () => {
+    /*
+     * The gradient is the argument: youth work leads to sports psychology
+     * leads to analytics, and you are four steps into a career before anyone
+     * mentions an envelope. Opening the menu with Schattenkabinett is a
+     * different game — it offers you a bribe on day one.
+     *
+     * Asserted through `doctrineIds` rather than the literal, because that is
+     * what every list, tab and tree actually reads.
+     */
+    expect(doctrineIds).toEqual([
+      'talent', 'psyche', 'data', 'curve', 'brand', 'industry', 'politics', 'shadow'
+    ]);
+    expect(doctrinesInOrder[0]!.id).toBe('talent');
+    expect(doctrinesInOrder[7]!.id).toBe('shadow');
   });
 
   it('are separable without colour', () => {

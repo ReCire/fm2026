@@ -5,9 +5,10 @@
   import { postToLedger } from '../finance/module';
   import { formatMoney } from '../finance/rules';
   import {
-    doctrines, knowledgeNodes, tierNames, fxLabels, flagLabels, affinityOf, affinityLabels,
+    doctrinesInOrder, knowledgeNodes, tierNames, fxLabels, flagLabels, affinityOf, affinityLabels,
     type KnowledgeNode, type FxKey
   } from './content';
+  import DoctrineTree from '$lib/graphics/DoctrineTree.svelte';
   import { canBuy, costOf, dormancyOf, rankOf, research, census } from './rules';
 
   const k = $derived(game.modules.knowledge);
@@ -19,7 +20,31 @@
   const counts = census(consumed);
 
   let open = $state<string | null>(null);
-  const doctrine = $derived(open ? doctrines.find((d) => d.id === open) : undefined);
+  const doctrine = $derived(open ? doctrinesInOrder.find((d) => d.id === open) : undefined);
+
+  let picked = $state<string | null>(null);
+  const node = $derived(picked ? knowledgeNodes.find((n) => n.id === picked) : undefined);
+
+  /* Computed once per doctrine rather than per node, so the tree can colour
+     140 marks without running the affordability check 140 times per keystroke. */
+  const openNow = $derived.by(() => {
+    const ids = new Set<string>();
+    if (!doctrine) return ids;
+    for (const n of nodesOf(doctrine.id)) {
+      if (canBuy(k, n, { money: game.modules.finance.money, leagueLevel: level, consumed }).ok) {
+        ids.add(n.id);
+      }
+    }
+    return ids;
+  });
+  const dormantIds = $derived.by(() => {
+    const ids = new Set<string>();
+    if (!doctrine) return ids;
+    for (const n of nodesOf(doctrine.id)) {
+      if (dormancyOf(n, consumed) !== 'live') ids.add(n.id);
+    }
+    return ids;
+  });
 
   const nodesOf = (id: string) =>
     knowledgeNodes.filter((n) => n.doctrine === id).sort((a, b) => a.tier - b.tier);
@@ -31,6 +56,16 @@
     for (const f of node.flags ?? []) lines.push(flagLabels[f]);
     return lines;
   }
+
+  /* The doctrine's colour, resolved to a token. tokens.css is the only file
+     allowed to define one, so this maps to the existing accent vocabulary
+     rather than minting eight more. */
+  const TINT: Record<string, string> = {
+    talent: 'var(--primary)', psyche: 'var(--purple)', data: 'var(--blue)',
+    curve: 'var(--danger)', brand: 'var(--accent)', industry: 'var(--industry)',
+    politics: 'var(--stocks, var(--blue))', shadow: 'var(--purple)'
+  };
+  const tintFor = (id: string) => TINT[id] ?? 'var(--primary)';
 
   function buy(node: KnowledgeNode) {
     const check = canBuy(k, node, { money: game.modules.finance.money, leagueLevel: level, consumed });
@@ -67,7 +102,7 @@
 {#if !doctrine}
   <Panel title="Doktrinen">
     <ul class="doctrines">
-      {#each doctrines as d (d.id)}
+      {#each doctrinesInOrder as d (d.id)}
         {@const mine = rankOf(k, d.id)}
         <!-- docs-check-ignore: a list row is navigation, not a control -->
         <button class="row" onclick={() => (open = d.id)}>
@@ -88,7 +123,7 @@
     <button class="back" onclick={() => (open = null)}>← Alle Doktrinen</button>
     <p class="intro">{doctrine.creed}</p>
     <ul class="affinity">
-      {#each doctrines.filter((o) => o.id !== doctrine.id && affinityOf(doctrine.id, o.id) !== 'neutral') as other (other.id)}
+      {#each doctrinesInOrder.filter((o) => o.id !== doctrine.id && affinityOf(doctrine.id, o.id) !== 'neutral') as other (other.id)}
         <li class={affinityOf(doctrine.id, other.id)}>
           {other.name} — {affinityLabels[affinityOf(doctrine.id, other.id)]}
         </li>
@@ -96,7 +131,40 @@
     </ul>
   </Panel>
 
-  {#each nodesOf(doctrine.id) as node (node.id)}
+  <!--
+    The tree, not fourteen stacked panels.
+
+    A list of fourteen cards is accurate and answers none of the questions a
+    player actually has here: how far in am I, what is next, and how much
+    further to the capstone. Those are shape questions, and only a shape
+    answers them — rows are tiers, lines are prerequisites, and the distance
+    between what you own and the last node is a distance you can see.
+
+    Tapping a node opens it below rather than navigating away, because
+    comparing two nodes means looking at the tree between them.
+  -->
+  <Panel title="Der Baum" accent="industry"
+         meta="{rankOf(k, doctrine.id)} von {nodesOf(doctrine.id).length}">
+    <div class="tree" style="--doctrine-tint: {tintFor(doctrine.id)}">
+      <DoctrineTree
+        nodes={nodesOf(doctrine.id)}
+        owned={new Set(k.owned)}
+        shape={doctrine.shape}
+        affordable={openNow}
+        dormant={dormantIds}
+        selected={picked}
+        onselect={(id) => (picked = picked === id ? null : id)}
+      />
+    </div>
+    <ul class="key">
+      <li><i class="sw owned"></i>freigeschaltet</li>
+      <li><i class="sw open"></i>verfügbar</li>
+      <li><i class="sw dorm"></i>noch nicht wirksam</li>
+      <li><i class="sw lock"></i>gesperrt</li>
+    </ul>
+  </Panel>
+
+  {#if node}
     {@const owned = k.owned.includes(node.id)}
     {@const state = dormancyOf(node, consumed)}
     {@const check = canBuy(k, node, { money: game.modules.finance.money, leagueLevel: level, consumed })}
@@ -127,10 +195,24 @@
         {/if}
       {/if}
     </Panel>
-  {/each}
+  {:else}
+    <p class="hint">Tippe einen Knoten an, um zu sehen was er kostet und was er bewirkt.</p>
+  {/if}
 {/if}
 
 <style>
+  .tree { margin: 0 calc(var(--s3) * -1); }
+  .key {
+    list-style: none; margin: var(--s3) 0 0; padding: 0;
+    display: flex; flex-wrap: wrap; gap: var(--s3);
+    font-size: var(--fs-caption); color: var(--text-muted);
+  }
+  .key li { display: flex; align-items: center; gap: var(--s1); }
+  .sw { width: 11px; height: 11px; border-radius: 2px; border: 2px solid var(--border-strong); }
+  .sw.owned { background: var(--primary); border-color: var(--primary); }
+  .sw.open { border-color: var(--primary); }
+  .sw.dorm { border-style: dashed; opacity: .6; }
+  .hint { color: var(--text-dim); font-size: var(--fs-caption); text-align: center; padding: var(--s4) 0; }
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); margin-bottom: var(--s3); }
   .intro { color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-body); }
   .muted { color: var(--text-dim); font-size: var(--fs-caption); line-height: var(--lh-body); margin-top: var(--s2); }

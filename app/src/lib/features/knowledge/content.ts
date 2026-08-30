@@ -70,6 +70,19 @@ export const DoctrineSchema = z.object({
 });
 export type Doctrine = z.infer<typeof DoctrineSchema>;
 
+/*
+ * Order is the reading order of the whole game.
+ *
+ * It runs pitch → people → commerce → power → crime, so a new manager meets
+ * Talentschmiede first and Schattenkabinett last. The prototype had Schatten at
+ * position one, which is a different game: it opens by offering you a bribe.
+ *
+ * The gradient is the argument. Every doctrine has to look reasonable from the
+ * one before it — youth work leads to sports psychology leads to analytics, and
+ * you are four steps into a career before anyone mentions an envelope. A player
+ * who ends up running a shadow cabinet should be able to trace how they got
+ * there, and never have chosen it off a menu on day one.
+ */
 export const doctrines: Doctrine[] = z.array(DoctrineSchema).length(8).parse([
   {
     id: 'shadow',
@@ -78,7 +91,7 @@ export const doctrines: Doctrine[] = z.array(DoctrineSchema).length(8).parse([
     abbr: 'SCH',
     glyph: '🎭',
     shape: 'triangle-down',
-    order: 1,
+    order: 8,
     creed:
       'Ein Spiel wird nicht auf dem Rasen entschieden, sondern in Hinterzimmern. Wer die Umschläge packt, die Wetten hält und den Verband kennt, braucht keine besseren Spieler.',
     ranks: ['Mitläufer', 'Strohmann', 'Mittelsmann', 'Strippenzieher', 'Konsigliere', 'Der Pate']
@@ -90,7 +103,7 @@ export const doctrines: Doctrine[] = z.array(DoctrineSchema).length(8).parse([
     abbr: 'MRK',
     glyph: '🔥',
     shape: 'circle',
-    order: 2,
+    order: 5,
     creed:
       'Der Verein ist das Produkt. Wappen, Dose, Serie, Stadionname - jeder Berührungspunkt verkauft. Titel sind Marketing, Marketing ist der Titel.',
     ranks: ['Vereinsheim', 'Regionalmarke', 'Landesmarke', 'Kontinentalmarke', 'Konzern', 'Weltmarke']
@@ -114,7 +127,7 @@ export const doctrines: Doctrine[] = z.array(DoctrineSchema).length(8).parse([
     abbr: 'TAL',
     glyph: '🌱',
     shape: 'triangle-up',
-    order: 4,
+    order: 1,
     creed:
       'Kaufen kann jeder. Wir bauen Spieler. Bolzplatz, Internat, Eliteschule, Profikader - eine Kette, die niemand mit Geld abkürzen kann.',
     ranks: ['Kreisliga-Sichtung', 'Jugendarbeit', 'Leistungszentrum', 'Akademie', 'Kaderschmiede', 'Dynastie']
@@ -126,7 +139,7 @@ export const doctrines: Doctrine[] = z.array(DoctrineSchema).length(8).parse([
     abbr: 'KUR',
     glyph: '✊',
     shape: 'arch',
-    order: 5,
+    order: 4,
     creed:
       'Der Verein gehört nicht dem, der zahlt, sondern dem, der singt. Mitglieder statt Aktionäre, Stehplatz statt Loge, Choreo statt Werbeclip.',
     ranks: ['Fanclub', 'Szene', 'Dachverband', 'Mitgliederbasis', 'Genossenschaft', 'Republik']
@@ -150,7 +163,7 @@ export const doctrines: Doctrine[] = z.array(DoctrineSchema).length(8).parse([
     abbr: 'MEN',
     glyph: '🧿',
     shape: 'diamond',
-    order: 7,
+    order: 2,
     creed:
       'Die letzten zehn Prozent liegen nie in den Beinen. Wer Druck, Angst und Gewissheit steuert, gewinnt Spiele, die er nach Stärke verlieren müsste.',
     ranks: ['Kabinenansprache', 'Betreuung', 'Sportpsychologie', 'Programm', 'Institut', 'Fabrik']
@@ -162,14 +175,25 @@ export const doctrines: Doctrine[] = z.array(DoctrineSchema).length(8).parse([
     abbr: 'LOG',
     glyph: '🕊️',
     shape: 'ring',
-    order: 8,
+    order: 7,
     creed:
       'Die wichtigsten Entscheidungen der Saison fallen in Sitzungssälen ohne Kameras. Wer dort sitzt, spielt ein anderes Turnier als der Rest der Liga.',
     ranks: ['Bittsteller', 'Delegierter', 'Ausschuss', 'Präsidium', 'Exekutive', 'Loge']
   }
 ]);
 
-export const doctrineIds = doctrines.map((d) => d.id);
+/*
+ * Sorted by `order`, not by the sequence they happen to be written in.
+ *
+ * Two sources of truth for the same sequence is one too many: the literal was
+ * still in the old order after `order` was changed, so every list rendered
+ * pitch-to-crime and every tab rendered crime-first, and both were "correct".
+ * Everything downstream reads this, so the field is the only ordering that
+ * exists.
+ */
+export const doctrinesInOrder: Doctrine[] = [...doctrines].sort((a, b) => a.order - b.order);
+
+export const doctrineIds = doctrinesInOrder.map((d) => d.id);
 export type DoctrineId = (typeof doctrineIds)[number];
 
 /* ─────────────────────────────────────────────────────────────────────────
