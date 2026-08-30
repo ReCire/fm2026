@@ -1,5 +1,5 @@
 import type { Footprint } from './iso';
-import { PLOT_SIZES, buildings, buildingById, type Building, type PlotSize } from '$lib/content/campus';
+import { PLOT_SIZES, buildings, buildingById, effectiveLevels, type Building, type PlotSize } from '$lib/content/campus';
 
 /**
  * The site plan.
@@ -140,7 +140,11 @@ export interface Placed {
  * ground — which is exactly what a fourth-division club looks like, so the
  * placeholder and the real thing agree on the only case that ships today.
  */
-export function layout(levels: Record<string, number> = {}): Placed[] {
+export function layout(stored: Record<string, number> = {}): Placed[] {
+  // One rule for "what level is this", shared with the catalogue. See
+  // `effectiveLevels` — the map and the price list disagreeing about whether
+  // the club owns its own changing rooms was exactly this function guessing.
+  const levels = effectiveLevels(stored);
   const concealedByHost = new Map<string, Building>();
   for (const [buildingId, plotId] of Object.entries(HIDDEN_HOSTS)) {
     if ((levels[buildingId] ?? -1) >= 0) {
@@ -151,13 +155,7 @@ export function layout(levels: Record<string, number> = {}): Placed[] {
 
   return plots.map((p) => {
     const building = buildingById.get(ASSIGNMENT[p.id] ?? '') ?? null;
-    const stored = building ? levels[building.id] : undefined;
-    const level =
-      stored !== undefined
-        ? stored
-        : building && building.costs[0] === 0
-          ? 0
-          : -1;
+    const level = building ? (levels[building.id] ?? -1) : -1;
     return {
       plot: p,
       footprint: footprintOf(p),
@@ -183,13 +181,13 @@ export function heightOf(placed: Placed): number {
  * campus can see that it is sparse but cannot see how sparse — and "9 von 54
  * Ausbaustufen" is the sentence that turns a picture into a target.
  */
-export function development(levels: Record<string, number> = {}): { built: number; possible: number } {
+export function development(stored: Record<string, number> = {}): { built: number; possible: number } {
+  const levels = effectiveLevels(stored);
   let built = 0;
   let possible = 0;
   for (const b of buildings) {
     possible += b.costs.length;
-    const lvl = levels[b.id] ?? (b.costs[0] === 0 ? 0 : -1);
-    built += Math.max(0, lvl + 1);
+    built += Math.max(0, (levels[b.id] ?? -1) + 1);
   }
   return { built, possible };
 }

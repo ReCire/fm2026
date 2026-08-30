@@ -27,8 +27,15 @@ import { z } from 'zod';
 export const CategorySchema = z.object({
   id: z.string(),
   label: z.string(),
-  /** The design token this category tints with — never a raw colour. */
-  accent: z.enum(['primary', 'accent', 'blue', 'danger', 'industry', 'purple']),
+  /*
+   * Restricted to the six accents `Panel` already speaks.
+   *
+   * Six categories against six accents is a clean fit, and minting `blue` and
+   * `purple` panel variants to get a nicer match would have grown the design
+   * system to serve one screen. A vocabulary that expands whenever a screen
+   * wants a shade is not a vocabulary.
+   */
+  accent: z.enum(['primary', 'accent', 'industry', 'europe', 'danger', 'gold']),
   note: z.string()
 });
 export type Category = z.infer<typeof CategorySchema>;
@@ -55,7 +62,7 @@ export const categories: Category[] = z.array(CategorySchema).parse([
   {
     id: 'intel',
     label: 'Intelligenz',
-    accent: 'blue',
+    accent: 'europe',
     note: 'Wissen, das die Konkurrenz auch haben könnte und nicht hat.'
   },
   {
@@ -67,7 +74,7 @@ export const categories: Category[] = z.array(CategorySchema).parse([
   {
     id: 'secrets',
     label: 'Geheimnisse',
-    accent: 'purple',
+    accent: 'gold',
     note: 'Steht in keinem Lageplan, der das Rathaus je erreicht hat.'
   }
 ]);
@@ -510,6 +517,27 @@ export const buildingById: ReadonlyMap<string, Building> = new Map(buildings.map
 /** Buildings that cost nothing to start are what a club HAS, not what it buys. */
 export function isFounding(b: Building): boolean {
   return b.costs[0] === 0;
+}
+
+/**
+ * The level every building is actually at, founding buildings included.
+ *
+ * ONE place, because the alternative already bit: the map drew four rusting
+ * containers while the catalogue offered to sell you a Kabinentrakt for €0,
+ * and both were "right" — the map applied "a club already has this" and the
+ * stored state said nothing was built. A club being asked to construct the
+ * changing rooms it is currently standing in is the visible half of that; the
+ * invisible half is two rules for one fact, drifting.
+ *
+ * A founding building is not bought, it is inherited. `costs[0] === 0` is the
+ * whole definition and this function is the only reader of it.
+ */
+export function effectiveLevels(stored: Record<string, number>): Record<string, number> {
+  const out: Record<string, number> = { ...stored };
+  for (const b of buildings) {
+    if (isFounding(b) && out[b.id] === undefined) out[b.id] = 0;
+  }
+  return out;
 }
 
 /**
