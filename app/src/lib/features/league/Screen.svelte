@@ -1,6 +1,8 @@
 <script lang="ts">
   import { game } from '$lib/state/game.svelte';
-  import { Panel, StatChip, Button, DataTable } from '$lib/ui';
+  import { Panel, StatChip, Button, DataTable, Leaderboard } from '$lib/ui';
+  import Crest from '$lib/graphics/Crest.svelte';
+  import { coloursFor } from '$lib/graphics/clubColours';
   import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
   import { standings, playerFixture, levelName, matchdayFixtures } from './rules';
 
@@ -31,6 +33,45 @@
 
   const nameAt = (index: number) => teams[index]?.name ?? '—';
   const idAt = (index: number) => teams[index]?.id ?? '';
+
+  /*
+   * Division leaderboards, from what the league actually records.
+   *
+   * Deliberately team-level. A Torjäger board is the first thing anyone wants
+   * from a football stats screen and the match model does not attribute
+   * scorers yet — so building one would mean an empty list or an invented one,
+   * and an invented statistic is worse than a missing tab. These four are all
+   * read straight off the table.
+   */
+  const boards = $derived([
+    {
+      title: 'Meiste Tore',
+      unit: 'Tore',
+      lowBest: false,
+      entries: teams.map((t) => ({ id: t.id, name: t.name, value: t.goalsFor, row: t }))
+    },
+    {
+      title: 'Beste Abwehr',
+      unit: 'Gegentore',
+      lowBest: true,
+      entries: teams.map((t) => ({ id: t.id, name: t.name, value: t.goalsAgainst, row: t }))
+    },
+    {
+      title: 'Meiste Siege',
+      unit: 'Siege',
+      lowBest: false,
+      entries: teams.map((t) => ({ id: t.id, name: t.name, value: t.won, row: t }))
+    },
+    {
+      title: 'Unentschieden',
+      unit: 'Remis',
+      lowBest: false,
+      entries: teams.map((t) => ({ id: t.id, name: t.name, value: t.drawn, row: t }))
+    }
+  ]);
+
+  /** Nothing has been played yet, so every board would read zero across. */
+  const anyPlayed = $derived(teams.some((t) => t.played > 0));
 
   function stepMatchday(delta: number) {
     pickedMatchday = Math.max(1, Math.min(MATCHDAYS_PER_SEASON, matchday + delta));
@@ -74,20 +115,44 @@
 
   <DataTable
     columns={[
-      { key: 'pos',    label: '#',     role: 'primary',   numeric: true },
+      /*
+       * Column order and labels follow a printed football table, which is what
+       * every reader of this screen has already learned: rank, club, played,
+       * goals as a SCORE, difference, points. Goals were a `detail` column and
+       * therefore hidden on a phone — but "51:22" is the line a football reader
+       * checks second, after the points.
+       */
+      { key: 'pos',    label: '#',      role: 'primary',   numeric: true },
       { key: 'name',   label: 'Verein', role: 'primary' },
-      { key: 'points', label: 'Pkt',   role: 'primary',   numeric: true },
-      { key: 'played', label: 'Sp',    role: 'secondary', numeric: true },
-      { key: 'diff',   label: 'Diff',  role: 'secondary', numeric: true },
-      { key: 'goals',  label: 'Tore',  role: 'detail',    numeric: true }
+      { key: 'played', label: 'Sp.',    role: 'secondary', numeric: true },
+      { key: 'goals',  label: 'Tore',   role: 'secondary', numeric: true },
+      { key: 'diff',   label: 'Diff.',  role: 'secondary', numeric: true },
+      { key: 'points', label: 'Pkt.',   role: 'primary',   numeric: true }
     ]}
     rows={table}
     id={(t) => t.team.name}
     title={(t) => t.team.name}
   >
     {#snippet cell(t, key)}
-      {#if key === 'pos'}{t.pos}.
-      {:else if key === 'name'}{t.team.name}
+      {#if key === 'pos'}
+        <!--
+          The zone as a bar on the rank, not a tinted row.
+          A coloured row background fights every value sitting on it and forces
+          the text contrast down to keep it readable. A 3px edge marker on the
+          number carries the same fact, costs no legibility, and is what a real
+          table does. The legend below names both zones in words, because a
+          colour on its own is not a channel.
+        -->
+        <span
+          class="zone"
+          class:promotion={t.pos <= promotionZone && !isTop}
+          class:relegation={t.pos > relegationZone && !isBottom}
+        >{t.pos}</span>
+      {:else if key === 'name'}
+        <span class="club">
+          <Crest name={t.team.name} colours={coloursFor(t.team.id)} size={20} plain />
+          <span class="clubname" class:mine={t.team.id === league.playerClubId}>{t.team.name}</span>
+        </span>
       {:else if key === 'played'}{t.team.played}
       {:else if key === 'goals'}{t.team.goalsFor}:{t.team.goalsAgainst}
       {:else if key === 'diff'}{t.goalDifference > 0 ? '+' : ''}{t.goalDifference}
@@ -100,6 +165,31 @@
     {#if !isBottom}<span class="key relegation"></span> Abstieg{/if}
   </p>
 </Panel>
+
+<!--
+  Team statistics, as the Sportschau app does them: a title, three rows, and
+  everything else one tap away.
+
+  Eight stat categories at eighteen rows each is a scroll wall nobody reaches
+  the end of. Eight at three rows each is a page. The full list is almost never
+  what someone wants and is therefore exactly the wrong default.
+-->
+{#if anyPlayed}
+  <Panel title="Teamstatistik" accent="accent" meta={levelName(level)}>
+    {#each boards as board (board.title)}
+      <Leaderboard
+        title={board.title}
+        unit={board.unit}
+        lowBest={board.lowBest}
+        entries={board.entries}
+      >
+        {#snippet mark(team)}
+          <Crest name={team.name} colours={coloursFor(team.id)} size={22} plain />
+        {/snippet}
+      </Leaderboard>
+    {/each}
+  </Panel>
+{/if}
 
 <Panel title="Spielplan" accent="accent" meta="Spieltag {matchday}">
   <div class="nav">
@@ -128,6 +218,20 @@
 </Panel>
 
 <style>
+  /* A 3px marker on the rank rather than a tinted row — see the cell snippet. */
+  .zone {
+    display: inline-block; padding-left: var(--s2);
+    border-left: 3px solid transparent;
+  }
+  .zone.promotion { border-left-color: var(--primary); }
+  .zone.relegation { border-left-color: var(--danger); }
+
+  .club { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
+  .clubname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Your own club, found by id. Weight rather than colour, so it reads in
+     greyscale and does not compete with the promotion and relegation marks. */
+  .clubname.mine { font-weight: 800; }
+
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); }
   .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--s2); margin-bottom: var(--s2); }
   .nav { display: flex; gap: var(--s2); margin-bottom: var(--s2); }
