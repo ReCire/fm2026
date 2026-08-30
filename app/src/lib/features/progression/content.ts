@@ -56,7 +56,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 150_000,
     startingTransferBudget: 100_000,
     unlockedAtStart: [...CORE, 'stadium'],
-    unlockOrder: ['transfer', 'youth', 'staff', 'sponsors', 'merch', 'fans', 'cup'],
+    unlockOrder: ['transfer', 'youth', 'staff', 'sponsors', 'merch', 'fans'],
     difficulty: 'normal'
   },
   {
@@ -70,7 +70,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 2_400_000,
     startingTransferBudget: 1_800_000,
     unlockedAtStart: [...CORE, 'stadium', 'transfer', 'staff', 'sponsors'],
-    unlockOrder: ['contracts', 'merch', 'youth', 'europe', 'fans', 'cup'],
+    unlockOrder: ['contracts', 'merch', 'youth', 'europe', 'fans'],
     difficulty: 'hart'
   },
   {

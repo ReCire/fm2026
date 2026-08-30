@@ -26,6 +26,7 @@ import sponsors from './features/sponsors/module';
 import merch from './features/merch/module';
 import youth from './features/youth/module';
 import contracts from './features/contracts/module';
+import cup from './features/cup/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -39,6 +40,7 @@ const declared: readonly ModuleDef[] = [
   stadium,
   league,
   matchday,
+  cup,
   calendar,
   transfer,
   staff,
