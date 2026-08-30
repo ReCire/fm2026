@@ -1,6 +1,7 @@
 <script lang="ts" generics="T">
   import type { Snippet } from 'svelte';
-  import type { Column } from './table';
+  import type { Column, SortState } from './table';
+  import { sortRows, nextSort } from './table';
   import Sheet from './Sheet.svelte';
 
   let {
@@ -12,7 +13,8 @@
     id,
     /** Row heading for the phone layout's detail sheet. */
     title,
-    empty = 'Keine Einträge.'
+    empty = 'Keine Einträge.',
+    defaultSort
   }: {
     columns: Column[];
     rows: T[];
@@ -20,7 +22,24 @@
     id: (row: T) => string;
     title?: (row: T) => string;
     empty?: string;
+    /** Column key to order by on first render. */
+    defaultSort?: string;
   } = $props();
+
+  /*
+   * Sorting lives in the component so every table in the game sorts the same
+   * way, and so a screen cannot accidentally sort the array it was handed —
+   * which would reorder the squad itself rather than the view of it.
+   */
+  const sortable = $derived(columns.filter((c) => c.sort));
+  let sort = $state<SortState>(null);
+  $effect(() => {
+    if (sort === null && defaultSort) {
+      const c = columns.find((x) => x.key === defaultSort && x.sort);
+      if (c) sort = nextSort(c, null);
+    }
+  });
+  const ordered = $derived(sortRows(rows, columns, sort));
 
   const primary = $derived(columns.filter((c) => c.role === 'primary'));
   const secondary = $derived(columns.filter((c) => c.role === 'secondary'));
@@ -38,7 +57,24 @@
       <thead>
         <tr>
           {#each columns as c (c.key)}
-            <th class:num={c.numeric}>{c.label}</th>
+            <th class:num={c.numeric} aria-sort={sort?.key === c.key
+              ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+              {#if c.sort}
+                <!-- The header IS the control; a separate sort button beside it
+                     would be a second target for the same job. -->
+                <!-- docs-check-ignore: column sort, named by the column itself -->
+                <button type="button" class="sort" class:on={sort?.key === c.key}
+                        onclick={() => (sort = nextSort(c, sort))}>
+                  {c.label}
+                  <!-- A glyph, not colour: which way a column is sorted has to
+                       survive greyscale, and an arrow is the only thing anyone
+                       looks for. -->
+                  <i aria-hidden="true">{sort?.key === c.key ? (sort.dir === 'asc' ? '▲' : '▼') : '↕'}</i>
+                </button>
+              {:else}
+                {c.label}
+              {/if}
+            </th>
           {/each}
         </tr>
       </thead>
@@ -47,7 +83,7 @@
              key: sort the squad and Svelte reuses DOM nodes positionally, so
              per-row state attaches to the wrong player — which makes the player
              distrust every number on screen, including the correct ones. -->
-        {#each rows as r (id(r))}
+        {#each ordered as r (id(r))}
           <tr>
             {#each columns as c (c.key)}
               <td class:num={c.numeric}>{@render cell(r, c.key)}</td>
@@ -58,9 +94,34 @@
     </table>
   </div>
 
-  <!-- Narrow: rows, not a squeezed table. -->
+  <!-- Narrow: rows, not a squeezed table. Sorting is a select rather than a
+       row of headers, because on a phone there are no headers to click — and
+       being able to order a squad by fitness matters more on the small screen,
+       where you can see six rows at once instead of twenty. -->
+  {#if sortable.length > 0}
+    <div class="sortbar">
+      <label for="sort-by">Sortieren</label>
+      <!-- docs-check-ignore: view ordering, labelled inline; changes nothing in the game -->
+      <select id="sort-by" value={sort?.key ?? ''}
+              onchange={(e) => {
+                const c = columns.find((x) => x.key === e.currentTarget.value);
+                sort = c ? nextSort(c, null) : null;
+              }}>
+        <option value="">Standard</option>
+        {#each sortable as c (c.key)}<option value={c.key}>{c.label}</option>{/each}
+      </select>
+      {#if sort}
+        <!-- docs-check-ignore: reverses the ordering above, labelled -->
+        <button type="button" class="dir"
+                aria-label={sort.dir === 'asc' ? 'Aufsteigend, umkehren' : 'Absteigend, umkehren'}
+                onclick={() => (sort = { key: sort!.key, dir: sort!.dir === 'asc' ? 'desc' : 'asc' })}>
+          {sort.dir === 'asc' ? '▲' : '▼'}
+        </button>
+      {/if}
+    </div>
+  {/if}
   <ul class="narrow">
-    {#each rows as r (id(r))}
+    {#each ordered as r (id(r))}
       <li>
         <div class="lines">
           <p class="line1">
@@ -104,6 +165,31 @@
 
 <style>
   .empty { color: var(--text-muted); font-size: var(--fs-caption); padding: var(--s3) 0; }
+
+  .sort {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: none; border: 0; padding: 0; cursor: pointer;
+    font: inherit; font-size: var(--fs-caption); text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-dim);
+  }
+  .sort:hover { color: var(--text-main); }
+  .sort.on { color: var(--text-main); }
+  .sort i { font-style: normal; font-size: 9px; opacity: 0.55; }
+  .sort.on i { opacity: 1; }
+  .sort:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  .sortbar { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) 0; }
+  .sortbar label { font-size: var(--fs-caption); color: var(--text-muted); }
+  .sortbar select {
+    font: inherit; font-size: var(--fs-caption); color: var(--text-main);
+    background: var(--bg-inset); border: 1px solid var(--border);
+    border-radius: var(--r-sm); padding: 0 var(--s2); min-height: var(--tap);
+  }
+  .sortbar .dir {
+    min-width: var(--tap); min-height: var(--tap);
+    background: var(--bg-inset); color: var(--text-main);
+    border: 1px solid var(--border); border-radius: var(--r-sm); cursor: pointer;
+  }
 
   .wide { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { border-collapse: collapse; width: 100%; font-size: var(--fs-body); }

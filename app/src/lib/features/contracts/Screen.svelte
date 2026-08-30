@@ -12,6 +12,34 @@
   import { wageBill } from '../squad/rules';
   import type { Player } from '../squad/state';
   import { renewalOptions, renewContract, type RenewalQuote } from './rules';
+  import { playerColumns, playerCell } from '../squad/playerColumns';
+  import type { Column } from '$lib/ui';
+
+  /*
+   * The shared player columns first, then this screen's own.
+   *
+   * "Is he worth renewing?" is a question about the PLAYER — how good, what
+   * shape, how old — and this table answered none of it: a name, a number of
+   * matchdays and a wage. You had to open the squad screen and hold it in your
+   * head while you decided.
+   *
+   * Declared here rather than inline because a Svelte template cannot carry a
+   * type assertion, and the sort functions need one.
+   */
+  const COLUMNS: Column[] = [
+    ...playerColumns,
+    {
+      key: 'left', label: 'Restlaufzeit', role: 'primary', numeric: true,
+      // Shortest first: this table exists to show you who is about to leave.
+      firstClick: 'asc',
+      sort: (p) => (p as Player).contractMatchdays
+    },
+    {
+      key: 'wage', label: 'Gehalt', role: 'secondary', numeric: true,
+      sort: (p) => (p as Player).wage
+    },
+    { key: 'renew', label: 'Verlängern', role: 'secondary' }
+  ];
   import { contractsContent } from './content';
 
   const squad = $derived(game.modules.squad);
@@ -55,27 +83,18 @@
 
 <Panel title="Vertragsübersicht" accent="primary" meta="{rows.length} Spieler">
   <DataTable
-    columns={[
-      { key: 'name', label: 'Name', role: 'primary' },
-      { key: 'left', label: 'Restlaufzeit', role: 'primary', numeric: true },
-      { key: 'wage', label: 'Gehalt', role: 'secondary', numeric: true },
-      { key: 'renew', label: 'Verlängern', role: 'secondary' },
-      { key: 'pos', label: 'Pos', role: 'detail' }
-    ]}
+    columns={COLUMNS}
     rows={rows}
     id={(p) => p.id}
     title={(p) => p.name}
+    defaultSort="left"
   >
     {#snippet cell(r, key)}
-      {#if key === 'name'}
-        {r.name}
-      {:else if key === 'pos'}
-        <span class="dim">{r.pos}</span>
-      {:else if key === 'left'}
+      {#if key === 'left'}
         <span class:soon={r.contractMatchdays <= contractsContent.warnAtMatchdays}>{r.contractMatchdays}</span>
       {:else if key === 'wage'}
         <span class="dim">{formatMoney(r.wage)}</span>
-      {:else}
+      {:else if key === 'renew'}
         <div class="renew-actions">
           {#each renewalOptions(r) as quote (quote.doc)}
             <Button
@@ -87,6 +106,8 @@
             />
           {/each}
         </div>
+      {:else}
+        <span class:dim={key !== 'name' && key !== 'strength'}>{playerCell(r, key)}</span>
       {/if}
     {/snippet}
   </DataTable>

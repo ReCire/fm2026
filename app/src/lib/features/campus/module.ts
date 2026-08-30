@@ -1,5 +1,5 @@
 import { defineModule } from '$lib/engine/module';
-import { CampusSchema, createCampus, CAMPUS_VERSION } from './state';
+import { CampusSchema, createCampus, CAMPUS_VERSION, migrateCampus } from './state';
 
 export default defineModule({
   id: 'campus',
@@ -8,7 +8,10 @@ export default defineModule({
   nav: { group: 'Verein', icon: '🏗️', order: 40 },
   requires: ['finance'],
 
-  state: { schema: CampusSchema, create: createCampus, version: CAMPUS_VERSION },
+  state: {
+    schema: CampusSchema, create: createCampus,
+    version: CAMPUS_VERSION, migrate: migrateCampus
+  },
 
   /*
    * No hooks. Building is something the player does on a screen, and a

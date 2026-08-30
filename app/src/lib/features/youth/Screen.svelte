@@ -1,6 +1,9 @@
 <script lang="ts">
   import { game } from '$lib/state/game.svelte';
-  import { Panel, Button, StatChip, toast } from '$lib/ui';
+  import { Panel, Button, StatChip, DataTable, toast } from '$lib/ui';
+  import type { Column } from '$lib/ui';
+  import { playerColumns, playerCell } from '../squad/playerColumns';
+  import type { Player } from '../squad/state';
   import { postToLedger, formatMoney } from '../finance/module';
   import { strengthOf } from '../squad/rules';
   import { levelUpgradeCost, capacity, scoutCost, canUpgrade, canScout, upgrade, scout, scoutRng } from './rules';
@@ -49,6 +52,20 @@
     const prospect = scout(youth, scoutRng(youth, game.meta.seed));
     if (prospect) toast('Talent gefunden', `${prospect.name}, ${prospect.age} Jahre, ${prospect.pos}`, 'good');
   }
+
+  /*
+   * Shared player columns plus the one fact that is only true in here.
+   * Sorted by strength first, because the academy screen is read to answer
+   * "which of these is actually going to be a player?".
+   */
+  const COLUMNS: Column[] = [
+    ...playerColumns,
+    {
+      key: 'graduates', label: 'Graduiert', role: 'secondary',
+      firstClick: 'asc',
+      sort: (p) => (p as Player).age
+    }
+  ];
 </script>
 
 <Panel title="Jugendakademie" accent="accent">
@@ -74,42 +91,33 @@
 </Panel>
 
 <Panel title="Talente" accent="primary" meta="{youth.prospects.length} in der Akademie">
-  {#if youth.prospects.length === 0}
-    <p class="empty">Keine Talente in der Akademie. Scoute eines, um anzufangen.</p>
-  {:else}
-    <ul class="prospects">
-      {#each youth.prospects as p (p.id)}
-        <li>
-          <div class="head">
-            <span class="pos">{p.pos}</span>
-            <span class="who">{p.name}</span>
-            <span class="age">{p.age} J.</span>
-          </div>
-          <div class="stats">
-            <span class="dim">Stärke {strengthOf(p)}</span>
-            <span class="dim">Graduiert mit {youthContent.graduationAge}</span>
-          </div>
-        </li>
-      {/each}
-    </ul>
-  {/if}
+  <!-- The same table as everywhere else a player is listed.
+       A prospect is exactly where the player most needs to see state: the whole
+       decision is "is this one worth the years?", and a name with a strength
+       number cannot answer it. Now his shape, his age, his strongest facet and
+       his talent are all on one row — and the table sorts, so "who is closest
+       to graduating" and "who is best" are one click apart. -->
+  <DataTable
+    columns={COLUMNS}
+    rows={youth.prospects}
+    id={(p) => p.id}
+    title={(p) => p.name}
+    defaultSort="strength"
+    empty="Keine Talente in der Akademie. Scoute eines, um anzufangen."
+  >
+    {#snippet cell(r, key)}
+      {#if key === 'graduates'}
+        <span class="dim">mit {youthContent.graduationAge} ({Math.max(0, youthContent.graduationAge - r.age)} J.)</span>
+      {:else}
+        <span class:dim={key !== 'name' && key !== 'strength'}>{playerCell(r, key)}</span>
+      {/if}
+    {/snippet}
+  </DataTable>
 </Panel>
 
 <style>
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--s2); margin-bottom: var(--s3); }
   .actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
-  .empty { color: var(--text-muted); font-size: var(--fs-caption); padding: var(--s2) 0; }
   .dim { color: var(--text-dim); }
 
-  .prospects { list-style: none; margin: 0; padding: 0; }
-  .prospects li { padding: var(--s3) 0; border-bottom: 1px solid var(--border); }
-  .prospects li:last-child { border-bottom: 0; }
-  .head { display: flex; align-items: baseline; gap: var(--s2); margin-bottom: var(--s1); }
-  .pos {
-    flex: none; font-size: var(--fs-caption); color: var(--accent-ink);
-    background: var(--bg-inset); border-radius: var(--r-sm); padding: 1px var(--s2);
-  }
-  .head .who { flex: 1; font-size: var(--fs-body); color: var(--text-main); }
-  .age { font-size: var(--fs-caption); color: var(--text-dim); }
-  .stats { display: flex; gap: var(--s3); font-size: var(--fs-caption); }
 </style>

@@ -3,7 +3,7 @@ import { createRng } from '$lib/engine/rng';
 import { Registry } from '$lib/engine/registry';
 import { modules } from '$lib/modules';
 import { buildings, buildable, totalCost } from '$lib/content/campus';
-import { createCampus } from './state';
+import { createCampus, migrateCampus } from './state';
 import {
   levelOf, isBuilt, maxLevel, isMaxed, nextCost, canBuild, build,
   investedIn, progress, catalogue, type BuildContext
@@ -16,23 +16,59 @@ const ctx = (over: Partial<BuildContext> = {}): BuildContext => ({
   money: 100_000_000, registered, ranks: {}, ...over
 });
 
+/* Something that can actually be stepped: not doctrine-gated, and with room
+   left above whatever the club was founded with. */
 const freeToBuild = () =>
-  buildable(registered).find((b) => !b.doctrine && (b.costs[0] ?? 0) === 0)
+  buildable(registered).find((b) => !b.doctrine && b.costs.length > 1)
   ?? buildable(registered)[0]!;
 
-describe('an unbuilt plot is grass, not a building at level zero', () => {
-  it('reports -1 for something never built', () => {
+/**
+ * A club is not founded on an empty field.
+ *
+ * `costs[0] === 0` means "the club already has this" — four containers still
+ * count as a Kabinentrakt. `built: {}` said it owned nothing, so the map drew
+ * the containers while the catalogue offered to sell the manager the changing
+ * rooms they were standing in, for €0. Both halves right, silently disagreeing.
+ */
+const founding = () => buildings.filter((b) => (b.costs[0] ?? 0) === 0);
+const mustBeBuilt = () => buildable(registered).find((b) => (b.costs[0] ?? 0) > 0 && !b.doctrine);
+
+describe('what the club starts with', () => {
+  it('owns everything that costs nothing to have', () => {
     const c = fresh();
-    expect(levelOf(c, buildings[0]!.id)).toBe(-1);
-    expect(isBuilt(c, buildings[0]!.id)).toBe(false);
+    expect(founding().length, 'no founding buildings at all').toBeGreaterThan(0);
+    for (const b of founding()) {
+      expect(levelOf(c, b.id), `${b.id} costs nothing and is not owned`).toBe(0);
+      expect(isBuilt(c, b.id)).toBe(true);
+    }
   });
 
-  it('level 0 is a real, owned building', () => {
+  it('never offers a founding building for sale at zero', () => {
     const c = fresh();
-    const b = freeToBuild();
+    for (const b of founding()) {
+      // It is already at level 0; the next step is a real upgrade with a price.
+      const cost = nextCost(c, b);
+      if (cost !== undefined) expect(cost, `${b.id} upgrade is free`).toBeGreaterThan(0);
+    }
+  });
+
+  it('a plot that has to be paid for is grass until it is', () => {
+    const c = fresh();
+    const b = mustBeBuilt();
+    if (!b) return;
+    expect(levelOf(c, b.id)).toBe(-1);
+    expect(isBuilt(c, b.id)).toBe(false);
     build(c, b);
     expect(levelOf(c, b.id)).toBe(0);
     expect(isBuilt(c, b.id)).toBe(true);
+  });
+
+  it('a migration does not reset a club that has already upgraded', () => {
+    const upgraded = { built: { [founding()[0]!.id]: 2 }, invested: 500 };
+    const after = migrateCampus(upgraded, 1);
+    expect(after.built[founding()[0]!.id], 'the seed overwrote real progress').toBe(2);
+    // ...and still seeds the ones the save never mentioned.
+    for (const b of founding()) expect(after.built[b.id]).toBeGreaterThanOrEqual(0);
   });
 });
 
@@ -43,7 +79,7 @@ describe('building and upgrading are the same operation', () => {
   it('walks the cost list one index at a time', () => {
     const c = fresh();
     const b = freeToBuild();
-    for (let level = 0; level <= maxLevel(b); level++) {
+    for (let level = levelOf(c, b.id) + 1; level <= maxLevel(b); level++) {
       expect(nextCost(c, b)).toBe(b.costs[level]);
       build(c, b);
     }
@@ -62,10 +98,12 @@ describe('building and upgrading are the same operation', () => {
   it('records what was spent, cumulatively', () => {
     const c = fresh();
     const b = freeToBuild();
+    const start = levelOf(c, b.id);
     build(c, b);
-    build(c, b);
-    expect(investedIn(c, b)).toBe(totalCost(b, 1));
-    expect(c.invested).toBe(totalCost(b, 1));
+    // `investedIn` counts from level 0, including whatever the club was founded
+    // with; `invested` counts only what this club actually paid.
+    expect(investedIn(c, b)).toBe(totalCost(b, start + 1));
+    expect(c.invested).toBe(b.costs[start + 1]);
   });
 });
 
@@ -119,12 +157,14 @@ describe('the gate', () => {
 });
 
 describe('the summary', () => {
-  it('counts only what is actually sellable', () => {
+  it('counts only what is actually sellable, and starts with the founding set', () => {
     const c = fresh();
     const { built, total } = progress(c, registered);
-    expect(built).toBe(0);
     expect(total).toBe(buildable(registered).length);
     expect(total, 'nothing is buildable at all').toBeGreaterThan(0);
+    // Not zero: a club is founded with the things that cost nothing to have.
+    expect(built).toBe(buildable(registered).filter((b) => (b.costs[0] ?? 0) === 0).length);
+    expect(built).toBeLessThan(total);
   });
 
   it('every building appears in the catalogue exactly once', () => {
