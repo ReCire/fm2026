@@ -39,6 +39,34 @@
 -->
 {#if squad.players.some((p) => p.record.matches > 0)}
   <Panel title="Bestenliste" accent="primary" meta="{squad.players.length} Spieler">
+    <!--
+      Torjäger first, because it is the first thing anyone wants from a football
+      stats screen — and the only one of these boards a player would look up
+      without being prompted.
+
+      Scoped to our own squad, and that is not a limitation to hide. The match
+      model does not name opposition scorers, so a division-wide board would
+      have to invent them — and an invented statistic is indistinguishable from
+      a real one, which makes it worse than a missing tab. Here the screen is
+      the squad, so "Torjäger" already means ours without a qualifier.
+
+      The subtitle carries appearances, because 14 goals in 34 games and 14 in
+      9 are different players and the ranking cannot tell them apart.
+    -->
+    <Leaderboard
+      title="Torjäger"
+      unit="Tore"
+      entries={squad.players
+        .filter((p) => p.record.goals > 0)
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          sub: `${p.pos} · ${p.record.matches} ${p.record.matches === 1 ? 'Spiel' : 'Spiele'}`,
+          value: p.record.goals,
+          row: p
+        }))}
+      empty="Noch kein Tor gefallen."
+    />
     <Leaderboard
       title="Einsätze"
       unit="Spiele"
