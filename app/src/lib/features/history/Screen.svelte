@@ -2,13 +2,11 @@
   import { game } from '$lib/state/game.svelte';
   import { Panel, StatChip, DataTable } from '$lib/ui';
   import { teamById } from '../league/rules';
-  import { resolveClub } from '../editor/rules';
   import { careerBestRank, careerBiggestWin } from './rules';
   import type { SeasonRecord } from './state';
 
   const history = $derived(game.modules.history);
   const league = $derived(game.modules.league);
-  const editor = $derived(game.modules.editor);
 
   const bestRank = $derived(careerBestRank(history.seasons));
   const biggestWin = $derived(careerBiggestWin(history.seasons));
@@ -27,8 +25,7 @@
   function opponentName(id: string): string {
     const t = teamById(league, id);
     if (!t) return '—';
-    return resolveClub(editor, { id: t.id, name: t.name, short: '', city: '', colours: ['#000000', '#ffffff'] as const })
-      .name;
+    return t.name;
   }
 </script>
 

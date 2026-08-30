@@ -5,7 +5,6 @@
   import LiveMatch from './LiveMatch.svelte';
   import { dismiss, skipToEnd, atInterval } from '$lib/state/live.svelte';
   import { teamById } from '../league/rules';
-  import { resolveClub } from '../editor/rules';
   import { Panel, Button, StatChip, Bar, fromEvent } from '$lib/ui';
   import { FORMATIONS, STYLES, TALKS } from './state';
   import {
@@ -18,14 +17,10 @@
   const m = $derived(game.modules.matchday);
   /* Fourteenth by-name club reference. The report printed a hardcoded
      "FC Anstoß Pro" beside the score while the club was SC Ziegelhütte —
-     visible in the one panel the player reads most closely. */
+     visible in the one panel the player reads most closely. Looked up by id;
+     an editor rename is already on the club, so there is nothing to resolve. */
   const clubName = $derived(
-    (() => {
-      const t = teamById(game.modules.league, game.modules.league.playerClubId);
-      return t ? resolveClub(game.modules.editor, {
-        id: t.id, name: t.name, short: '', city: '', colours: ['#000000', '#ffffff'] as const
-      }).name : 'Dein Verein';
-    })()
+    teamById(game.modules.league, game.modules.league.playerClubId)?.name ?? 'Dein Verein'
   );
   const squad = $derived(game.modules.squad);
   const league = $derived(game.modules.league);

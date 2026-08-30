@@ -1,6 +1,8 @@
 import type { Rng } from '$lib/engine/rng';
 import type { Fixture, LeagueState, LeagueTeam } from './state';
 import { leagueContent } from './content';
+import { shortFrom } from './state';
+import { coloursFor } from '$lib/graphics/clubColours';
 
 /**
  * League rules. Pure functions over plain data, RNG always injected.
@@ -47,10 +49,16 @@ export function generateClubName(rng: Rng, used: Set<string>): string {
   }
 }
 
-export function emptyTeam(id: string, name: string, strength: number): LeagueTeam {
+export function emptyTeam(id: string, name: string, strength: number, city = ''): LeagueTeam {
   return {
     id,
     name,
+    // Defaults the editor can then overwrite. A generated club is deliberately
+    // plain — a blank slate is what invites replacement, which is the whole
+    // point of shipping an editor.
+    short: shortFrom(name),
+    city,
+    colours: [...coloursFor(id)] as [string, string],
     strength: clamp(Math.round(strength), 1, 99),
     played: 0,
     won: 0,

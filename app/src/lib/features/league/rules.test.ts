@@ -40,7 +40,10 @@ function team(
 ): LeagueTeam {
   // Test ids are derived from the name for readability only. Production ids
   // deliberately are NOT — see LeagueTeamSchema.
-  return { id: `t-${name}`, name, strength: 60, played: won + drawn + lost, won, drawn, lost, goalsFor, goalsAgainst };
+  return {
+    id: `t-${name}`, name, short: 'XXX', city: '', colours: ['#000000', '#ffffff'],
+    strength: 60, played: won + drawn + lost, won, drawn, lost, goalsFor, goalsAgainst
+  };
 }
 
 function handMade(levels: LeagueTeam[][], playerLevel: number): LeagueState {

@@ -18,7 +18,10 @@ function team(
   goalsFor: number,
   goalsAgainst: number
 ): LeagueTeam {
-  return { id, name, strength: 60, played: won + drawn + lost, won, drawn, lost, goalsFor, goalsAgainst };
+  return {
+    id, name, short: 'XXX', city: '', colours: ['#000000', '#ffffff'],
+    strength: 60, played: won + drawn + lost, won, drawn, lost, goalsFor, goalsAgainst
+  };
 }
 
 function handMade(teams: LeagueTeam[], playerClubId: string): LeagueState {

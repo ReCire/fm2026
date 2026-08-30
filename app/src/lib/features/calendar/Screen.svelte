@@ -2,13 +2,11 @@
   import { game } from '$lib/state/game.svelte';
   import { Panel, StatChip, Button } from '$lib/ui';
   import { teamById } from '../league/rules';
-  import { resolveClub } from '../editor/rules';
   import { CALENDAR_FILTERS, type CalendarFilter } from './state';
   import { seasonSchedule, applyFilter, nextMatch, seasonTally } from './rules';
 
   const league = $derived(game.modules.league);
   const calendar = $derived(game.modules.calendar);
-  const editor = $derived(game.modules.editor);
 
   const schedule = $derived(seasonSchedule(league));
   const rows = $derived(applyFilter(schedule, calendar.filter));
@@ -28,8 +26,7 @@
   function opponentName(id: string): string {
     const t = teamById(league, id);
     if (!t) return '—';
-    return resolveClub(editor, { id: t.id, name: t.name, short: '', city: '', colours: ['#000000', '#ffffff'] as const })
-      .name;
+    return t.name;
   }
 
   function setFilter(f: CalendarFilter) {

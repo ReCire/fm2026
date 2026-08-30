@@ -3,8 +3,6 @@ import type { GameState } from '$lib/engine/state';
 import { continueFrom, scoreAt } from './narrate';
 import { halfTimeDecision, optionById, cappedSwing, type Decision, type Option } from './intervene';
 import { simulateFixture, amendResult, matchdayFixtures, teamById } from '../league/rules';
-import { resolveClub } from '../editor/rules';
-import { coloursFor } from '$lib/graphics/clubColours';
 
 /**
  * Taking the half-time decision.
@@ -17,14 +15,14 @@ import { coloursFor } from '$lib/graphics/clubColours';
  * longer matches the scoreline is the kind of bug nobody finds for weeks.
  */
 
-/** Our club's display name, as the editor has it. */
+/**
+ * Our club's display name.
+ *
+ * Just the club's name. An editor rename is written onto the club itself, so
+ * there is nothing to resolve and nothing for this to forget.
+ */
 function ourName(state: GameState): string {
-  const league = state.modules.league;
-  const team = teamById(league, league.playerClubId);
-  if (!team) return 'Unser Verein';
-  return resolveClub(state.modules.editor, {
-    id: team.id, name: team.name, short: '', city: '', colours: coloursFor(team.id)
-  }).name;
+  return teamById(state.modules.league, state.modules.league.playerClubId)?.name ?? 'Unser Verein';
 }
 
 /** The question waiting at the interval, or null when there is none. */

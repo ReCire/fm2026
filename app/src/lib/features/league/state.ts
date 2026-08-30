@@ -3,6 +3,18 @@ import type { Rng } from '$lib/engine/rng';
 import { leagueContent } from './content';
 import { buildPyramid, generateFixtures } from './rules';
 import { onboardingContent } from '../onboarding/content';
+import { coloursFor } from '$lib/graphics/clubColours';
+
+/**
+ * A four-character badge from a club's name, when nothing better exists.
+ *
+ * Initials of the words that are not legal-form noise: "SC Ziegelhütte" gives
+ * SCZ, "Borussia Augsburg" gives BA. Deterministic, so it does not wobble.
+ */
+export function shortFrom(name: string): string {
+  const words = name.split(/[\s.-]+/).filter(Boolean);
+  return words.map((w) => w[0]!.toUpperCase()).join('').slice(0, 4) || '?';
+}
 
 /**
  * The league pyramid, as plain saveable data.
@@ -35,6 +47,19 @@ export const LeagueTeamSchema = z.object({
    */
   id: z.string(),
   name: z.string(),
+  /**
+   * The rest of a club's identity, so the editor has somewhere to put it.
+   *
+   * These lived nowhere for a while: `LeagueTeam` carried only an id and a
+   * name, so every screen that wanted to show a club invented `short: ''`,
+   * `city: ''` and a pair of colours on the spot. That made the editor's badge,
+   * city and colour fields unstorable — they were accepted, written into an
+   * override map, and had nothing to be applied to. A club in the league is a
+   * club; it gets a club's fields.
+   */
+  short: z.string().max(4),
+  city: z.string().max(48),
+  colours: z.tuple([z.string(), z.string()]),
   /** 1..99. The only input the match model has for a club that is not ours. */
   strength: z.number().int().min(1).max(99),
   played: z.number().int().min(0),
@@ -113,4 +138,18 @@ export function createLeague(rng: Rng): LeagueState {
   };
 }
 
-export const LEAGUE_VERSION = 1;
+/** v2: a league club carries its own short name, city and colours. */
+export const LEAGUE_VERSION = 2;
+
+export function migrateLeague(old: unknown, _from: number): LeagueState {
+  const base = old as LeagueState;
+  for (const level of base.levels ?? []) {
+    for (const team of level) {
+      const t = team as Partial<LeagueTeam> & { id: string; name: string };
+      t.short ??= shortFrom(t.name);
+      t.city ??= '';
+      t.colours ??= [...coloursFor(t.id)] as [string, string];
+    }
+  }
+  return base;
+}

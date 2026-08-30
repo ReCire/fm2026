@@ -7,19 +7,26 @@ import type { GameState, MetaState, ModuleStates } from '$lib/engine/state';
 import { applyNarrative } from '$lib/features/progression/rules';
 import { narratives } from '$lib/features/progression/content';
 import { adoptClub, allTeams, teamById, standings } from '$lib/features/league/rules';
-import { editClub, resolveClub } from './rules';
+import { editClub, editPlayer, resetClub, resetPlayer } from './rules';
 import { onboardingContent } from '$lib/features/onboarding/content';
+import { overallFor } from '$lib/features/squad/attributes';
 
 /**
- * The editor has to reach the clubs the player actually meets.
+ * The editor has to reach the game, not just its own screen.
  *
- * It did not, for a while: it edited the fourteen designed clubs while the
- * league ran on seventeen procedurally generated rivals, so the overlap was
- * exactly one club — the player's own. Eric's example was renaming an OPPONENT,
- * which was the case that did not work at all.
+ * Two separate failures, both of this shape:
  *
- * Seventh instance of the shape, so it gets a test that walks the whole path
- * rather than one that checks the override map.
+ *  - it edited the fourteen designed clubs while the league ran on seventeen
+ *    procedurally generated rivals, so the overlap was exactly one club — the
+ *    player's own. Renaming an OPPONENT did not work at all.
+ *
+ *  - once that was fixed, edits were RESOLVED at read time and almost nobody
+ *    called the resolver: `resolvePlayer` was called in exactly one place, the
+ *    editor's own screen. A renamed player was renamed in the editor and
+ *    nowhere else. The league table printed raw club names for the same reason.
+ *
+ * So these tests never look at the edit map. They change something and then
+ * read the object the rest of the game reads.
  */
 const registry = new Registry(modules);
 
@@ -51,10 +58,12 @@ describe('the editor reaches the league', () => {
     const division = g.modules.league.levels[g.modules.league.playerLevel]!;
     const rival = division.find((t) => t.id !== g.modules.league.playerClubId)!;
 
-    editClub(g.modules.editor, rival.id, { name: 'FC Bayern München' });
+    editClub(g.modules.editor, rival, { name: 'FC Bayern München' });
 
-    const shown = resolveClub(g.modules.editor, { ...rival, short: '', city: '', colours: ['#000', '#fff'] });
-    expect(shown.name).toBe('FC Bayern München');
+    // Read it back the way the league table does: straight off the club.
+    expect(teamById(g.modules.league, rival.id)!.name).toBe('FC Bayern München');
+    expect(standings(division).find((r) => r.team.id === rival.id)!.team.name)
+      .toBe('FC Bayern München');
   });
 
   it('reaches every rival in the division, not just the designed ones', () => {
@@ -67,10 +76,23 @@ describe('the editor reaches the league', () => {
     // blank slates the editor exists for.
     expect(generated.length).toBeGreaterThan(0);
     for (const team of generated) {
-      editClub(g.modules.editor, team.id, { name: `Neu ${team.id}` });
-      expect(resolveClub(g.modules.editor, { ...team, short: '', city: '', colours: ['#000', '#fff'] }).name)
-        .toBe(`Neu ${team.id}`);
+      editClub(g.modules.editor, team, { name: `Neu ${team.id}` });
+      expect(teamById(g.modules.league, team.id)!.name).toBe(`Neu ${team.id}`);
     }
+  });
+
+  it('a club edit survives a season of ticks', () => {
+    const g = career();
+    const rival = g.modules.league.levels[g.modules.league.playerLevel]!
+      .find((t) => t.id !== g.modules.league.playerClubId)!;
+    editClub(g.modules.editor, rival, { name: 'Werkself Leverkusen', short: 'B04', city: 'Leverkusen' });
+
+    for (let i = 0; i < 10; i++) { runTick(registry, g, 'week'); runTick(registry, g, 'matchday'); }
+
+    const after = teamById(g.modules.league, rival.id)!;
+    expect(after.name).toBe('Werkself Leverkusen');
+    expect(after.short).toBe('B04');
+    expect(after.city).toBe('Leverkusen');
   });
 
   it('seeds designed clubs into their own division as a minority', () => {
@@ -82,6 +104,79 @@ describe('the editor reaches the league', () => {
     expect(seeded.length, 'no designed clubs reached the division').toBeGreaterThan(0);
     expect(seeded.length, 'designed clubs crowded out the blank slates')
       .toBeLessThan(division.length / 2);
+  });
+});
+
+describe('the editor reaches the squad', () => {
+  /* Eric's report: "the edits are saved in the editor but do not affect the
+     players — name and skill level remain the same in the team view". */
+  it('a renamed player is renamed everywhere the squad is read', () => {
+    const g = career();
+    const p = g.modules.squad.players[0]!;
+    editPlayer(g.modules.editor, p, { name: 'Uwe Seeler' });
+    expect(g.modules.squad.players[0]!.name).toBe('Uwe Seeler');
+  });
+
+  it('an attribute edit changes the rating the rest of the game computes', () => {
+    const g = career();
+    const p = g.modules.squad.players.find((x) => x.pos === 'ST')!;
+    const before = overallFor(p.attributes, p.pos);
+
+    editPlayer(g.modules.editor, p, {
+      attributes: { technik: 99, tempo: 99, kraft: 99, uebersicht: 99, mentalitaet: 99 }
+    });
+
+    const after = overallFor(
+      g.modules.squad.players.find((x) => x.id === p.id)!.attributes,
+      p.pos
+    );
+    expect(after).toBe(99);
+    expect(after).toBeGreaterThan(before);
+  });
+
+  /* The 99-everywhere ringer is the feature. If it does not make the side
+     stronger on the pitch, the editor is a text field. */
+  it('a maxed-out squad actually wins more', () => {
+    const table = (maxed: boolean) => {
+      const g = career('ringer');
+      if (maxed) {
+        for (const p of g.modules.squad.players) {
+          editPlayer(g.modules.editor, p, {
+            attributes: { technik: 99, tempo: 99, kraft: 99, uebersicht: 99, mentalitaet: 99 }
+          });
+        }
+      }
+      for (let i = 0; i < 20; i++) { runTick(registry, g, 'week'); runTick(registry, g, 'matchday'); }
+      return teamById(g.modules.league, g.modules.league.playerClubId)!.won;
+    };
+    expect(table(true)).toBeGreaterThan(table(false));
+  });
+
+  it('reset puts back what shipped, not the previous edit', () => {
+    const g = career();
+    const p = g.modules.squad.players[0]!;
+    const original = p.name;
+    const originalTechnik = p.attributes.technik;
+
+    editPlayer(g.modules.editor, p, { name: 'Erste Änderung', attributes: { technik: 40 } });
+    editPlayer(g.modules.editor, p, { name: 'Zweite Änderung', attributes: { technik: 80 } });
+    resetPlayer(g.modules.editor, p);
+
+    expect(p.name).toBe(original);
+    expect(p.attributes.technik).toBe(originalTechnik);
+  });
+
+  it('resetting a club puts back every field it touched', () => {
+    const g = career();
+    const rival = g.modules.league.levels[g.modules.league.playerLevel]!
+      .find((t) => t.id !== g.modules.league.playerClubId)!;
+    const before = { name: rival.name, short: rival.short, city: rival.city, colours: [...rival.colours] };
+
+    editClub(g.modules.editor, rival, { name: 'X', short: 'XXX', city: 'Y', colours: ['#111111', '#222222'] });
+    resetClub(g.modules.editor, rival);
+
+    expect({ name: rival.name, short: rival.short, city: rival.city, colours: [...rival.colours] })
+      .toEqual(before);
   });
 });
 
@@ -125,7 +220,7 @@ describe('adopting the chosen club', () => {
   it('keeps playing our fixtures after we rename our own club', () => {
     const g = career();
     const before = teamById(g.modules.league, g.modules.league.playerClubId)!;
-    before.name = 'Ftze Bayam Munchies';
+    editClub(g.modules.editor, before, { name: 'Ftze Bayam Munchies' });
 
     for (let i = 0; i < 6; i++) runTick(registry, g, 'matchday');
 

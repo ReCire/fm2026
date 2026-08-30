@@ -1,6 +1,14 @@
 import { defineDocs } from '$lib/docs/registry';
 
 export const editorDocs = defineDocs({
+  'editor.section': {
+    label: 'Vereinsbereiche',
+    tooltip: 'Wechselt zwischen den Vereinsdaten und dem Kader dieses Vereins.',
+    manual: '## Verein und Kader\n\nEin Verein ist ein Ort, in den du hineingehst: Name, Stadt, Farben und Wappen liegen unter „Verein", die Spieler unter „Kader".\n\nDen Kader gibt es nur bei deinem eigenen Verein. Von allen anderen Vereinen der Pyramide kennt das Spiel einen Namen und eine Stärke, aber keine einzelnen Spieler — es wären über tausend, und keiner davon würde je auflaufen.',
+    why: 'Vorher standen alle Vereine in einer Liste und darunter, ohne sichtbaren Zusammenhang, dein Kader. Der Kader gehörte immer zu deinem Verein, aber nichts auf dem Bildschirm hat das gesagt. Ein Verein, in den man hineingeht, ist die Form, die jeder ohnehin erwartet.',
+    since: '0.2.0',
+    related: ['editor.club', 'editor.player']
+  },
   'editor.club': {
     label: 'Verein bearbeiten',
     tooltip: 'Name, Kürzel, Stadt und die beiden Wappenfarben.',

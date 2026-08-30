@@ -15,7 +15,7 @@
 
 export const editorContent = {
   intro:
-    'Der Verein heißt, wie du ihn nennst. Die Elf ist, wen du willst. Alles hier lässt sich jederzeit zurücksetzen — deine Änderungen liegen über dem Spiel, nicht darin.',
+    'Der Verein heißt, wie du ihn nennst. Die Elf ist, wen du willst. Was du hier änderst, gilt sofort im ganzen Spiel — in der Tabelle, im Spielbericht, auf dem Platz. Und alles lässt sich jederzeit zurücksetzen.',
 
   clubIntro:
     'Name, Stadt, Farben. Das Wappen wird aus den beiden Farben erzeugt, solange du keins hochlädst.',

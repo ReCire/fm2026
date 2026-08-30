@@ -11,7 +11,6 @@
   import ThemeControl from '$lib/ui/ThemeControl.svelte';
   import Crest from '$lib/graphics/Crest.svelte';
   import { teamById } from '$lib/features/league/rules';
-  import { resolveClub } from '$lib/features/editor/rules';
   import { coloursFor } from '$lib/graphics/clubColours';
   import { formatMoney } from '$lib/features/finance/rules';
 
@@ -40,12 +39,10 @@
      its new name up here too. */
   const club = $derived.by(() => {
     const team = teamById(game.modules.league, game.modules.league.playerClubId);
-    const named = team
-      ? resolveClub(game.modules.editor, {
-          id: team.id, name: team.name, short: '', city: '', colours: coloursFor(team.id)
-        })
-      : null;
-    return named ?? { name: 'FC Anstoß Pro', colours: ['#3D5C44', '#F0E8D4'] as const };
+    if (!team) return { name: 'FC Anstoß Pro', colours: ['#3D5C44', '#F0E8D4'] as const };
+    // The club carries its own colours now, so an editor change to them shows
+    // in the crest up here without this file knowing the editor exists.
+    return { name: team.name, colours: team.colours ?? coloursFor(team.id) };
   });
 
   let drawerOpen = $state(false);
