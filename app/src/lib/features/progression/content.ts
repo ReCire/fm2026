@@ -23,6 +23,19 @@ export const NarrativeSchema = z.object({
   /**
    * What opens next, in order. Progression walks this list — so a narrative
    * controls not just what you get but the sequence you meet it in.
+   *
+   * ONLY GATED MODULES BELONG HERE, plus names from the roadmap.
+   *
+   * A module with no `gate` is available from the first minute regardless of
+   * what this list says, so naming one costs a rung and changes nothing — and
+   * every ladder was mostly those. Aufsteiger opened with `transfer` and
+   * `youth`, both of which were already open, so the first department that
+   * actually appeared was the third rung, six matchdays in.
+   *
+   * Same failure as the five roadmap names that pointed at modules which do not
+   * exist, and it hid in the same place: the list read like a plan and was
+   * half no-ops. `content.test.ts` now asserts both directions — every gated
+   * module is reachable in every narrative, and nothing ungated wastes a rung.
    */
   unlockOrder: z.array(z.string()),
   /** Free-text flavour for the difficulty of this start. */
@@ -56,7 +69,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 150_000,
     startingTransferBudget: 100_000,
     unlockedAtStart: [...CORE, 'stadium'],
-    unlockOrder: ['transfer', 'youth', 'staff', 'sponsors', 'merch', 'fans'],
+    unlockOrder: ['staff', 'sponsors', 'merch', 'industry', 'fans'],
     difficulty: 'normal'
   },
   {
@@ -70,7 +83,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 2_400_000,
     startingTransferBudget: 1_800_000,
     unlockedAtStart: [...CORE, 'stadium', 'transfer', 'staff', 'sponsors'],
-    unlockOrder: ['contracts', 'merch', 'youth', 'europe', 'fans'],
+    unlockOrder: ['merch', 'industry', 'europe', 'fans'],
     difficulty: 'hart'
   },
   {
@@ -84,7 +97,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 6_000_000,
     startingTransferBudget: 3_000_000,
     unlockedAtStart: [...CORE, 'stadium', 'transfer', 'holding'],
-    unlockOrder: ['industry', 'rawMaterials', 'stocks', 'merch', 'staff', 'sponsors'],
+    unlockOrder: ['industry', 'merch', 'staff', 'sponsors', 'rawMaterials', 'stocks'],
     difficulty: 'ruhig'
   },
   {
@@ -98,7 +111,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 400_000,
     startingTransferBudget: 50_000,
     unlockedAtStart: [...CORE, 'youth'],
-    unlockOrder: ['staff', 'transfer', 'stadium', 'campus', 'sponsors', 'contracts', 'fans'],
+    unlockOrder: ['staff', 'sponsors', 'merch', 'industry', 'fans'],
     difficulty: 'hart'
   },
   {
@@ -120,7 +133,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: -1_800_000,
     startingTransferBudget: 0,
     unlockedAtStart: [...CORE],
-    unlockOrder: ['transfer', 'sponsors', 'stadium', 'staff', 'merch', 'youth', 'fans'],
+    unlockOrder: ['sponsors', 'staff', 'merch', 'industry', 'fans'],
     difficulty: 'brutal'
   }
 ]);
