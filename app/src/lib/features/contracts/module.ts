@@ -56,8 +56,19 @@ export default defineModule({
       const squad = state.modules.squad;
       const finance = state.modules.finance;
 
-      // The countdown still runs — an executive does not stop time.
+      // The countdown still runs — an executive does not stop time. And the
+      // board's floor applies to a delegated department too: an executive who
+      // lets the squad fall through it is exactly who the floor is for.
       const outcome = tickContracts(squad);
+      for (const r of outcome.rescued) {
+        postToLedger(finance, {
+          season: state.meta.season,
+          matchday: state.meta.matchday,
+          source: 'contracts',
+          reason: `Notverlängerung ${r.player.name}`,
+          amount: -r.fee
+        });
+      }
 
       const { renewals, released } = autoRenew(
         squad,
@@ -85,6 +96,7 @@ export default defineModule({
         if (renewals.length) parts.push(`${renewals.length} verlängert`);
         if (released.length) parts.push(`${released.length} nicht verlängert`);
         if (outcome.departed.length) parts.push(`${outcome.departed.length} ablösefrei weg`);
+        if (outcome.rescued.length) parts.push(`${outcome.rescued.length} vom Vorstand notverlängert`);
         emit({
           source: 'contracts',
           severity: outcome.departed.length > 0 ? 'warn' : 'info',
@@ -110,7 +122,33 @@ export default defineModule({
       run({ state, emit }) {
         const squad = state.modules.squad;
         const contracts = state.modules.contracts;
-        const { warned, departed } = tickContracts(squad);
+        const finance = state.modules.finance;
+        const { warned, departed, rescued } = tickContracts(squad);
+
+        /*
+         * The board stepped in. Said plainly, and charged — a rescue nobody is
+         * told about is just a bug that happens to help you, and the point of
+         * this floor is that it costs you something and is embarrassing.
+         */
+        for (const r of rescued) {
+          postToLedger(finance, {
+            season: state.meta.season,
+            matchday: state.meta.matchday,
+            source: 'contracts',
+            reason: `Notverlängerung ${r.player.name}`,
+            amount: -r.fee
+          });
+          emit({
+            source: 'contracts',
+            severity: 'warn',
+            title: `Der Vorstand hat ${r.player.name} verlängert`,
+            detail: 'Über deinen Kopf hinweg, zu Konditionen, die du nie akzeptiert hättest — '
+              + `${Math.round(r.newWage).toLocaleString('de-DE')} € pro Spieltag. `
+              + 'Der Kader wäre sonst unter die Mindestgröße gefallen.',
+            amount: -r.fee,
+            goto: 'contracts'
+          });
+        }
 
         for (const player of warned) {
           emit({

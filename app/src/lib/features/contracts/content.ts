@@ -67,7 +67,16 @@ export const ContractsContentSchema = z.object({
    * an unlimited budget every director renews everybody and competence
    * measures nothing.
    */
-  autoBudgetShare: z.number().min(0).max(1)
+  autoBudgetShare: z.number().min(0).max(1),
+  /**
+   * What the board pays over the odds when it renews a contract you ignored.
+   *
+   * 0.6 means half again on the fee and the wage demand. Not a punishment for
+   * its own sake: an agent negotiating with a club that has fifteen players and
+   * no choice gets the terms that situation deserves, and the club has to live
+   * with the wage for two seasons.
+   */
+  boardRescuePenalty: z.number().min(0)
 });
 export type ContractsContent = z.infer<typeof ContractsContentSchema>;
 
@@ -91,5 +100,6 @@ export const contractsContent: ContractsContent = ContractsContentSchema.parse({
   maxDemandFactor: 1.2,
   feeRatePerSeason: 0.04,
   minSquadSizeForRelease: 16,
-  autoBudgetShare: 0.15
+  autoBudgetShare: 0.15,
+  boardRescuePenalty: 0.6
 });

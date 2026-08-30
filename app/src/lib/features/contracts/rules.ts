@@ -73,11 +73,23 @@ export function renewContract(player: Player, quote: RenewalQuote): void {
   player.wage = quote.newWage;
 }
 
+export interface BoardRescue {
+  player: Player;
+  fee: number;
+  newWage: number;
+}
+
 export interface WeekOutcome {
   /** Players whose contract just crossed the warning threshold. */
   warned: Player[];
   /** Players whose contract ran out this week — gone, ablösefrei. */
   departed: Player[];
+  /**
+   * Contracts the BOARD renewed over your head, because letting them go would
+   * have taken the squad below the floor. Terms are worse than you would have
+   * got; the caller charges the fee.
+   */
+  rescued: BoardRescue[];
 }
 
 /**
@@ -101,6 +113,45 @@ export function tickContracts(squad: SquadState): WeekOutcome {
     if (p.contractMatchdays <= 0) departingIds.add(p.id);
   }
 
+  /*
+   * The floor. Ignoring this screen for three seasons emptied a club down to
+   * ONE player — measured, not feared — and that is a broken mechanic rather
+   * than a difficulty setting.
+   *
+   * The board steps in over your head rather than an emergency signing
+   * appearing from nowhere: a rescue renewal reuses machinery that runs every
+   * week, where a signing path that only exists in failure states is a second
+   * transfer system nobody ever tests. And it is not free — the terms are the
+   * ones an agent gets from a club with fifteen players and no choice, and you
+   * carry that wage for two seasons.
+   */
+  const rescued: BoardRescue[] = [];
+  const keep = squad.players.length - departingIds.size;
+  if (keep < c.minSquadSizeForRelease && departingIds.size > 0) {
+    // Rescue the best of the departing first: the board saves the squad, not
+    // the individual, and it starts where the damage would be worst.
+    const leaving = squad.players
+      .filter((p) => departingIds.has(p.id))
+      .sort((a, b) => strengthOf(b) - strengthOf(a));
+
+    for (const player of leaving) {
+      if (squad.players.length - departingIds.size >= c.minSquadSizeForRelease) break;
+      const option = c.renewOptions[c.renewOptions.length - 1]!;
+      const penalty = 1 + c.boardRescuePenalty;
+      const factor = demandFactor(player) * penalty;
+      const newWage = Math.max(player.wage, Math.round((player.wage * (1 + factor)) / 50) * 50);
+      const fee = Math.round(
+        player.marketValue * c.feeRatePerSeason * (1 + factor)
+          * (option.matchdays / c.matchdaysPerSeason) * penalty
+      );
+
+      player.contractMatchdays += option.matchdays;
+      player.wage = newWage;
+      departingIds.delete(player.id);
+      rescued.push({ player, fee, newWage });
+    }
+  }
+
   const departed = squad.players.filter((p) => departingIds.has(p.id));
   if (departed.length > 0) {
     squad.players = squad.players.filter((p) => !departingIds.has(p.id));
@@ -108,7 +159,7 @@ export function tickContracts(squad: SquadState): WeekOutcome {
     if (squad.captainId && departingIds.has(squad.captainId)) squad.captainId = null;
   }
 
-  return { warned, departed };
+  return { warned, departed, rescued };
 }
 
 /**
