@@ -147,7 +147,9 @@
         >
           <rect x={r.x} y={r.y} width={r.w} height={r.h} rx="5" />
           <text class="name" x={r.x + 8} y={r.y + 17}>{l.name}</text>
-          <text class="sub" x={r.x + 8} y={r.y + 29}>{l.sub}</text>
+          {#if p.plot.size !== 'klein' || p.level < 0}
+            <text class="sub" x={r.x + 8} y={r.y + 29}>{l.sub}</text>
+          {/if}
           {#if b && b.levels.length > 1}
             <!-- Level as marks, not "2/3". A count invites ranking; marks read
                  as a position on a ladder, which is what it is. -->
@@ -184,10 +186,22 @@
 
 <style>
   .campus { margin: 0; background: var(--iso-sky); border-radius: var(--r-md); }
-  /* Wider than a phone, so it scrolls inside its own box — the page body must
-     never scroll sideways. */
-  .scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
-  svg { display: block; }
+  .scroll { overflow: hidden; }
+  /*
+   * The whole plan, always, scaled to the width it is given.
+   *
+   * It used to render at its natural 720px and scroll sideways, which on a
+   * phone meant a full screen of map before you reached anything and a pan to
+   * see the far half. The plan is ORIENTATION — it answers "what does my club
+   * look like" — and the list below it is what you actually buy from. An
+   * overview that needs panning is neither.
+   *
+   * The trade is that a 2x2 plot lands near 29px on a phone, under the 44px
+   * touch minimum. That is deliberate and it is why every plot also appears as
+   * a full-width row in the list: the map is the convenient path, never the
+   * only one.
+   */
+  svg { display: block; width: 100%; height: auto; }
 
   .grid line { stroke: var(--iso-line); stroke-width: 0.5; opacity: 0.07; }
   .road { fill: var(--iso-tarmac); opacity: 0.85; }
