@@ -701,6 +701,52 @@ export const designIntent = defineIntent([
       'Deriving a light palette by dimming the dark one produces tokens that are consistent in code and wrong on screen. A role must be free to resolve to an unrelated value per mode.',
     module: 'design',
     source: 'fm-03-design'
+  },
+
+  // ------------------------------------------------------------ knowledge --
+  {
+    id: 'knowledge.leagueCostMultiplier',
+    constant: 'leagueCostMultiplier',
+    value: '[6, 3.2, 1.8, 1] by league level, 0 = top flight',
+    rationale:
+      'The five narratives start between minus 1,8 million and plus 6 million euros — a fortyfold spread. A flat euro price for a node therefore only gates the poor: the Investor start buys every tier 1 to 4 node on day one without noticing, while the Aufsteiger spends a fifth of everything on one. Scaling the price by league keeps the bite constant, so Wissenspunkte stay the real scarcity at every level.',
+    failureMode:
+      'Flatten this to 1 and the money cost of the knowledge tree stops existing above the fourth division. Nothing errors; the tree simply becomes a Wissenspunkte checklist for anyone with a budget, and the "what do I give up" decision the whole doctrine system is built on only applies to players who were already short of options.',
+    module: 'knowledge',
+    source: 'fm-03-design'
+  },
+  {
+    id: 'knowledge.tierCost',
+    constant: 'tierCost',
+    value: 'tier 1 [1 WP, 25.000 EUR] rising to tier 5 [6 WP, 750.000 EUR]',
+    rationale:
+      'Priced against the measured fourth-division economy: a season at the turnstiles is roughly 457.000 euros against a 352.000 euro wage bill, so tier 1 is a real quarter of a season of surplus and a tier-5 capstone is money that has to have come from somewhere other than football.',
+    failureMode:
+      'These figures were set against the OLD economy, where gate receipts were 2,87 million a season and every one of them was a rounding error. If the economy is retuned again, re-derive them from balance.test.ts rather than carrying them forward — a cost ladder priced against an economy that no longer exists reads as deliberate and is not.',
+    module: 'knowledge',
+    source: 'fm-03-design'
+  },
+  {
+    id: 'knowledge.synthesisGate',
+    constant: 'gate / costMult, derived from affinity',
+    value: 'allied 5 and 0.7x, neutral 6 and 1.0x, hostile 8 and 1.5x',
+    rationale:
+      'A synthesis needs rank in both doctrines, so at eight doctrines and scarce points a career reaches three or four. Allied pairs opening earlier and cheaper is what makes the affinity matrix a thing the player plans around rather than a colour on a diagram.',
+    failureMode:
+      'Write these numbers onto the twenty-eight synthesis nodes instead of deriving them and the matrix stops being the source of truth. Someone flips a pair from hostile to allied, the node keeps the old price, and only one of the two is on screen.',
+    module: 'knowledge',
+    source: 'fm-03-design'
+  },
+  {
+    id: 'content.brandTierForLeague',
+    constant: 'brandTierForLeague',
+    value: '[3, 3, 2, 1] by league level',
+    rationale:
+      'Levels 0 and 1 share a ceiling deliberately. The 2. Bundesliga is already where national brands take your call, and letting promotion to the top flight also upgrade your sponsors would spend a reward the promotion has already paid.',
+    failureMode:
+      'Give a category no tier-1 name and a fourth-division club has no possible partner in it: the screen renders an empty list rather than an error. This already happened to tech, which bottomed out at tier 2 until a test went looking.',
+    module: 'content',
+    source: 'fm-03-design'
   }
 ] as const);
 
