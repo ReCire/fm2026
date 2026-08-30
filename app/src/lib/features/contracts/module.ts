@@ -1,6 +1,7 @@
 import { defineModule } from '$lib/engine/module';
+import { postToLedger } from '../finance/module';
 import { ContractsSchema, createContracts, CONTRACTS_VERSION } from './state';
-import { tickContracts } from './rules';
+import { tickContracts, autoRenew } from './rules';
 import { contractsContent } from './content';
 
 /**
@@ -38,6 +39,61 @@ export default defineModule({
             : `${expiring.length} Spieler gehen ablösefrei, wenn du nicht verlängerst`
       }
     ];
+  },
+
+  /*
+   * What a Kaderplaner does instead of the player.
+   *
+   * `competence` decides which players are renewed and on what terms — never
+   * how fast. An executive who merely acted slowly would be a wage with no
+   * trade attached, and the number would stop meaning what the engine does
+   * with it.
+   */
+  autopilot: {
+    phase: 'sim',
+    order: 30,
+    run({ state, emit, delegation }) {
+      const squad = state.modules.squad;
+      const finance = state.modules.finance;
+
+      // The countdown still runs — an executive does not stop time.
+      const outcome = tickContracts(squad);
+
+      const { renewals, released } = autoRenew(
+        squad,
+        delegation?.competence ?? 0.5,
+        Math.max(0, finance.money * contractsContent.autoBudgetShare)
+      );
+
+      for (const { player, quote } of renewals) {
+        postToLedger(finance, {
+          season: state.meta.season,
+          matchday: state.meta.matchday,
+          source: 'contracts',
+          reason: `Verlängerung ${player.name}`,
+          amount: -quote.fee
+        });
+      }
+
+      /*
+       * ONE event for the week, naming what was decided. The player traded
+       * prompts for outcomes; replacing nineteen prompts with nineteen
+       * notifications would be the same interruption with worse timing.
+       */
+      if (renewals.length > 0 || released.length > 0 || outcome.departed.length > 0) {
+        const parts: string[] = [];
+        if (renewals.length) parts.push(`${renewals.length} verlängert`);
+        if (released.length) parts.push(`${released.length} nicht verlängert`);
+        if (outcome.departed.length) parts.push(`${outcome.departed.length} ablösefrei weg`);
+        emit({
+          source: 'contracts',
+          severity: outcome.departed.length > 0 ? 'warn' : 'info',
+          title: 'Kaderplanung',
+          detail: parts.join(', ') + '.',
+          goto: 'contracts'
+        });
+      }
+    }
   },
 
   hooks: {

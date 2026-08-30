@@ -51,7 +51,23 @@ export const ContractsContentSchema = z.object({
   minDemandFactor: z.number(),
   maxDemandFactor: z.number(),
   /** Immediate signing fee, per season added = marketValue × this × (1 + demand). */
-  feeRatePerSeason: z.number().min(0)
+  feeRatePerSeason: z.number().min(0),
+  /**
+   * A delegated department will not shrink the squad below this.
+   *
+   * Not a rule about football — a rule about an autopilot. Nobody hires a
+   * director of football and expects to come back to nine players, and an
+   * executive who can empty the club is a bug wearing a job title.
+   */
+  minSquadSizeForRelease: z.number().int().min(1),
+  /**
+   * How much of the balance a delegated department may commit in one week.
+   *
+   * Finite on purpose: it is the constraint that makes the ORDER matter. With
+   * an unlimited budget every director renews everybody and competence
+   * measures nothing.
+   */
+  autoBudgetShare: z.number().min(0).max(1)
 });
 export type ContractsContent = z.infer<typeof ContractsContentSchema>;
 
@@ -73,5 +89,7 @@ export const contractsContent: ContractsContent = ContractsContentSchema.parse({
   demandDiscountPerYearOld: 0.04,
   minDemandFactor: -0.3,
   maxDemandFactor: 1.2,
-  feeRatePerSeason: 0.04
+  feeRatePerSeason: 0.04,
+  minSquadSizeForRelease: 16,
+  autoBudgetShare: 0.15
 });

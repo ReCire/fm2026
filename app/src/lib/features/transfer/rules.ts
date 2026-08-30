@@ -508,3 +508,69 @@ export function counterRoundsLeft(offer: Offer): number {
 function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v));
 }
+
+/**
+ * What a delegated transfer department does with an inbox of bids.
+ *
+ * Same contract as every autopilot: **a mediocre executive decides BADLY, not
+ * slowly.** Every offer on the desk gets answered this tick, whoever is doing
+ * the job. Competence decides WHICH answer, and the difference shows up in the
+ * balance and in the eleven within a season.
+ *
+ * The one number that matters is how the bid compares to what the player is
+ * worth. A good director sells above value and keeps the eleven together; a bad
+ * one takes whatever is offered, including for the people you cannot replace.
+ */
+export interface AutoDecision {
+  offer: Offer;
+  accepted: boolean;
+  fee: number;
+}
+
+export function autoAnswerOffers(
+  transfer: TransferState,
+  squad: SquadState,
+  competence: number
+): AutoDecision[] {
+  const skill = Math.max(0, Math.min(1, competence));
+  const decisions: AutoDecision[] = [];
+
+  /*
+   * A good director wants a clear premium before selling; a poor one sells at a
+   * discount and calls it business. 1.35× market at the top, 0.8× at the bottom
+   * — so a weak executive systematically loses money on every deal, which is
+   * exactly the kind of loss that only shows up when you add up the season.
+   */
+  const wanted = 0.8 + skill * 0.55;
+
+  for (const offer of [...transfer.offers]) {
+    const player = squad.players.find((p) => p.id === offer.playerId);
+    if (!player) {
+      transfer.offers = transfer.offers.filter((o) => o.id !== offer.id);
+      continue;
+    }
+
+    const ratio = offer.currentBid / Math.max(1, player.marketValue);
+
+    /*
+     * Protecting the eleven is a judgement, and it is the first thing a poor
+     * director stops doing. A starter needs a much bigger premium to be worth
+     * selling — but only if the person deciding can see that far.
+     */
+    const isStarter = squad.lineup.includes(player.id);
+    const threshold = wanted * (isStarter ? 1 + skill * 0.6 : 1);
+
+    const accept = ratio >= threshold && squad.players.length > c.minSquadSize;
+
+    if (accept) {
+      const result = acceptOffer(transfer, squad, offer.id);
+      if (typeof result === 'string') continue;
+      decisions.push({ offer, accepted: true, fee: result.fee });
+    } else {
+      rejectOffer(transfer, squad, offer.id);
+      decisions.push({ offer, accepted: false, fee: offer.currentBid });
+    }
+  }
+
+  return decisions;
+}

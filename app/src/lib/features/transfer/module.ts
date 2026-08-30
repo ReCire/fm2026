@@ -1,11 +1,12 @@
 import { defineModule } from '$lib/engine/module';
 import { TransferSchema, createTransfer, TRANSFER_VERSION } from './state';
-import { refreshMarket, isRefreshDue, expireOffers, canReceiveOffer, generateOffer } from './rules';
+import { refreshMarket, isRefreshDue, expireOffers, canReceiveOffer, generateOffer, autoAnswerOffers } from './rules';
 import { transferContent } from './content';
 // The sanctioned cross-module surface: a narrow public API plus a declared
-// dependency. Imported but unused for control flow — a transfer only moves
-// money when the player pushes a button, and the screen posts it there.
-import { formatMoney } from '../finance/module';
+// dependency. A transfer the PLAYER makes moves money from the screen; one a
+// delegated department makes has no screen to post from, so the autopilot
+// books it here.
+import { formatMoney, postToLedger } from '../finance/module';
 
 export default defineModule({
   id: 'transfer',
@@ -35,6 +36,52 @@ export default defineModule({
             : `${offers.length} Angebote unbeantwortet, das höchste über ${formatMoney(best.currentBid)}`
       }
     ];
+  },
+
+  /*
+   * What a Transferchef does instead of the player.
+   *
+   * Every bid on the desk is answered this tick regardless of competence — an
+   * executive who merely answered slowly would be a wage with no trade
+   * attached. What competence buys is the price they hold out for, and whether
+   * they notice they are selling the eleven.
+   */
+  autopilot: {
+    phase: 'world',
+    order: 10,
+    run({ state, emit, delegation }) {
+      const transfer = state.modules.transfer;
+      const squad = state.modules.squad;
+
+      // Bids still expire on their own; the department does not stop the world.
+      expireOffers(transfer);
+
+      const decisions = autoAnswerOffers(transfer, squad, delegation?.competence ?? 0.5);
+      const sold = decisions.filter((d) => d.accepted);
+
+      for (const d of sold) {
+        postToLedger(state.modules.finance, {
+          season: state.meta.season,
+          matchday: state.meta.matchday,
+          source: 'transfer',
+          reason: `Verkauf ${d.offer.playerName}`,
+          amount: d.fee
+        });
+      }
+
+      if (decisions.length > 0) {
+        emit({
+          source: 'transfer',
+          severity: sold.length > 0 ? 'info' : 'good',
+          title: 'Transferbüro',
+          detail: sold.length > 0
+            ? `${sold.length} verkauft, ${decisions.length - sold.length} abgelehnt.`
+            : `${decisions.length} Angebot(e) abgelehnt.`,
+          amount: sold.reduce((sum, d) => sum + d.fee, 0) || undefined,
+          goto: 'transfer'
+        });
+      }
+    }
   },
 
   hooks: {

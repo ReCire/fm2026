@@ -59,7 +59,7 @@ function toEntry(m: ModuleDef, fresh: string[]): NavEntry {
 export function attentionFor(m: ModuleDef): OpenItem[] {
   if (!m.attention) return [];
   if (m.gate && !m.gate(game)) return [];
-  if (game.modules.progression && isDelegated(game, m.id)) return [];
+  if (isCovered(m)) return [];
   try {
     return m.attention(game);
   } catch (err) {
@@ -82,9 +82,30 @@ export function attentionFor(m: ModuleDef): OpenItem[] {
  * So the filter stays where it is and this reports around it. `delegated` says
  * which of the two you are looking at.
  */
+/**
+ * Is somebody else actually doing this job?
+ *
+ * Delegation ALONE is not enough, and the difference is the whole safety of the
+ * feature. `runTick` falls back to the normal hook when a delegated module has
+ * no `autopilot`, so the department keeps ticking — but many of its decisions
+ * are the player's, taken on its screen: accepting a bid, renewing a contract.
+ * Silencing it on delegation alone therefore removes the player and replaces
+ * them with nothing. Offers expire unanswered, contracts lapse, and it looks
+ * exactly like the feature working.
+ *
+ * So a department goes quiet only when there is something to go quiet FOR.
+ * `linkedout` already refuses to sell a role whose module has no autopilot;
+ * this is the same rule enforced one layer lower, where a save carrying a hire
+ * from before the autopilot existed cannot slip past it.
+ */
+function isCovered(m: ModuleDef): boolean {
+  if (!m.autopilot) return false;
+  return !!game.modules.progression && isDelegated(game, m.id);
+}
+
 export function attentionDetail(m: ModuleDef): { items: OpenItem[]; delegated: boolean; locked: boolean } {
   const locked = !!m.gate && !m.gate(game);
-  const delegated = !!game.modules.progression && isDelegated(game, m.id);
+  const delegated = isCovered(m);
   if (!m.attention || locked) return { items: [], delegated, locked };
   try {
     return { items: m.attention(game), delegated, locked };

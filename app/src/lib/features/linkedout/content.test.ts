@@ -35,8 +35,10 @@ describe('roles', () => {
      * entry, and offers that expire unanswered because nobody can see them and
      * nothing replaced the player.
      *
-     * Today this list is empty, and that is the correct state of the game
-     * rather than a broken test: no department has an autopilot yet.
+     * `transfer` and `contracts` have autopilots now — those two first,
+     * deliberately, because a bad decision in either is legible on the balance
+     * sheet within a season, which is the whole trade. The rest are pending
+     * until theirs land.
      */
     for (const r of hireableRoles(withAutopilot)) {
       expect(withAutopilot, `${r.id} is hireable but ${r.module} has no autopilot`).toContain(r.module);
@@ -44,8 +46,14 @@ describe('roles', () => {
   });
 
   it('lights a role up the moment its autopilot lands', () => {
+    /* Pick a department that does NOT have one yet, or the assertion passes
+       trivially the day someone writes the autopilot it was naming — which is
+       exactly what happened when `transfer` got one. */
+    const pending = pendingRoles(registered, withAutopilot);
+    expect(pending.length, 'every department is delegable — this test has nothing to prove').toBeGreaterThan(0);
+
     const before = hireableRoles(withAutopilot).length;
-    const after = hireableRoles(new Set([...withAutopilot, 'transfer'])).length;
+    const after = hireableRoles(new Set([...withAutopilot, pending[0]!.module])).length;
     expect(after, 'the gate does not move when an autopilot appears').toBeGreaterThan(before);
   });
 
