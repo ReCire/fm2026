@@ -3,8 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0e1422" />
-    <meta name="color-scheme" content="dark" />
+    <!--
+      Both themes, and both declared.
+
+      This was one fixed dark `theme-color` and `color-scheme: dark`, while the
+      app ships a full parchment light mode. On a phone that means the browser
+      chrome above the page stays night-dark against a cream screen, and every
+      native control the OS draws — scrollbars, date pickers, form widgets —
+      renders dark on light. `theme.svelte.ts` also rewrites the tag when the
+      player picks a theme explicitly, since a media query cannot see a choice
+      stored in localStorage.
+    -->
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141F1A" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFDF7" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
     <link rel="icon" href="%sveltekit.assets%/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="%sveltekit.assets%/icons/apple-touch-icon.png" />

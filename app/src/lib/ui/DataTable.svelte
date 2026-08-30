@@ -168,7 +168,9 @@
 
   .sort {
     display: inline-flex; align-items: center; gap: 4px;
-    background: none; border: 0; padding: 0; cursor: pointer;
+    /* Headers only render in the wide layout, so this is a tablet control
+       rather than a phone one — but a tablet is still a finger. */
+    min-height: var(--tap); background: none; border: 0; padding: 0; cursor: pointer;
     font: inherit; font-size: var(--fs-caption); text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--text-dim);
   }

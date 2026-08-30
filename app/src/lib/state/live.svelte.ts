@@ -78,9 +78,54 @@ export function start(): void {
   }, TICK_MS);
 }
 
+/**
+ * Whether the clock stopped because the PHONE went away, not the player.
+ *
+ * The distinction is the whole of this: `pause()` is a decision and is
+ * remembered, `release()` is a component unmounting, and this is the operating
+ * system taking the screen away mid-match. Only the last one should resume by
+ * itself.
+ */
+let suspended = false;
+
+/**
+ * Stop the clock while the tab is hidden, and pick it up on return.
+ *
+ * Two reasons, and the second is the one that matters on a phone.
+ *
+ * The battery reason: a 250ms interval that keeps firing behind a locked screen
+ * is work nobody asked for, on the most constrained device this game runs on.
+ *
+ * The real reason: the minute is computed from the WALL CLOCK, so a match left
+ * running while you answer a message advances without you. Come back after two
+ * minutes and it is over — the ninety minutes you were meant to watch happened
+ * to an empty screen. On a phone, being interrupted is not an edge case; it is
+ * how the device is used. A match is something you watch, so if you are not
+ * there it waits.
+ */
+if (browser) {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (timer) {
+        suspended = true;
+        stop();
+      }
+      return;
+    }
+    if (!suspended) return;
+    suspended = false;
+    // `start` re-bases the wall clock on the current minute, so the time spent
+    // away is not counted against the match.
+    start();
+  });
+}
+
 export function pause(): void {
   const live = game.modules.matchday.live;
   if (live) live.running = false;
+  // A deliberate pause outranks a suspension: coming back to the app must not
+  // restart a match the player stopped on purpose before they left.
+  suspended = false;
   stop();
 }
 
@@ -95,6 +140,7 @@ export function pause(): void {
  * second and stayed stopped.
  */
 export function release(): void {
+  suspended = false;
   stop();
 }
 

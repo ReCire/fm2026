@@ -56,6 +56,8 @@ export function setTheme(choice: ThemeChoice): void {
   if (choice === 'system') root.removeAttribute('data-theme');
   else root.setAttribute('data-theme', choice);
 
+  paintBrowserChrome();
+
   try {
     if (choice === 'system') localStorage.removeItem(KEY);
     else localStorage.setItem(KEY, choice);
@@ -76,3 +78,30 @@ export const THEME_LABEL: Record<ThemeChoice, string> = {
   light: 'Hell',
   dark: 'Dunkel'
 };
+
+/** The header colour of each theme, matching `--bg-sidebar` in tokens.css. */
+const CHROME = { dark: '#141F1A', light: '#FFFDF7' } as const;
+
+/**
+ * Tell the phone what colour the page is.
+ *
+ * `app.html` carries a `theme-color` per `prefers-color-scheme`, which covers
+ * the `system` choice. It cannot cover an EXPLICIT choice, because a media
+ * query has no way to see a preference stored in localStorage — so a player on
+ * a dark phone who picks the light theme would get a black bar above a cream
+ * page. This writes the resolved answer over the top.
+ *
+ * Only the un-media-queried tag is touched, so the system pair underneath stays
+ * intact and keeps working if the choice goes back to `system`.
+ */
+function paintBrowserChrome(): void {
+  if (!browser) return;
+  const wanted = CHROME[resolved()];
+  let tag = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]:not([media])');
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.name = 'theme-color';
+    document.head.appendChild(tag);
+  }
+  tag.content = wanted;
+}

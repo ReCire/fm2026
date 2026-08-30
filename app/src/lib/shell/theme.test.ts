@@ -22,11 +22,23 @@ beforeEach(() => {
     setItem: (k: string, v: string) => void store.set(k, v),
     removeItem: (k: string) => void store.delete(k)
   });
+  /*
+   * The stub grew a head and a querySelector when the theme started painting
+   * the browser chrome. Widened rather than guarded in the source: a
+   * `document` without a `head` is not a real environment, and adding a
+   * `typeof … === 'function'` check to production code to satisfy a test
+   * double would be the test dictating the shape of the thing it tests.
+   */
+  const metas: { name?: string; media?: string; content?: string }[] = [];
   vi.stubGlobal('document', {
     documentElement: {
       setAttribute: (k: string, v: string) => void attrs.set(k, v),
       removeAttribute: (k: string) => void attrs.delete(k)
-    }
+    },
+    head: { appendChild: (m: { name?: string }) => void metas.push(m) },
+    createElement: () => ({}) as { name?: string; content?: string },
+    querySelector: (sel: string) =>
+      sel.includes('theme-color') ? metas.find((m) => m.name === 'theme-color' && !m.media) ?? null : null
   });
   vi.stubGlobal('window', {
     matchMedia: () => ({ matches: false })
