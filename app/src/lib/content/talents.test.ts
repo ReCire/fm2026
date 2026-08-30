@@ -12,7 +12,7 @@ const player = (over: Partial<Player> = {}, attr = 50): Player => ({
   attributes: Object.fromEntries(ATTRIBUTES.map((a) => [a, attr])) as Player['attributes'],
   fitness: 100, morale: 70, age: 24, marketValue: 100_000, wage: 2_000,
   trait: 'Kein', injured: 0, suspended: 0, individualFocus: 'allgemein',
-  contractMatchdays: 34, ...over
+  contractMatchdays: 34, record: { ...EMPTY_RECORD }, ...over
 });
 
 const record = (over: Partial<PlayerRecord> = {}): PlayerRecord => ({ ...EMPTY_RECORD, ...over });

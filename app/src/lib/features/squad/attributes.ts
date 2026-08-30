@@ -64,11 +64,25 @@ export const POSITION_WEIGHTS: Record<Position, Record<Attribute, number>> = {
   ST:  { technik: 0.35, tempo: 0.30, kraft: 0.15, uebersicht: 0.10, mentalitaet: 0.10 }
 };
 
-/** The overall rating for a player in a given position, 1..99. */
+/**
+ * The overall rating for a player in a given position, 1..99.
+ *
+ * The epsilon is load-bearing, not defensive. The weights are decimals, so a
+ * genuine midpoint like { 56, 41, 43, 40, 39 } sums to 44.5 in arithmetic and
+ * to 44.499999999999996 in IEEE 754 — and `Math.round` then returns 44 for a
+ * value that is exactly a half. That breaks `shiftToBand`'s promise that adding
+ * the same delta to every attribute moves the overall by exactly that delta,
+ * which is what the transfer market relies on to keep a Bundesliga player out
+ * of a fourth-division shop window.
+ *
+ * It has been found twice, both times as "this seed produces a player one below
+ * its band", and both times worked around by choosing a different seed. A third
+ * seed would have dodged it a third time.
+ */
 export function overallFor(attributes: Attributes, pos: Position): number {
   const w = POSITION_WEIGHTS[pos];
   const raw = ATTRIBUTES.reduce((sum, a) => sum + attributes[a] * w[a], 0);
-  return Math.max(1, Math.min(99, Math.round(raw)));
+  return Math.max(1, Math.min(99, Math.round(raw + 1e-9)));
 }
 
 /** The player's best position, for the editor and for auto-selection. */

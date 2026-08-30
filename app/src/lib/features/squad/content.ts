@@ -18,9 +18,6 @@ export const WageBandSchema = z.object({
 export const SquadContentSchema = z.object({
   firstNames: z.array(z.string()).min(1),
   lastNames: z.array(z.string()).min(1),
-  traits: z.array(z.string()).min(1),
-  /** Chance a generated player has a trait at all. */
-  traitChance: z.number().min(0).max(1),
   wageBands: z.array(WageBandSchema).min(1),
   /** Market value curve: value = sum over thresholds passed. */
   valueCurve: z.array(z.object({
@@ -79,8 +76,6 @@ export type SquadContent = z.infer<typeof SquadContentSchema>;
 export const squadContent: SquadContent = SquadContentSchema.parse({
   firstNames: ['Max','Lukas','Leon','Felix','Jonas','Elias','Noah','Julian','Tim','Moritz','Jan','Tom','David','Paul','Alexander','Daniel','Tobias','Florian','Marco','Kevin','Nico','Sven'],
   lastNames: ['Müller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz','Hoffmann','Schäfer','Koch','Bauer','Richter','Klein','Wolf','Schröder','Neumann','Schwarz','Zimmermann','Hartmann','Lange'],
-  traits: ['Tor-Instinkt','Freistoß-Gott','Elfmeter-Killer','Leader','Eisenfuß','Flügelflitzer','Zweikampfmonster'],
-  traitChance: 0.35,
 
   // Ported from calculatePlayerWage()'s ternary chain.
   wageBands: [

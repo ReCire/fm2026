@@ -1,7 +1,8 @@
 import { defineModule } from '$lib/engine/module';
-import { SquadSchema, createSquad, SQUAD_VERSION } from './state';
+import { SquadSchema, createSquad, SQUAD_VERSION, migrateSquad } from './state';
 import { applyPostMatch, autoLineup, wageBill, teamStrength, isAvailable } from './rules';
 import { postToLedger } from '../finance/module';
+import { bestFor, NO_TALENT } from '$lib/content/talents';
 
 export default defineModule({
   id: 'squad',
@@ -10,7 +11,10 @@ export default defineModule({
   nav: { group: 'Sport', icon: '👥', order: 10, primary: true },
   requires: ['finance'],
 
-  state: { schema: SquadSchema, create: createSquad, version: SQUAD_VERSION },
+  state: {
+    schema: SquadSchema, create: createSquad,
+    version: SQUAD_VERSION, migrate: migrateSquad
+  },
 
   /*
    * The reference implementation of `attention`. Two things to copy:
@@ -57,10 +61,67 @@ export default defineModule({
   },
 
   hooks: {
+    /*
+     * Talents are earned, and this is where a career turns into a name.
+     *
+     * On the WEEK, after training has moved the numbers: every predicate in the
+     * catalogue tests a change or a duration, so the moment worth checking is
+     * the one just after a player has changed. Checking on matchday would award
+     * the same thing a week later for no reason a player could see.
+     *
+     * Only players who do not already carry one are considered. A talent is a
+     * name, a player has one name, and re-evaluating a man who already has his
+     * would let a rarer talent quietly replace a rarer one he had earned first.
+     */
+    /*
+     * Another season in the shirt. Six predicates in the talent catalogue read
+     * `seasonsHere`, and loyalty is the one thing in there that cannot be
+     * trained for — so without this, six of nineteen could never fire.
+     */
+    seasonEnd: {
+      phase: 'world',
+      order: 10,
+      run({ state }) {
+        for (const p of state.modules.squad.players) p.record.seasonsHere += 1;
+      }
+    },
+
+    week: {
+      phase: 'post',
+      order: 40,
+      run({ state, emit }) {
+        const squad = state.modules.squad;
+        const awarded = new Set(squad.awardedTalents);
+
+        for (const player of squad.players) {
+          if (player.trait !== NO_TALENT) continue;
+          const talent = bestFor(player, player.record, awarded);
+          if (!talent) continue;
+
+          player.trait = talent.name;
+          if (talent.rarity === 'einmalig') {
+            squad.awardedTalents.push(talent.id);
+            awarded.add(talent.id);
+          }
+
+          emit({
+            source: 'squad',
+            severity: 'good',
+            title: `${player.name}: ${talent.name}`,
+            detail: talent.blurb,
+            goto: 'squad'
+          });
+        }
+      }
+    },
+
     matchday: [{
       phase: 'post',
-      consumes: ['squad.fitnessLoss', 'squad.injuryRisk', 'squad.injuryDuration', 'squad.moraleFloor'],
-      run({ state, rng, emit, factor, total }) {
+      consumes: [
+        'squad.fitnessLoss', 'squad.injuryRisk', 'squad.injuryDuration',
+        'squad.moraleFloor', 'league.result'
+      ],
+      run({ state, rng, emit, factor, total, query }) {
         const squad = state.modules.squad;
 
         if (squad.lineup.length < 11) squad.lineup = autoLineup(squad);
@@ -69,6 +130,25 @@ export default defineModule({
         // squad never needs to know those systems exist.
         // Doctrine and staff will modify these too; they arrive as plain
         // multipliers so squad never needs to know those systems exist.
+        /*
+         * The record, kept where the match is resolved.
+         *
+         * Half the talent catalogue reads `matches`, `seasonsHere`,
+         * `cleanSheets` or `injuries`, and none of them were ever incremented —
+         * so seven predicates out of nineteen could never fire, and the feature
+         * would have looked merely rare instead of broken.
+         */
+        const result = query<{ goalsAgainst: number } | null>('league.result', null);
+        const cleanSheet = !!result && result.goalsAgainst === 0;
+        for (const p of squad.players) {
+          if (!squad.lineup.includes(p.id)) continue;
+          p.record.matches += 1;
+          // A clean sheet belongs to whoever was defending it. Awarding it to
+          // the whole eleven would make a striker's shut-out record identical
+          // to his keeper's, and the one talent that reads it meaningless.
+          if (cleanSheet && (p.pos === 'TW' || p.pos === 'ABW')) p.record.cleanSheets += 1;
+        }
+
         const outcome = applyPostMatch(squad, rng, {
           injuryRiskMultiplier: factor('squad.injuryRisk'),
           fitnessLossMultiplier: factor('squad.fitnessLoss'),
@@ -86,6 +166,8 @@ export default defineModule({
         if (floor > 0) {
           for (const p of squad.players) p.morale = Math.max(p.morale, floor);
         }
+
+        for (const { player } of outcome.injuries) player.record.injuries += 1;
 
         for (const { player, matchdays } of outcome.injuries) {
           emit({

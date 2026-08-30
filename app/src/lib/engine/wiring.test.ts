@@ -87,3 +87,39 @@ describe('features on disk are wired into the registry', () => {
     }
   });
 });
+
+/**
+ * A migration nobody calls is a save nobody can load.
+ *
+ * `squad` and `league` both exported a `migrate*` function that their module
+ * never wired. Squad's had been there since v2 and had never run once: every
+ * version bump since — attributes, contracts, the talent record — silently had
+ * no upgrade path, and the only reason nobody noticed is that a save which
+ * fails to validate is discarded rather than reported.
+ *
+ * Same shape as everything else this week: the artifact says one thing and
+ * contains another, and nothing objects. `import.meta.glob` reads the tree
+ * rather than a maintained list, because a maintained list would need the
+ * discipline that failed.
+ */
+const STATE_FILES = import.meta.glob('../features/*/state.ts', { eager: true, query: '?raw', import: 'default' });
+
+describe('every migration is actually wired', () => {
+  it('a feature that exports one registers it', () => {
+    const orphans: string[] = [];
+    for (const [path, source] of Object.entries(STATE_FILES)) {
+      if (!/export function migrate[A-Z]/.test(source as string)) continue;
+      const id = featureName(path);
+      const mod = registry.byId.get(id);
+      if (mod && !mod.state.migrate) orphans.push(id);
+    }
+    expect(orphans, 'features whose migration nothing calls').toEqual([]);
+  });
+
+  it('a feature past version 1 has a migration at all', () => {
+    const missing = registry.all
+      .filter((m) => m.state.version > 1 && !m.state.migrate)
+      .map((m) => m.id);
+    expect(missing, 'features that bumped a version with no upgrade path').toEqual([]);
+  });
+});

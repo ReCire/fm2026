@@ -1,5 +1,5 @@
 import { defineModule } from '$lib/engine/module';
-import { LeagueSchema, createLeague, LEAGUE_VERSION } from './state';
+import { LeagueSchema, createLeague, LEAGUE_VERSION, migrateLeague } from './state';
 import {
   applyPromotionRelegation,
   levelName,
@@ -17,7 +17,10 @@ export default defineModule({
   nav: { group: 'Sport', icon: '🏆', order: 20, primary: true },
   requires: ['finance'],
 
-  state: { schema: LeagueSchema, create: createLeague, version: LEAGUE_VERSION },
+  state: {
+    schema: LeagueSchema, create: createLeague,
+    version: LEAGUE_VERSION, migrate: migrateLeague
+  },
 
   hooks: {
     /*

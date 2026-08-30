@@ -44,19 +44,20 @@ describe('createPlayer', () => {
   });
   it('respects the strength range', () => {
     /*
-     * Seed 3 used to work here, until `createPlayer` grew one more `rng.int`
-     * draw for `contractMatchdays`: that shifted every later iteration's
-     * attributes onto a different point in the stream, and iteration 104
-     * landed on { technik: 56, tempo: 41, kraft: 43, uebersicht: 40,
-     * mentalitaet: 39 } — a weighted sum of exactly 44.5 that IEEE 754 stores
-     * as 44.499999999999996, so `Math.round` rounds it down to 44 instead of
-     * the true midpoint's 45. That is a real, pre-existing rounding edge case
-     * in `overallFor` — `shiftToBand`'s "adds exactly `delta`" guarantee holds
-     * only up to float precision — and it existed before this test ever saw
-     * it. Seed 125 does not roll it in these 200 draws; the assertions below
-     * are unchanged.
+     * Back on seed 3, and that is the point.
+     *
+     * This seed was abandoned once and seed 125 abandoned again, both times
+     * because a change to `createPlayer` shifted the RNG stream onto an
+     * iteration whose weighted sum was exactly 44.5 — stored by IEEE 754 as
+     * 44.499999999999996, so `Math.round` returned 44 for a true midpoint and
+     * the player came out one below his own band.
+     *
+     * Both times the note said "a real, pre-existing rounding edge case" and
+     * both times the fix was a different seed. It is fixed now, in
+     * `overallFor`, so the original seed passes again — which is the only
+     * honest way to show that the bug is gone rather than hidden.
      */
-    const rng = createRng(125);
+    const rng = createRng(3);
     for (let i = 0; i < 200; i++) {
       const p = createPlayer(rng, 'MIT', 45, 55);
       expect(strengthOf(p)).toBeGreaterThanOrEqual(45);
@@ -120,7 +121,7 @@ describe('teamStrength', () => {
     expect(teamStrength(s, true)).toBe(teamStrength(s, false) + 3);
   });
   it('falls back to 50 with no lineup', () => {
-    const s: SquadState = { players: [], lineup: [], captainId: null };
+    const s: SquadState = { players: [], lineup: [], captainId: null, awardedTalents: [] };
     expect(teamStrength(s, false)).toBe(50);
   });
   it('drops when the eleven is tired', () => {

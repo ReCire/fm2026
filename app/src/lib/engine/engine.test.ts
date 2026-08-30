@@ -223,12 +223,27 @@ describe('saves', () => {
   });
 
   it('resets a slice whose version moved on with no migration, and says so', () => {
+    /*
+     * A module with no `migrate`, built for the purpose.
+     *
+     * This used to point at `squad` — which was a fair example right up until
+     * the day squad's migration was wired, because squad had exported one and
+     * never registered it since v2. The test was documenting a bug as a
+     * feature, and would have gone green forever if nobody had noticed.
+     */
+    const noMigration = modules.map((m) =>
+      m.id === 'core' ? { ...m, state: { ...m.state, migrate: undefined, version: 9 } } : m
+    );
+    const r = new Registry(noMigration);
     const game = freshGame();
-    const file = serialise(registry, game, 'v0');
-    file.modules.squad!.v = 0;
+    const seed = createRng(1);
+    for (const m of r.all) (game.modules as any)[m.id] ??= m.state.create(seed);
 
-    const { notes } = deserialise(registry, file, () => createRng(1));
-    expect(notes.join(' ')).toMatch(/Kader.*ohne Migration/);
+    const file = serialise(r, game, 'v0');
+    file.modules.core!.v = 0;
+
+    const { notes } = deserialise(r, file, () => createRng(1));
+    expect(notes.join(' ')).toMatch(/ohne Migration/);
   });
 });
 

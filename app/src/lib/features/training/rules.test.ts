@@ -4,20 +4,23 @@ import { gainChance, declineChance, restFor, trainWeek, focusOf, seasonProgress 
 import { createTraining, type TrainingState } from './state';
 import type { Player, SquadState } from '../squad/state';
 import { uniform, ATTRIBUTES } from '../squad/attributes';
+import { strengthOf } from '../squad/rules';
 import { trainingContent } from './content';
+import { EMPTY_RECORD } from '$lib/content/talents';
 
 function player(over: Partial<Player> = {}): Player {
   return {
     id: 'p1', name: 'Test Spieler', pos: 'MIT',
     attributes: uniform(50), fitness: 70, morale: 70, age: 22,
     marketValue: 100_000, wage: 1000, trait: '—',
-    injured: 0, suspended: 0, individualFocus: 'allgemein', contractMatchdays: 34,
+    injured: 0, suspended: 0, individualFocus: 'allgemein',
+    record: { ...EMPTY_RECORD }, contractMatchdays: 34,
     ...over
   };
 }
 
 function squadOf(players: Player[]): SquadState {
-  return { players, lineup: [], captainId: null };
+  return { players, lineup: [], captainId: null, awardedTalents: [] };
 }
 
 const rng = () => createRng(12345);
@@ -167,5 +170,74 @@ describe('trainWeek', () => {
     expect(young).toBeGreaterThan(0);
     expect(old).toBeLessThan(0);
     expect(young - old).toBeGreaterThan(20);
+  });
+});
+
+describe('a career actually develops players', () => {
+  /*
+   * Training was very nearly inert and nobody noticed for a week.
+   *
+   * `baseGain: 0.055` is a per-attribute weekly chance, and `allgemein` divides
+   * it across all five — so a default squad gained 0.011 points per attribute
+   * per week, which is +0.37 overall a SEASON. Measured over four simulated
+   * seasons the best player in the squad had improved by ONE point.
+   *
+   * It hid because every earlier measurement used `teamStrength`, which folds
+   * in fitness and picks the best eleven: that number moved convincingly while
+   * the players underneath it did not move at all. The right measurement is a
+   * player against his own debut, which is exactly what the talent record now
+   * makes possible.
+   *
+   * These assert the SHAPE — ignoring training does little, coaching does a
+   * lot — rather than a figure, so a retune shows up as a real change of
+   * intent rather than a red test.
+   */
+  const grow = (seasons: number, coached: boolean) => {
+    const t = createTraining(rng());
+    if (coached) t.intensity = 'hart';
+    const squad = squadOf(
+      Array.from({ length: 18 }, (_, i) =>
+        player({
+          id: `p${i}`,
+          age: coached ? 18 : 30,
+          attributes: uniform(50),
+          /*
+           * BOTH sides train `allgemein`, and that is deliberate. A personal
+           * focus pours the whole week into one attribute, so it gains five
+           * times as fast there but moves the OVERALL by only that attribute's
+           * weight — roughly a quarter. Focusing shapes a player; it does not
+           * maximise him. Comparing a focused squad against a spread one
+           * therefore measures the wrong thing, and the first version of this
+           * test did exactly that and read as a failure.
+           */
+          individualFocus: 'allgemein'
+        })
+      )
+    );
+    const before = squad.players.map((p) => strengthOf(p));
+    for (let w = 0; w < seasons * 34; w++) trainWeek(t, squad, createRng(w));
+    return Math.max(...squad.players.map((p, i) => strengthOf(p) - before[i]!));
+  };
+
+  it('a squad nobody coaches improves slowly but visibly', () => {
+    const gained = grow(3, false);
+    expect(gained, 'three seasons of default training changed nothing').toBeGreaterThanOrEqual(2);
+    expect(gained, 'ignoring training should not build a superteam').toBeLessThan(12);
+  });
+
+  it('youth and hard weeks develop faster than veterans on an easy régime', () => {
+    expect(grow(3, true)).toBeGreaterThan(grow(3, false) * 1.5);
+  });
+
+  /*
+   * The floor a talent predicate needs to be expressible at all: "arrived and
+   * became somebody" is only a sentence if somebody can become somebody. In a
+   * real simulated career — where a squad is a spread of ages and positions
+   * rather than eighteen identical eighteen-year-olds — the best prospect
+   * gained 14 over three seasons under a coaching régime. This fixture is
+   * flatter, so it asks for less.
+   */
+  it('a coached prospect can gain enough for a career to be a story', () => {
+    expect(grow(3, true)).toBeGreaterThanOrEqual(7);
   });
 });

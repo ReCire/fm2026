@@ -2,6 +2,7 @@ import type { Rng } from '$lib/engine/rng';
 import type { Position } from './positions';
 import type { Player, SquadState } from './state';
 import { squadContent } from './content';
+import { EMPTY_RECORD, NO_TALENT } from '$lib/content/talents';
 import { overallFor, uniform, type Attributes } from './attributes';
 
 /**
@@ -66,7 +67,17 @@ export function createPlayer(
   );
   const strength = overallFor(attributes, pos);
   const value = marketValue(strength);
-  const trait = forceTrait ?? (rng.chance(squadContent.traitChance) ? rng.pick(squadContent.traits) : 'Kein');
+  const age = rng.int(18, 34);
+  /*
+   * Nobody is born with a talent any more.
+   *
+   * A trait used to be a 35% roll at creation from a list of seven strings, so
+   * the column was half dealt and half nothing, with no way to tell which. A
+   * talent is now something a career produces — see content/talents.ts, where
+   * every predicate tests a CHANGE or a duration. `forceTrait` survives for
+   * the editor, which is the one place a name should be assignable by hand.
+   */
+  const trait = forceTrait ?? NO_TALENT;
   return {
     id: `p${rng.int(100_000, 999_999)}-${strength}`,
     attributes,
@@ -74,14 +85,20 @@ export function createPlayer(
     pos,
     fitness: rng.int(85, 100),
     morale: rng.int(60, 90),
-    age: rng.int(18, 34),
+    age,
     marketValue: value,
     wage: wage(strength, value),
     trait,
     injured: 0,
     suspended: 0,
     individualFocus: 'allgemein',
-    contractMatchdays: rng.int(squadContent.initialContract.min, squadContent.initialContract.max)
+    contractMatchdays: rng.int(squadContent.initialContract.min, squadContent.initialContract.max),
+    /*
+     * His debut, written once and never again. Everything a talent measures is
+     * a distance from here — without it, "gained twenty-five points" cannot be
+     * expressed and every predicate collapses back into a threshold.
+     */
+    record: { ...EMPTY_RECORD, debutAge: age, debutStrength: strength }
   };
 }
 

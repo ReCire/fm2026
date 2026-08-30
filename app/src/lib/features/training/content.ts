@@ -56,7 +56,7 @@ export const TrainingContentSchema = z.object({
 export type TrainingContent = z.infer<typeof TrainingContentSchema>;
 
 export const trainingContent: TrainingContent = TrainingContentSchema.parse({
-  baseGain: 0.055,
+  baseGain: 0.35,
   diminishFrom: 70,
   diminishRate: 0.045,
   peakAgeFrom: 18,

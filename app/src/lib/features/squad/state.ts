@@ -3,7 +3,8 @@ import { hashString, type Rng } from '$lib/engine/rng';
 import { POSITIONS } from './positions';
 import { AttributesSchema, FOCUS } from './attributes';
 import { squadContent } from './content';
-import { createPlayer } from './rules';
+import { createPlayer, strengthOf } from './rules';
+import { EMPTY_RECORD } from '$lib/content/talents';
 import { uniform } from './attributes';
 
 export { POSITIONS, type Position } from './positions';
@@ -30,6 +31,29 @@ export const PlayerSchema = z.object({
   /** What this player works on in training. See attributes.ts. */
   individualFocus: z.enum(FOCUS),
   /**
+   * What he has done, so a talent can test a CHANGE rather than a level.
+   *
+   * `debutStrength` is the load-bearing field: nothing else in `Player`
+   * remembers what he used to be, so "gained twenty-five points since he
+   * arrived" is inexpressible without it. Written once when he first enters
+   * the game — generated, signed or graduated — and never again.
+   *
+   * On the player rather than in a `Record<playerId, …>` inside the talents
+   * module, for the same reason as his contract and his training focus: it is
+   * a fact ABOUT him. It moves with him when he is sold and disappears when he
+   * retires, where a keyed map would leave an entry behind for everyone who
+   * ever left.
+   */
+  record: z.object({
+    debutAge: z.number().int().min(0),
+    debutStrength: z.number().int().min(0),
+    seasonsHere: z.number().int().min(0),
+    matches: z.number().int().min(0),
+    goals: z.number().int().min(0),
+    cleanSheets: z.number().int().min(0),
+    injuries: z.number().int().min(0)
+  }),
+  /**
    * Matchdays left on the current deal. 0 means out of contract — the player
    * leaves for nothing at the next `contracts` week tick.
    *
@@ -47,6 +71,15 @@ export type Player = z.infer<typeof PlayerSchema>;
 
 export const SquadSchema = z.object({
   players: z.array(PlayerSchema),
+  /**
+   * Every `einmalig` talent this CAREER has ever handed out.
+   *
+   * Career-level, never squad-level, and it never shrinks. Selling a player
+   * does not un-have him: the club had its Jahrhunderttalent. Tracking it per
+   * squad would let the same once-in-a-lifetime name be farmed by cycling
+   * players through, which is the joke telling itself twice.
+   */
+  awardedTalents: z.array(z.string()),
   /** Player ids in the starting eleven. */
   lineup: z.array(z.string()),
   captainId: z.string().nullable()
@@ -67,14 +100,15 @@ export function createSquad(rng: Rng): SquadState {
       players.push(createPlayer(rng, pos, min, max));
     }
   }
-  return { players, lineup: [], captainId: null };
+  return { players, lineup: [], captainId: null, awardedTalents: [] };
 }
 
 /**
  * v3: every player carries a contract (`contractMatchdays`). v2: `strength:
  * number` became `attributes: {...}`, and strength is derived.
  */
-export const SQUAD_VERSION = 3;
+/** v4: every player carries the record a talent is earned against. */
+export const SQUAD_VERSION = 4;
 
 /**
  * A deterministic stand-in for "how much contract is left", for a save that
@@ -107,17 +141,34 @@ export function migrateSquad(old: unknown, fromVersion: number): SquadState {
         { ...p, attributes: uniform(typeof p.strength === 'number' ? p.strength : 50) };
 
     const id = typeof withAttributes.id === 'string' ? withAttributes.id : 'unknown';
-    return {
+    const player = {
       ...withAttributes,
       contractMatchdays:
         typeof withAttributes.contractMatchdays === 'number'
           ? withAttributes.contractMatchdays
           : migratedContract(id)
     } as unknown as Player;
+
+    /*
+     * An old save cannot say what a player used to be, so his debut is taken as
+     * where he is NOW. That deliberately under-awards: a veteran who improved
+     * twenty points before the upgrade reads as having improved none, and will
+     * not be handed a Jahrhunderttalent for a career this save never recorded.
+     * Awarding one on no evidence would be worse than awarding none.
+     */
+    if (!player.record) {
+      player.record = {
+        ...EMPTY_RECORD,
+        debutAge: player.age,
+        debutStrength: strengthOf(player)
+      };
+    }
+    return player;
   });
   return {
     players,
     lineup: base.lineup ?? [],
-    captainId: base.captainId ?? null
+    captainId: base.captainId ?? null,
+    awardedTalents: (base as { awardedTalents?: string[] }).awardedTalents ?? []
   };
 }
