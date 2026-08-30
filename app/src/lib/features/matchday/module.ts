@@ -141,7 +141,11 @@ export default defineModule({
             minute: 0,
             running: true,
             opponent: report.opponent,
-            isHome: report.isHome
+            isHome: report.isHome,
+            decided: null,
+            ourStrength: report.ourStrength,
+            opponentStrength: report.opponentStrength,
+            matchday: state.meta.matchday
           };
 
           // The team talk's cost lands now, a week after it was chosen.

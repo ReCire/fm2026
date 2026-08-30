@@ -2,7 +2,9 @@
   import { untrack } from 'svelte';
   import { game } from '$lib/state/game.svelte';
   import { Button } from '$lib/ui';
-  import { start, pause, release, skipToEnd, dismiss } from '$lib/state/live.svelte';
+  import { start, pause, release, skipToEnd, dismiss, atInterval } from '$lib/state/live.svelte';
+  import { pendingDecision, applyHalfTime } from './halftime';
+  import { save } from '$lib/state/persist.svelte';
   import { beatsUpTo, scoreAt, type Beat, type BeatKind } from './narrate';
 
   let { clubName }: { clubName: string } = $props();
@@ -14,6 +16,27 @@
   const shown = $derived(live ? [...beatsUpTo(live.beats, minute)].reverse() : []);
   const score = $derived<[number, number]>(live ? scoreAt(live.beats, minute) : [0, 0]);
   const finished = $derived(minute >= 90);
+  /* Recomputed from state, not stored: the question IS the scoreboard at 45,
+     and a stored copy could disagree with the beats it was built from. */
+  const decision = $derived(live ? pendingDecision(game) : null);
+  const waiting = $derived(!!decision && atInterval());
+
+  function decide(id: string) {
+    const chosen = applyHalfTime(game, id);
+    if (!chosen) return;
+    /*
+     * Save immediately.
+     *
+     * The autosave fires on a committed TICK, and a half-time decision is not
+     * one — it happens between the matchday tick and the next. Without this,
+     * reloading during the second half restored the pre-decision save: the
+     * table went back to the old scoreline while the match on screen had ended
+     * on the new one. Found by reloading mid-match and watching the two
+     * disagree.
+     */
+    void save();
+    start();
+  }
 
   const home = $derived(live?.isHome ? clubName : (live?.opponent ?? ''));
   const away = $derived(live?.isHome ? (live?.opponent ?? '') : clubName);
@@ -68,7 +91,28 @@
       </div>
     </header>
 
-    <div class="controls">
+    {#if waiting && decision}
+      <!-- The question sits above the controls and replaces them, because at
+           the interval there is exactly one thing to do. -->
+      <div class="ask">
+        <p class="q">{decision.question}</p>
+        <ul class="opts">
+          {#each decision.options as o (o.id)}
+            <li>
+              <!-- The options are data, so their text cannot come from the
+                   registry the way a fixed control's does. -->
+              <!-- docs-check-ignore: documented as a group (matchday.halftime) -->
+              <button type="button" class="opt" onclick={() => decide(o.id)}>
+                <b>{o.label}</b>
+                <small>{o.detail}</small>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+
+    <div class="controls" class:hidden={waiting}>
       {#if finished}
         <Button doc="matchday.dismiss" variant="secondary" onclick={dismiss} />
       {:else if live.running}
@@ -123,6 +167,21 @@
   }
 
   .controls { display: flex; gap: var(--s2); padding: var(--s3); border-bottom: 1px solid var(--border); }
+  .controls.hidden { display: none; }
+
+  .ask { padding: var(--s3); border-bottom: 1px solid var(--border); background: var(--primary-glow); }
+  .q { font-size: var(--fs-body); font-weight: 700; color: var(--text-main); margin-bottom: var(--s3); }
+  .opts { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+  .opt {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    padding: var(--s2) var(--s3); min-height: var(--tap);
+    border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+    background: var(--bg-card); font: inherit;
+  }
+  .opt:hover { border-color: var(--primary-ink); }
+  .opt:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .opt b { display: block; font-size: var(--fs-body); color: var(--text-main); }
+  .opt small { display: block; font-size: var(--fs-caption); color: var(--text-muted); line-height: var(--lh-tight); }
 
   .feed { list-style: none; margin: 0; padding: 0; max-height: 46vh; overflow-y: auto; }
   .feed li {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { narrate, beatsUpTo, scoreAt } from './narrate';
+import { narrate, beatsUpTo, scoreAt, continueFrom } from './narrate';
 import { createRng } from '$lib/engine/rng';
 
 const run = (ourGoals: number, theirGoals: number, edge = 0, seed = 1) =>
@@ -101,5 +101,79 @@ describe('replay', () => {
     expect(beatsUpTo(beats, 90).length).toBe(beats.length);
     expect(scoreAt(beats, 90)).toEqual([2, 1]);
     expect(scoreAt(beats, 0)).toEqual([0, 0]);
+  });
+});
+
+describe('continueFrom', () => {
+  const input = (ourGoals: number, theirGoals: number, edge = 0) => ({
+    ourGoals, theirGoals, ourName: 'Wir', theirName: 'Sie', edge
+  });
+
+  /*
+   * The first half is history the moment it has been watched. Re-rolling it
+   * underneath the player would make the live view feel arbitrary, which is
+   * the exact thing it exists to fix.
+   */
+  it('leaves everything before the split untouched', () => {
+    for (let seed = 0; seed < 40; seed++) {
+      const rng = createRng(seed);
+      const before = narrate(rng, input(2, 1, 5));
+      const firstHalf = before.filter((b) => b.minute < 45);
+      const after = continueFrom(createRng(seed + 7000), before, 45, input(4, 1, 9));
+      expect(after.filter((b) => b.minute < 45)).toEqual(firstHalf);
+    }
+  });
+
+  it('always ends on exactly the score it was given', () => {
+    for (let seed = 0; seed < 60; seed++) {
+      for (const [us, them] of [[0, 0], [1, 0], [3, 2], [5, 1], [0, 4], [2, 2]] as const) {
+        const base = narrate(createRng(seed), input(0, 0));
+        const out = continueFrom(createRng(seed), base, 45, input(us, them));
+        const end = out[out.length - 1]!;
+        expect(end.kind).toBe('fulltime');
+        expect(end.score, `seed ${seed} for ${us}:${them}`).toEqual([us, them]);
+      }
+    }
+  });
+
+  it('keeps goals already scored when the new final score is lower', () => {
+    // A 2:0 first half cannot end 1:1. The caller is expected to pass a score
+    // at least as large; this asserts we do not silently un-score a goal the
+    // player watched go in.
+    const base = narrate(createRng(3), input(2, 0, 20));
+    const at45 = scoreAt(base, 45);
+    const out = continueFrom(createRng(3), base, 45, input(0, 0));
+    const end = out[out.length - 1]!;
+    expect(end.score[0]).toBeGreaterThanOrEqual(at45[0]);
+    expect(end.score[1]).toBeGreaterThanOrEqual(at45[1]);
+  });
+
+  it('is deterministic for a seed', () => {
+    const base = narrate(createRng(11), input(1, 1));
+    const a = continueFrom(createRng(22), base, 45, input(3, 1));
+    const b = continueFrom(createRng(22), base, 45, input(3, 1));
+    expect(a).toEqual(b);
+  });
+
+  it('leaves exactly one full-time beat and one half-time beat', () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const base = narrate(createRng(seed), input(1, 2));
+      const out = continueFrom(createRng(seed), base, 45, input(2, 2));
+      expect(out.filter((b) => b.kind === 'fulltime')).toHaveLength(1);
+      expect(out.filter((b) => b.kind === 'halftime')).toHaveLength(1);
+    }
+  });
+
+  it('the running score never goes backwards', () => {
+    for (let seed = 0; seed < 30; seed++) {
+      const base = narrate(createRng(seed), input(1, 1));
+      const out = continueFrom(createRng(seed), base, 45, input(3, 2));
+      let [us, them] = [0, 0];
+      for (const b of out) {
+        expect(b.score[0]).toBeGreaterThanOrEqual(us);
+        expect(b.score[1]).toBeGreaterThanOrEqual(them);
+        [us, them] = b.score;
+      }
+    }
   });
 });

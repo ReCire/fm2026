@@ -54,7 +54,20 @@ export const LiveSchema = z.object({
   minute: z.number().int().min(0).max(90),
   running: z.boolean(),
   opponent: z.string(),
-  isHome: z.boolean()
+  isHome: z.boolean(),
+  /**
+   * The half-time call, once it has been made. Null until then.
+   *
+   * Stored rather than held in the component so that a reload during the
+   * interval does not lose a decision the player already took — and so the
+   * clock can refuse to run past 45 until there IS one.
+   */
+  decided: z.string().nullable(),
+  /** Our strength this match, kept so the second half can be replayed. */
+  ourStrength: z.number().int(),
+  opponentStrength: z.number().int(),
+  /** Index into league.fixtures for the match this is narrating. */
+  matchday: z.number().int()
 });
 export type Live = z.infer<typeof LiveSchema>;
 
@@ -81,8 +94,8 @@ export function createMatchday(_rng: Rng): MatchdayState {
   return { live: null, formation: '4-4-2', style: 'ausgeglichen', talk: 'ruhig', lastReport: null, recent: [] };
 }
 
-/** v2: adds the live match, so watching survives leaving the screen. */
-export const MATCHDAY_VERSION = 2;
+/** v3: the live match gains the half-time decision. */
+export const MATCHDAY_VERSION = 3;
 
 export function migrateMatchday(old: unknown, _from: number): MatchdayState {
   const base = old as Partial<MatchdayState>;

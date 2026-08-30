@@ -1,6 +1,14 @@
 import { defineDocs } from '$lib/docs/registry';
 
 export const matchdayDocs = defineDocs({
+  'matchday.halftime': {
+    label: 'Halbzeit-Entscheidung',
+    tooltip: 'In der Pause wirst du gefragt, wie es weitergehen soll. Deine Antwort verändert die zweite Halbzeit wirklich.',
+    manual: '## Die Pause\n\nBei Halbzeit hält die Uhr an und du entscheidest. Die zweite Halbzeit wird danach neu ausgespielt — mit der Stärke, die deine Wahl ergibt. Das Ergebnis kann sich dadurch ändern, und die Tabelle wird entsprechend korrigiert.\n\nWas du in der ersten Halbzeit gesehen hast, bleibt unverändert stehen. Nur was noch nicht passiert ist, wird neu entschieden.\n\nJede Option kostet etwas: Fitness, Verletzungsrisiko oder Stimmung. „Nichts ändern" ist eine vollwertige Antwort und kostet nichts.',
+    why: 'Zuschauen ohne Eingreifen ist Fernsehen. Der Ausschlag ist auf sechs Punkte begrenzt — genug, um ein enges Spiel zu drehen, nie genug, um eine deutlich bessere Mannschaft zu schlagen. Sonst wäre die Aufstellung egal, und dass die Aufstellung zählt, ist die Zusage, auf der das ganze Spiel steht.',
+    since: '0.2.0',
+    related: ['matchday.live', 'matchday.style', 'squad.fitness']
+  },
   'matchday.live': {
     label: 'Spielverlauf',
     tooltip: 'Neunzig Minuten in neunzig Sekunden. Die Ereignisse kommen an, während die Uhr läuft.',

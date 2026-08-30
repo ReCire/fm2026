@@ -13,6 +13,7 @@ import { game } from './game.svelte';
  * match cannot come out differently the second time.
  */
 const MATCH_SECONDS = 90;
+const HALF_TIME = 45;
 const TICK_MS = 250;
 
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -43,6 +44,8 @@ export function start(): void {
   if (!browser || timer) return;
   const live = game.modules.matchday.live;
   if (!live || live.minute >= 90) return;
+  // Held at the interval until the half-time call has been made.
+  if (live.minute >= HALF_TIME && live.decided === null) return;
 
   live.running = true;
   startedAt = Date.now();
@@ -55,6 +58,17 @@ export function start(): void {
     const elapsed = (Date.now() - startedAt) / 1000;
     const exact = Math.min(90, minuteAtStart + elapsed * MINUTES_PER_SECOND);
     current.minute = Math.floor(exact);
+
+    /*
+     * The interval. The clock will not run into the second half until the
+     * manager has answered, because a question you can scroll past is not a
+     * decision — and the second half literally has not been decided yet.
+     */
+    if (current.minute >= HALF_TIME && current.decided === null) {
+      current.minute = HALF_TIME;
+      current.running = false;
+      return stop();
+    }
 
     if (exact >= 90) {
       current.minute = 90;
@@ -84,13 +98,38 @@ export function release(): void {
   stop();
 }
 
-/** Jump to the whistle. Always available — nobody should be held in a match. */
+/**
+ * Jump to the whistle. Always available — nobody should be held in a match.
+ *
+ * Except by the interval: skipping past an unanswered half-time question would
+ * skip a decision that has not been taken, and the second half it decides.
+ * `atInterval()` lets the view offer the question instead of the button.
+ */
 export function skipToEnd(): void {
-  stop();
   const live = game.modules.matchday.live;
   if (!live) return;
+  // At the interval the view shows the question instead of this button, and
+  // pressing past it would skip a decision the second half depends on.
+  if (atInterval()) return;
+  stop();
+  /*
+   * Skipping from the FIRST half walks past the interval without being asked,
+   * which is fine — a manager who wants out should not be made to answer. But
+   * the match must not stay recorded as undecided: `decided === null` is how
+   * everything else knows a question is outstanding, so a skipped match would
+   * read as permanently at the interval, at minute 90.
+   *
+   * Skipping is `halten` — nothing changed — which is exactly what happened.
+   */
+  if (live.decided === null) live.decided = 'halten';
   live.minute = 90;
   live.running = false;
+}
+
+/** True while the clock is waiting on the half-time call. */
+export function atInterval(): boolean {
+  const live = game.modules.matchday.live;
+  return !!live && live.minute >= HALF_TIME && live.minute < 90 && live.decided === null;
 }
 
 export function dismiss(): void {

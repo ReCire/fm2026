@@ -288,6 +288,56 @@ export function simulateFixture(
   };
 }
 
+/**
+ * Change a result that has already been counted.
+ *
+ * The player's own match is resolved by the simulation at kickoff so that the
+ * table, the report and the narration all agree from the first second. If they
+ * then change something at half time, the second half is played again and this
+ * is how the table learns about it: reverse exactly what `applyResult` added,
+ * write the new goals, and apply it once more.
+ *
+ * Written as reverse-then-reapply rather than as a diff on purpose. A diff has
+ * to re-derive which of won/drawn/lost moved, and gets it wrong the moment a
+ * 1:0 becomes a 1:1 — the kind of error that shows up four matchdays later as a
+ * table that does not add up, with nothing to point at.
+ */
+export function amendResult(
+  teams: LeagueTeam[],
+  fixture: Fixture,
+  homeGoals: number,
+  awayGoals: number
+): void {
+  const home = teams[fixture.home];
+  const away = teams[fixture.away];
+  if (!home || !away) return;
+  if (!fixture.played || fixture.homeGoals === null || fixture.awayGoals === null) return;
+
+  const hg = fixture.homeGoals;
+  const ag = fixture.awayGoals;
+
+  home.played--;
+  away.played--;
+  home.goalsFor -= hg;
+  home.goalsAgainst -= ag;
+  away.goalsFor -= ag;
+  away.goalsAgainst -= hg;
+  if (hg > ag) {
+    home.won--;
+    away.lost--;
+  } else if (hg < ag) {
+    away.won--;
+    home.lost--;
+  } else {
+    home.drawn--;
+    away.drawn--;
+  }
+
+  fixture.homeGoals = Math.max(0, Math.round(homeGoals));
+  fixture.awayGoals = Math.max(0, Math.round(awayGoals));
+  applyResult(teams, fixture);
+}
+
 /** The round of a division, or an empty list outside the season. */
 export function matchdayFixtures(league: LeagueState, level: number, matchday: number): Fixture[] {
   return league.fixtures[level]?.[matchday - 1] ?? [];

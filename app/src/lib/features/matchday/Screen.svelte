@@ -3,7 +3,7 @@
   import { game } from '$lib/state/game.svelte';
   import { currentStep, takeStep } from '$lib/shell';
   import LiveMatch from './LiveMatch.svelte';
-  import { dismiss, skipToEnd } from '$lib/state/live.svelte';
+  import { dismiss, skipToEnd, atInterval } from '$lib/state/live.svelte';
   import { teamById } from '../league/rules';
   import { resolveClub } from '../editor/rules';
   import { Panel, Button, StatChip, Bar, fromEvent } from '$lib/ui';
@@ -63,6 +63,9 @@
    * the tab order and says why, because disabling is not an explanation.
    */
   const watching = $derived(!!m.live && m.live.minute < 90);
+  /* At the interval the match is not merely running, it is waiting on the
+     manager — so the message must not offer a skip that is refused. */
+  const interval = $derived(atInterval());
 
   function play() {
     if (watching) return;
@@ -130,10 +133,15 @@
   <p class="step">{step.title}</p>
   {#if watching}
     <p class="held" id="loop-held">
-      Das Spiel läuft noch — {m.live?.minute}. Minute.
-      Sieh es zu Ende oder spring zum Abpfiff.
+      {#if interval}
+        Halbzeit — die zweite Hälfte wartet auf deine Entscheidung.
+      {:else}
+        Das Spiel läuft noch — {m.live?.minute}. Minute.
+        Sieh es zu Ende oder spring zum Abpfiff.
+      {/if}
     </p>
-    <Button doc={step.doc} blocked describedBy="loop-held" onclick={skipToEnd} explain />
+    <Button doc={step.doc} blocked describedBy="loop-held"
+            onclick={() => { if (!interval) skipToEnd(); }} explain />
   {:else}
     <Button doc={step.doc} onclick={play} explain />
   {/if}
