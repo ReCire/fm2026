@@ -205,3 +205,57 @@ describe('tactical styles trade mean for variance', () => {
     expect(goals('offensiv')).toBeGreaterThan(goals('defensiv'));
   });
 });
+
+describe('the club can run out of money', () => {
+  /*
+   * The guard that was missing.
+   *
+   * Gate receipts shipped at €169.000 a game — €2,87 MILLION across a season
+   * against a €352.000 wage bill, which was 99% of all income in the game. The
+   * consequence was not that the numbers were large; it was that no financial
+   * decision could matter. You could not overpay for a player, could not go
+   * under on wages, could not be punished for an empty stand. Nothing failed,
+   * nothing errored, and every economic system in the project was decoration.
+   *
+   * Found by adding up a season's ledger by source rather than by reading any
+   * of the code. This asserts the shape rather than the exact figure: football
+   * pays for the club with a real but modest margin, and the margin is small
+   * enough that one expansion or one bad run puts you under it.
+   */
+  function seasonLedger(seed: number) {
+    const rng = createRng(seed);
+    const mods: Record<string, unknown> = {};
+    for (const m of registry.all) mods[m.id] = m.state.create(rng.fork(m.id));
+    const meta: MetaState = { seed, season: 1, matchday: 1, tick: 0, createdAt: 0, lastPlayedAt: 0 };
+    const g: GameState = { meta, modules: mods as unknown as ModuleStates };
+    applyNarrative(g.modules.progression, narratives[0]!);
+    g.modules.progression.started = true;
+    playSeason(g);
+
+    const by = new Map<string, number>();
+    for (const e of g.modules.finance.ledger ?? []) {
+      by.set(e.source, (by.get(e.source) ?? 0) + e.amount);
+    }
+    return by;
+  }
+
+  it('gate receipts pay the wages with a margin, not twenty times over', () => {
+    for (let seed = 0; seed < 4; seed++) {
+      const by = seasonLedger(seedFrom(`econ${seed}`));
+      const gate = by.get('stadium') ?? 0;
+      const wages = -(by.get('squad') ?? 0);
+      expect(wages, `seed ${seed}: nobody was paid`).toBeGreaterThan(0);
+      expect(gate / wages, `seed ${seed}: gate/wages ratio`).toBeGreaterThan(0.9);
+      expect(gate / wages, `seed ${seed}: gate/wages ratio`).toBeLessThan(2.2);
+    }
+  });
+
+  it('a season at the turnstiles is worth roughly a season of wages', () => {
+    const by = seasonLedger(seedFrom('econ-scale'));
+    const gate = by.get('stadium') ?? 0;
+    // A fourth-division ground, not a Bundesliga one. The failure mode this
+    // catches is a single content edit quietly restoring millions.
+    expect(gate).toBeGreaterThan(250_000);
+    expect(gate).toBeLessThan(800_000);
+  });
+});

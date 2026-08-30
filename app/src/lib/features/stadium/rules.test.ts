@@ -6,9 +6,15 @@ import { createRng } from '$lib/engine/rng';
 const base = () => createStadium(createRng(1));
 
 describe('capacity', () => {
+  /* Derived from the blocks, not restated. A hardcoded total is a second copy
+     of the content that goes stale the moment the ground is resized — which is
+     exactly what happened when it was rescaled from a Bundesliga stadium to the
+     Regionalliga one a fourth-division club actually has. */
   it('sums every block including the VIP boxes', () => {
-    // 2000 + 1500 + 3000 + 1500 + 3000 + 2000 + 50 + 1500
-    expect(capacity(base())).toBe(14_550);
+    const s = base();
+    const byHand = Object.values(s.blocks).reduce((sum, b) => sum + b.cap, 0);
+    expect(capacity(s)).toBe(byHand);
+    expect(byHand, 'a fourth-division ground, not a Bundesliga one').toBeLessThan(6000);
   });
 });
 
@@ -61,8 +67,10 @@ describe('attendanceFactor', () => {
 describe('ticketIncome', () => {
   it('prices standing, seated and VIP separately', () => {
     const s = base();
-    const att = attendance(s);              // 14550 * 0.675 = 9821
-    const expected = Math.round(att * 0.5 * 12 + att * 0.45 * 24 + 50 * 80);
+    const att = attendance(s);              // capacity * 0.675
+    const p = s.ticketPrices;
+    const vip = s.blocks.vipLogen!.cap;
+    const expected = Math.round(att * 0.5 * p.steh + att * 0.45 * p.sitz + vip * p.vip);
     expect(ticketIncome(s)).toBe(expected);
   });
 
@@ -76,7 +84,10 @@ describe('ticketIncome', () => {
 
 describe('expansionQuote', () => {
   it('reports cost and the resulting capacity', () => {
-    expect(expansionQuote(base(), 'kurve')).toEqual({ cost: 130_000, seats: 1000, newCap: 4000 });
+    const s = base();
+    const block = s.blocks.kurve!;
+    expect(expansionQuote(s, 'kurve'))
+      .toEqual({ cost: block.cost, seats: block.addSeats, newCap: block.cap + block.addSeats });
   });
   it('returns undefined for a block that does not exist', () => {
     expect(expansionQuote(base(), 'nope')).toBeUndefined();
