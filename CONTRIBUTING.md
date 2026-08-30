@@ -66,7 +66,7 @@ the live build on his phone while work continues, so `main` may move under you.
    Without this every commit reads as `ReCire`, including Eric's, and nobody can
    tell who did what afterwards.
 
-## Two rules that came out of real bugs
+## Three rules that came out of real bugs
 
 **Vary the input across its range and assert the output moves.** Every tuneable
 gets a test that changes it and asserts something downstream changes. It does
@@ -79,6 +79,32 @@ computed, and never wired.
 **A screenshot confirms what you expect to see.** Verify by querying the
 artifact, not by looking at it: assert the element exists, assert its value
 equals the expected one, assert it is absent where it should be absent.
+
+**Write the assertion from what should be true, never from what the code
+does.** A test written by reading the implementation cannot fail, because it
+was derived from the thing it is checking — and if the implementation is wrong,
+the test now records the bug as the design and stays green forever.
+
+We shipped one. `engine.test.ts` demonstrated the "no migration, so reset that
+slice" path using `squad` as its example — which was accurate, because squad
+exported a `migrateSquad` its module had never registered. Every version bump
+since v2 had no upgrade path at all, and the test that would have caught it was
+instead describing it as intended behaviour. It would never have gone red.
+
+That is worse than a missing test. A missing test leaves a gap you might
+notice; this one fills the gap with a wrong answer.
+
+The tell is checkable in review: **if a test's assertion is the same sentence as
+the implementation's comment, one of the two is redundant, and it is usually the
+test.** `expect(catalogue).toHaveLength(24)` is reading your own array back.
+`expect(everySynthesisNode).toHaveTwoDoctrines()` is a claim about what a
+synthesis IS.
+
+The three rules catch three different failures. The first catches a tuneable
+that reaches nothing. The second catches a mechanism that works where the
+player cannot get at it. The third catches a tuneable deliberately set to the
+wrong value, and a mechanism that is wrong on purpose because somebody wrote
+the test last.
 
 ## Design intent
 

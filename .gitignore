@@ -21,3 +21,6 @@ traumverein_app/
 
 # Subagent worktrees. Working copies, not history.
 .claude/worktrees/
+
+# Eric's Sportschau reference screenshots. Input, not source.
+sportschau/
