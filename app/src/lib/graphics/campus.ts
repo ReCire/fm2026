@@ -1,4 +1,3 @@
-import type { Footprint } from './iso';
 import { PLOT_SIZES, buildings, buildingById, effectiveLevels, type Building, type PlotSize } from '$lib/content/campus';
 
 /**
@@ -15,6 +14,14 @@ import { PLOT_SIZES, buildings, buildingById, effectiveLevels, type Building, ty
  * grounds are laid out: the car park is between the stand and the road because
  * that is where the space was.
  */
+/** A rectangle on the site grid, in tiles. */
+export interface Footprint {
+  x: number;
+  y: number;
+  w: number;
+  d: number;
+}
+
 export const SITE = { w: 24, d: 24 } as const;
 export const BOWL: Footprint = { x: 8, y: 8, w: 8, d: 8 };
 
