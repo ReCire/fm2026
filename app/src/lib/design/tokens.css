@@ -102,6 +102,28 @@
   --c-live:     #00FF88;
   --c-live-ink: #00FF88;   /* 13.96:1 on the forest — carries type here */
 
+  /* ---- Campus surfaces ----
+     The isometric view paints materials, not domains, so it needs its own
+     small vocabulary. One ALBEDO per material: the three faces of a solid are
+     derived in code by a fixed light level, the way isometric art has always
+     worked. Defining three tokens per material would let a roof and its own
+     wall drift out of the same family.
+
+     Night here is a deliberate reading of the mode, not a dimming: a ground
+     under floodlights is what a stadium looks like when it matters. */
+  --iso-grass:    #2F4A33;
+  --iso-turf:     #4A7A50;
+  --iso-line:     #C8D8C4;
+  --iso-tarmac:   #262E2A;
+  --iso-concrete: #5A655C;
+  --iso-stand:    #7C8A7E;
+  --iso-roof:     #3A453E;
+  --iso-glass:    #2A3F4E;
+  --iso-water:    #2A5560;
+  --iso-rust:     #6B4A32;
+  --iso-lit:      #F2D9A0;
+  --iso-sky:      #0B1410;
+
   --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.35);
   --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.50);
 }
@@ -160,6 +182,21 @@
      darkened value to be type at all. */
   --c-live:     #00CC6A;
   --c-live-ink: #007F42;
+
+  /* Campus by day. Same roles, unrelated values — a night palette lightened
+     turns grass into sage and tarmac into lavender. */
+  --iso-grass:    #6E9A63;
+  --iso-turf:     #86B577;
+  --iso-line:     #FFFFFF;
+  --iso-tarmac:   #9A9A93;
+  --iso-concrete: #C6C2B6;
+  --iso-stand:    #D8D4C8;
+  --iso-roof:     #8E9089;
+  --iso-glass:    #A9C4D2;
+  --iso-water:    #6FA8B8;
+  --iso-rust:     #A9764F;
+  --iso-lit:      #FFFFFF;
+  --iso-sky:      #DDE6DA;
 
   --shadow-card: 0 1px 3px rgba(44, 36, 22, 0.08);
   --shadow-lift: 0 6px 20px rgba(44, 36, 22, 0.10);

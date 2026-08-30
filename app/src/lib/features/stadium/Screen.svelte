@@ -3,9 +3,21 @@
   import { Panel, StatChip, Bar, Button, toast } from '$lib/ui';
   import { capacity, attendance, attendanceFactor, ticketIncome, expansionQuote } from './rules';
   import { formatMoney, post } from '../finance/rules';
+  import CampusMap from '$lib/graphics/CampusMap.svelte';
+  import { development } from '$lib/graphics/campus';
+  import { teamById } from '../league/rules';
 
   const stadium = $derived(game.modules.stadium);
   const finance = $derived(game.modules.finance);
+
+  // Editor edits are applied to the league team itself now, so the team's own
+  // name is already the edited one — no resolver in between.
+  const clubName = $derived(
+    teamById(game.modules.league, game.modules.league.playerClubId)?.name ?? 'Vereinsgelände'
+  );
+
+  // No campus module yet, so nothing is built beyond what the club starts with.
+  const built = $derived(development());
 
   function expand(blockId: string) {
     const quote = expansionQuote(stadium, blockId);
@@ -25,6 +37,22 @@
     toast('Ausbau beauftragt', `+${quote.seats} Plätze`, 'good');
   }
 </script>
+
+<!--
+  The ground, before the numbers.
+
+  Capacity is 3.420 and attendance is 2.309 and neither of those tells you that
+  you are running a fourth-division club out of four containers and a gravel
+  car park. This does, in the time it takes to look at it — which is the one
+  thing a figure cannot do however well it is formatted.
+-->
+<Panel title="Vereinsgelände" accent="primary" meta="{built.built} von {built.possible} Ausbaustufen">
+  <CampusMap {stadium} {clubName} />
+  <p class="legend">
+    Die Höhe jeder Tribüne ist die Kapazität ihres Blocks. Gestrichelte Flächen sind
+    Grundstücke, auf denen noch nichts steht.
+  </p>
+</Panel>
 
 <Panel title="Stadion" accent="accent">
   <div class="chips">
@@ -65,6 +93,7 @@
 </Panel>
 
 <style>
+  .legend { margin: var(--s3) 0 0; font-size: var(--fs-caption); color: var(--text-muted); }
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); }
   .fans { margin-top: var(--s3); font-size: var(--fs-caption); color: var(--text-muted); display: grid; gap: var(--s2); }
   .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s2); }
