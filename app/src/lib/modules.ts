@@ -22,6 +22,8 @@ import staff from './features/staff/module';
 import training from './features/training/module';
 import calendar from './features/calendar/module';
 import history from './features/history/module';
+import sponsors from './features/sponsors/module';
+import merch from './features/merch/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -36,6 +38,8 @@ const declared: readonly ModuleDef[] = [
   calendar,
   transfer,
   staff,
+  sponsors,
+  merch,
   history,
   editor
 ];

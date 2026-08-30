@@ -66,7 +66,7 @@ describe('registry', () => {
 
   it('leaves a disabled module out entirely', () => {
     const off = modules.map((m) =>
-      m.id === 'stadium' ? { ...m, enabled: () => false } : m
+      m.id === 'stadium' || m.id === 'merch' ? { ...m, enabled: () => false } : m
     );
     const r = new Registry(off);
     expect(r.byId.has('stadium')).toBe(false);
@@ -158,7 +158,7 @@ describe('a matchday', () => {
   it('survives a module that throws, and reports it instead of aborting the tick', () => {
     const broken = modules.map((m) =>
       m.id === 'stadium'
-        ? { ...m, hooks: { matchday: { phase: 'economy' as const, run() { throw new Error('boom'); } } } }
+        ? { ...m, hooks: { matchday: { phase: 'economy' as const, provides: ['stadium.attendance'], run() { throw new Error('boom'); } } } }
         : m
     );
     const r = new Registry(broken);
@@ -255,7 +255,7 @@ describe('a failing tick', () => {
   it('reports which module threw, so the caller can roll back', () => {
     const broken = modules.map((m) =>
       m.id === 'stadium'
-        ? { ...m, hooks: { matchday: { phase: 'economy' as const, run() { throw new Error('boom'); } } } }
+        ? { ...m, hooks: { matchday: { phase: 'economy' as const, provides: ['stadium.attendance'], run() { throw new Error('boom'); } } } }
         : m
     );
     const r = new Registry(broken);
@@ -297,8 +297,10 @@ describe('a failing tick', () => {
             hooks: {
               matchday: {
                 phase: 'economy' as const,
+                provides: ['stadium.attendance'],
                 run({ provide }: { provide: (k: string, v: unknown) => void }) {
                   provide('stadium.attendance', 1000);
+                  provide('stadium.hotDogs', 12);   // never declared
                 }
               }
             }
@@ -322,8 +324,10 @@ describe('a failing tick', () => {
             hooks: {
               matchday: {
                 phase: 'economy' as const,
-                run({ modify }: { modify: (k: string, f: number) => void }) {
-                  modify('squad.fitnessLoss', 0.5);
+                provides: ['stadium.attendance'],
+                run({ provide, modify }: { provide: (k: string, v: unknown) => void; modify: (k: string, f: number) => void }) {
+                  provide('stadium.attendance', 1000);
+                  modify('squad.fitnessLoss', 0.5);   // never declared here
                 }
               }
             }
@@ -393,6 +397,7 @@ describe('delegation', () => {
             ...m,
             autopilot: {
               phase: 'economy' as const,
+              provides: ['stadium.attendance'],
               run(ctx: any) {
                 // The competence value is the whole point: an autopilot should
                 // act WORSE when it is low, not merely differently.

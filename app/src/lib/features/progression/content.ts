@@ -56,7 +56,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 150_000,
     startingTransferBudget: 100_000,
     unlockedAtStart: [...CORE, 'stadium'],
-    unlockOrder: ['transfer', 'training', 'youth', 'staff', 'sponsors', 'merch', 'fans', 'cup'],
+    unlockOrder: ['transfer', 'youth', 'staff', 'sponsors', 'merch', 'fans', 'cup'],
     difficulty: 'normal'
   },
   {
@@ -70,7 +70,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 2_400_000,
     startingTransferBudget: 1_800_000,
     unlockedAtStart: [...CORE, 'stadium', 'transfer', 'staff', 'sponsors'],
-    unlockOrder: ['training', 'contracts', 'merch', 'youth', 'europe', 'fans', 'cup'],
+    unlockOrder: ['contracts', 'merch', 'youth', 'europe', 'fans', 'cup'],
     difficulty: 'hart'
   },
   {
@@ -84,7 +84,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 6_000_000,
     startingTransferBudget: 3_000_000,
     unlockedAtStart: [...CORE, 'stadium', 'transfer', 'holding'],
-    unlockOrder: ['industry', 'rawMaterials', 'stocks', 'merch', 'staff', 'sponsors', 'training'],
+    unlockOrder: ['industry', 'rawMaterials', 'stocks', 'merch', 'staff', 'sponsors'],
     difficulty: 'ruhig'
   },
   {
@@ -97,7 +97,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     leagueLevel: 2,
     startingMoney: 400_000,
     startingTransferBudget: 50_000,
-    unlockedAtStart: [...CORE, 'youth', 'training'],
+    unlockedAtStart: [...CORE, 'youth'],
     unlockOrder: ['staff', 'transfer', 'stadium', 'campus', 'sponsors', 'contracts', 'fans'],
     difficulty: 'hart'
   },
@@ -120,7 +120,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: -1_800_000,
     startingTransferBudget: 0,
     unlockedAtStart: [...CORE],
-    unlockOrder: ['transfer', 'sponsors', 'stadium', 'staff', 'merch', 'training', 'youth', 'fans'],
+    unlockOrder: ['transfer', 'sponsors', 'stadium', 'staff', 'merch', 'youth', 'fans'],
     difficulty: 'brutal'
   }
 ]);
