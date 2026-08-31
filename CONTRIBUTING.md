@@ -171,6 +171,56 @@ whether it rendered or not.
 the port reads.** Not the data — the references. That would have found `icon`
 in ten seconds.
 
+## Copy plans, the feed notices, the manual confirms
+
+Three places a player can learn a rule, and they are not interchangeable.
+
+| | for | holds |
+|---|---|---|
+| **on-screen copy** | planning | the rule a player must know *before* deciding |
+| **the feed** | noticing | what just happened, once, in the moment |
+| **the manual `why`** | confirming | the mechanic behind a suspicion already formed |
+
+The test is not "is this true", it is "what does a player DO having read it".
+
+I nearly put "a raid lowers Ermittlungsdruck" in a tooltip and thought I was
+being transparent. It is true. It is also, in a tooltip, advice to get raided —
+and the fine scales with the needle, so a player who follows it eats the most
+expensive possible version of it. True, prominent, and a trap.
+
+The same fact belongs in the feed, where the raid and its resolution are two
+lines and the needle visibly falls between them: found out once, unmissable,
+never repeated. And in the manual, where a player goes to confirm a suspicion
+they already have. **Confirming is not advertising.**
+
+The rule that must be in the copy is the one being planned against: the file
+closes below 25, and the board's target is printed in October. Being punished
+by a number you were never shown is the worst thing this game can do — and
+"you can lower the meter by getting raided" is the same sentence pointed the
+other way.
+
+## Write the test from the claim, not from the code
+
+Both real bugs found on the day this was written came from a test written
+against a sentence about what should be true:
+
+- *"a board must never sack a manager for the place it asked him to reach"* —
+  found a published target of 17th with a failure line at 16th.
+- *"a club that stops must be able to get clean"* — found a fixed point at 60%
+  where a manager who sold every node they owned was raided forever.
+
+Neither is a reading of the function it broke. Both are design claims, and
+that is why they could disagree with the implementation at all.
+
+The failure mode is the same tell as a test that encodes a bug, pointed the
+other way. The press meter's unit test was written from the code, so it
+modelled a raid as publishing ONE story — the code publishes two, the raid and
+the fine — and it passed while the real system diverged. The integration test,
+which ran a season instead of modelling one, found it in a second.
+
+**Model the system in one test and run it in another. Only one of them can be
+wrong about what the system contains.**
+
 ## Three rules that came out of real bugs
 
 **Vary the input across its range and assert the output moves.** Every tuneable
