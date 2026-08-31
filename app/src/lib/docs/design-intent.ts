@@ -42,6 +42,28 @@ function defineIntent<T extends readonly DesignIntent[]>(entries: T): T {
 export const designIntent = defineIntent([
   // ---------------------------------------------------------------- squad --
   {
+    id: 'matchday.swingCap',
+    constant: 'SWING_CAP',
+    value: '6 strength points, either direction',
+    rationale:
+      'The most a half-time call may move the second half. Deliberately smaller than the ten points that separate two divisions, so a tactical decision can turn a close match and can never beat a side that is simply better.',
+    failureMode:
+      'At 12 a half-time button outweighs the gap to the division above, and the eleven you picked stops deciding results. Nothing errors and no test outside this one goes red — the matches still resolve, they just stop being about the squad. Every balance guarantee in the project rests on "a better eleven wins more"; this is the number that can quietly buy its way out of that.',
+    module: 'matchday',
+    source: 'architecture'
+  },
+  {
+    id: 'matchday.halfTimeCosts',
+    constant: 'Option.fitnessCost / injuryRisk / morale',
+    value: 'every option costs at least one of the three; `halten` costs nothing and gives nothing',
+    rationale:
+      'An option with an upside and no price is not a decision, it is a button you press every week. The injury multiplier applies to the REMAINING match rather than the season, which is why the figures look small beside the base rate.',
+    failureMode:
+      'Make any option strictly better and the interval becomes a formality: the player learns the one right answer in three matches and clicks it forever. The panel would still work, the numbers would still resolve, and the one moment in a match where the manager is asked something would have exactly one answer.',
+    module: 'matchday',
+    source: 'architecture'
+  },
+  {
     id: 'squad.injuryBaseRisk',
     constant: 'injuryBaseRisk',
     value: '0.055 per starter per match',
