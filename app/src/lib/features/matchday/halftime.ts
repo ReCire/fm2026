@@ -2,7 +2,8 @@ import { createRng, mixSeed } from '$lib/engine/rng';
 import type { GameState } from '$lib/engine/state';
 import { continueFrom, scoreAt } from './narrate';
 import { halfTimeDecision, optionById, cappedSwing, type Decision, type Option } from './intervene';
-import { simulateFixture, amendResult, matchdayFixtures, teamById } from '../league/rules';
+import { applyMidMatchOutcome, comebackFor } from './outcome';
+import { simulateFixture, teamById } from '../league/rules';
 
 /**
  * Taking the half-time decision.
@@ -54,13 +55,8 @@ export function applyHalfTime(state: GameState, optionId: string): Option | null
    */
   const rng = createRng(mixSeed(state.meta.seed, `halftime#${live.matchday}#${option.id}`));
 
-  const league = state.modules.league;
-  const teams = league.levels[league.playerLevel] ?? [];
-  const fixture = matchdayFixtures(league, league.playerLevel, live.matchday)
-    .find((f) => teams[f.home]?.id === league.playerClubId || teams[f.away]?.id === league.playerClubId);
-
   const swing = cappedSwing(option);
-  const ours = live.ourStrength + swing;
+  const ours = live.ourStrength + swing + comebackFor(live, us, them);
 
   /*
    * The second half only. `goalChance` halved, because this is forty-five
@@ -88,51 +84,10 @@ export function applyHalfTime(state: GameState, optionId: string): Option | null
     edge: ours - live.opponentStrength
   });
 
-  /*
-   * The table counted the original result at kickoff. Correct it.
-   *
-   * Loud, not silent. An `if (fixture)` that quietly does nothing leaves the
-   * table saying one thing and the scoreline another, and nobody finds that
-   * for weeks — it is the exact failure shape this codebase keeps hitting. If
-   * the fixture cannot be found, the decision has not been applied and the
-   * caller needs to know rather than see a resumed clock and assume it worked.
-   */
-  if (!fixture) {
-    throw new Error(
-      `Half-time decision could not find the player's fixture for matchday ${live.matchday}. ` +
-      'The table has NOT been corrected.'
-    );
-  }
-  amendResult(
-    teams,
-    fixture,
-    live.isHome ? finalUs : finalThem,
-    live.isHome ? finalThem : finalUs
-  );
-
-  /*
-   * The career win count follows the amended result. A half-time call can turn
-   * a draw into a win or a win into a draw, and a badge that read a tally the
-   * scoreline no longer supported would be awarded for a match that did not
-   * happen that way.
-   */
-  if (m.lastReport && m.lastReport.matchday === live.matchday) {
-    const wasWin = m.lastReport.goalsFor > m.lastReport.goalsAgainst;
-    const isWin = finalUs > finalThem;
-    if (!wasWin && isWin) m.careerWins += 1;
-    if (wasWin && !isWin) m.careerWins = Math.max(0, m.careerWins - 1);
-  }
-
-  // And the report, which is what the player reads afterwards.
-  if (m.lastReport && m.lastReport.matchday === live.matchday) {
-    m.lastReport.goalsFor = finalUs;
-    m.lastReport.goalsAgainst = finalThem;
-    const recent = m.recent[0];
-    if (recent && recent.matchday === live.matchday) {
-      recent.goalsFor = finalUs;
-      recent.goalsAgainst = finalThem;
-    }
-  }
+  // The table counted the original result at kickoff, and the report and the
+  // career record read the same one — see outcome.ts for why the three are
+  // corrected together rather than three times over.
+  applyMidMatchOutcome(state, finalUs, finalThem, 'Half-time decision');
 
   // What it cost. Applied to the eleven that played, not to the whole squad.
   for (const p of state.modules.squad.players) {

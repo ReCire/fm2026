@@ -2,7 +2,8 @@ import { createRng, mixSeed } from '$lib/engine/rng';
 import type { GameState } from '$lib/engine/state';
 import type { Player } from '../squad/state';
 import { continueFrom, scoreAt, type Beat } from './narrate';
-import { simulateFixture, amendResult, matchdayFixtures, teamById } from '../league/rules';
+import { applyMidMatchOutcome, comebackFor } from './outcome';
+import { simulateFixture, teamById } from '../league/rules';
 import { rating, isAvailable } from '../squad/rules';
 
 /**
@@ -96,7 +97,7 @@ export function applySubstitution(state: GameState, outId: string, inId: string)
    */
   const swing = subSwing(inPlayer, outPlayer);
   const [usNow, themNow] = scoreAt(live.beats, live.minute);
-  const ours = live.ourStrength + swing;
+  const ours = live.ourStrength + swing + comebackFor(live, usNow, themNow);
 
   const share = Math.max(0, (90 - live.minute) / 90);
   const rest = simulateFixture(
@@ -134,41 +135,9 @@ export function applySubstitution(state: GameState, outId: string, inId: string)
   live.subs.push({ minute: live.minute, outId, inId });
   live.subsUsed += 1;
 
-  /*
-   * Same correction the half-time call makes, and for the same reason: the
-   * table counted the score at kickoff, and this is the second thing in the
-   * game that can change a result after it was counted. See halftime.ts —
-   * duplicated rather than shared, because reaching into architecture's file
-   * to extract a helper is a bigger seam crossing than this feature needed.
-   */
-  const league = state.modules.league;
-  const teams = league.levels[league.playerLevel] ?? [];
-  const fixture = matchdayFixtures(league, league.playerLevel, live.matchday)
-    .find((f) => teams[f.home]?.id === league.playerClubId || teams[f.away]?.id === league.playerClubId);
-  if (!fixture) {
-    throw new Error(
-      `Substitution could not find the player's fixture for matchday ${live.matchday}. ` +
-      'The table has NOT been corrected.'
-    );
-  }
-  amendResult(
-    teams, fixture,
-    live.isHome ? finalUs : finalThem,
-    live.isHome ? finalThem : finalUs
-  );
-  if (m.lastReport && m.lastReport.matchday === live.matchday) {
-    const wasWin = m.lastReport.goalsFor > m.lastReport.goalsAgainst;
-    const isWin = finalUs > finalThem;
-    if (!wasWin && isWin) m.careerWins += 1;
-    if (wasWin && !isWin) m.careerWins = Math.max(0, m.careerWins - 1);
-    m.lastReport.goalsFor = finalUs;
-    m.lastReport.goalsAgainst = finalThem;
-    const recent = m.recent[0];
-    if (recent && recent.matchday === live.matchday) {
-      recent.goalsFor = finalUs;
-      recent.goalsAgainst = finalThem;
-    }
-  }
+  // Same correction the half-time call makes, and for the same reason — see
+  // outcome.ts, now shared rather than copied.
+  applyMidMatchOutcome(state, finalUs, finalThem, 'Substitution');
 
   return true;
 }
