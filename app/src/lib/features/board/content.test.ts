@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   bands, bandFor, ambitions, ambitionFor, expectedRank, disasterRank, isDisaster, demandFor,
-  boardContent, doubtPerStoryWeight, memoryOfLastSeason, SACK_AT, SOURCES, VOICES, copy
+  boardContent, doubtPerStoryWeight, doubtPerOpenFile, memoryOfLastSeason, SACK_AT, SOURCES, VOICES, copy
 } from './content';
 
 describe('the gauge', () => {
@@ -188,6 +188,24 @@ describe('what the board reads', () => {
      */
     expect(doubtPerStoryWeight * 14).toBeCloseTo(-(doubtPerStoryWeight * -14));
     expect(doubtPerStoryWeight * 14).toBeGreaterThan(boardContent.promotionBonus / 3);
+  });
+
+  it('keeps a standing file quieter than a single raid', () => {
+    /*
+     * The feed carries moments; an investigation is a condition. Both must be
+     * felt, and the event must always be the louder of the two — a weight that
+     * out-argued the raid would make it rational to stop caring which week the
+     * Ermittler actually came.
+     *
+     * One raid headline against a whole season of being under investigation.
+     */
+    const oneRaid = doubtPerStoryWeight * 14;
+    const wholeSeason = doubtPerOpenFile * 34;
+    expect(oneRaid).toBeGreaterThan(doubtPerOpenFile);
+    expect(wholeSeason).toBeGreaterThan(oneRaid);
+    // ...and a season of it still leaves a manager on the starting trust above
+    // the ultimatum, so an open file alone never ends a career.
+    expect(boardContent.startingTrust - wholeSeason).toBeGreaterThan(boardContent.ultimatumAt);
   });
 
   it('punishes a bad season harder than it rewards a good one', () => {

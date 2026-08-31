@@ -44,6 +44,27 @@ import { cast, type CastId, type CastMember } from '$lib/content/cast';
 export const doubtPerStoryWeight = 0.55;
 
 /**
+ * What an OPEN FILE costs the boardroom per matchday, on top of what was printed.
+ *
+ * Named for what it does rather than for what it is attached to: it is
+ * subtracted, like `doubtPerStoryWeight`, and a `trustPerOpenFile` that took
+ * trust away would be the second name in this file to mean its own opposite.
+ *
+ * It exists because the feed carries MOMENTS and an investigation is a standing
+ * condition. Without it, eleven quiet matchdays under investigation read in the
+ * boardroom as a club that is fine — the papers have moved on, so nothing
+ * arrives, so nothing changes, while the Verband is still holding a file with
+ * the club's name on it. That is not what a supervisory board is like.
+ *
+ * Deliberately small enough that it can never compete with a raid: a full
+ * season under permanent investigation costs about twelve trust, while one
+ * raid's headline costs nearly eight in an afternoon. The file is a weight; the
+ * raid is an event. If the weight ever out-argued the event, a player would
+ * rationally stop caring which week the ermittler actually came.
+ */
+export const doubtPerOpenFile = 0.35;
+
+/**
  * Sporting trust and bought trust are not the same substance.
  *
  * `board.trust` is earned per season; `board.floor` is a number seven doctrine
