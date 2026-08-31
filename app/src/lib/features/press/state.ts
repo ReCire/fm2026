@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CAUSES, pressContent } from './content';
+import { CAUSES } from './content';
 
 /**
  * What has been written about the club, and how hot it is.
@@ -66,7 +66,12 @@ declare module '$lib/engine/state' {
 
 export function createPress(): PressState {
   return {
-    pressure: pressContent.baseline,
+    /*
+     * Zero, and it matters. A club that has done nothing is not under
+     * investigation at a low level — it is not under investigation, and the
+     * screen should be able to say so. See the note in content.ts.
+     */
+    pressure: 0,
     feed: [],
     winless: 0,
     unbeaten: 0,

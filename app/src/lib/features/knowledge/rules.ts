@@ -87,7 +87,28 @@ export const EFFECTS: Partial<Record<FxKey, Effect>> = {
   transferBudgetMod: { key: 'finance.transferBudget',     arity: 'factor' },
   sellBonus:         { key: 'transfer.saleValue',         arity: 'factor' },
   valueBoost:        { key: 'squad.marketValue',          arity: 'factor' },
-  youthPot:          { key: 'training.youthCeiling',      arity: 'total' }
+  youthPot:          { key: 'training.youthCeiling',      arity: 'total' },
+
+  /*
+   * The third pass: Ermittlungsdruck and the boardroom.
+   *
+   * `pressureMod` maps to `press.suspicion` rather than to `press.pressure`
+   * because the doctrine does not set the meter, it adds to what the Verband
+   * has reason to wonder about. The meter is what press makes of that, and
+   * press publishes it back out under its own name — one key for what goes in,
+   * one for what comes out, and no chance of a node appearing to overwrite a
+   * reading it only nudges.
+   *
+   * `boardFloor` is `max` and not `total` for the reason the arity note gives:
+   * two nodes promising trust never falls below 30 and below 40 promise a
+   * floor of 40. Summed, they would promise 70, and a node whose German says
+   * "fällt nie unter 40 %" has to be literally true or the tree is lying in
+   * the one place the player is reading it carefully.
+   */
+  pressureMod:       { key: 'press.suspicion',            arity: 'total' },
+  penaltyMod:        { key: 'press.penalty',              arity: 'factor' },
+  boardFloor:        { key: 'board.floor',                arity: 'max' },
+  boardGain:         { key: 'board.trust',                arity: 'total' }
 };
 
 /** Every bus key this module can write. Declared statically on the hook. */

@@ -6,7 +6,7 @@ import {
   playMatchday,
   playerFixture,
   rankOfId,
-  seasonOutcome, developClubs } from './rules';
+  seasonOutcome, developClubs, teamById } from './rules';
 import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
 import { postToLedger, formatMoney } from '../finance/module';
 
@@ -60,7 +60,7 @@ export default defineModule({
       consumes: ['squad.strength', 'matchday.goalChance', 'league.opponentPenalty'],
       provides: [
         'league.isHome', 'league.opponent', 'league.opponentStrength',
-        'league.level', 'league.result'
+        'league.level', 'league.result', 'league.clubName'
       ],
       run({ state, rng, emit, query, provide, total }) {
         const league = state.modules.league;
@@ -110,6 +110,19 @@ export default defineModule({
           isHome: us.isHome,
           opponent: us.opponent
         });
+
+        /*
+         * The club's own name, published rather than imported.
+         *
+         * Press needs it for every headline and the matchday screen already
+         * looks it up directly — which is fine for a screen and wrong for a
+         * tick hook, because an editor rename has to reach both and only one
+         * of them re-derives. League owns the club list, so league answers.
+         */
+        provide(
+          'league.clubName',
+          teamById(league, league.playerClubId)?.name ?? 'Dein Verein'
+        );
 
         const rank = rankOfId(league.levels[league.playerLevel] ?? [], league.playerClubId);
         emit({

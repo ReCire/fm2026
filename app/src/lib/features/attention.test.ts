@@ -55,6 +55,22 @@ const CASES: {
     }
   },
   {
+    /*
+     * Not "the meter is high" — the meter being high is a fact, and the badge
+     * is for a decision. A club at 60% with no file open has nothing to do
+     * about it yet; a club with a file open has a stretch of matchdays in
+     * which lowering the needle is a live move, and that is what is worth
+     * interrupting for.
+     */
+    module: 'press',
+    item: 'press.investigation',
+    urgency: 'soon',
+    provoke: (g) => {
+      g.modules.press.pressure = 50;
+      g.modules.press.investigation = { openedSeason: 1, openedMatchday: 4, raids: 0 };
+    }
+  },
+  {
     module: 'transfer',
     item: 'transfer.offers',
     urgency: 'now',

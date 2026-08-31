@@ -1,18 +1,31 @@
 import { defineModule } from '$lib/engine/module';
 import type { GameState } from '$lib/engine/state';
 import { KnowledgeSchema, createKnowledge, KNOWLEDGE_VERSION } from './state';
-import { ownedEffects, CONTRIBUTED } from './rules';
-import { knowledgeContent } from './content';
+import { ownedEffects, ownedFlags, CONTRIBUTED } from './rules';
+import { knowledgeContent, FLAG_KEYS } from './content';
 
-/** One implementation, run on every tick a module might read an effect on. */
-function contributeEffects({ state, modify, addTo }: {
+/**
+ * One implementation, run on every tick a module might read an effect on.
+ *
+ * Flags go out as `provide` rather than as a contribution, because a flag is
+ * not a quantity: two nodes that both switch off Verbandsstrafen switch them
+ * off once. They are published under their own bare names — `noPenalties`, not
+ * `knowledge.noPenalties` — because that is the name the dormancy gate looks
+ * for when it decides whether a flag has a reader, and a flag published under
+ * a prettier key would read as unwired forever while working perfectly.
+ */
+function contributeEffects({ state, modify, addTo, provide }: {
   state: GameState;
   modify: (key: string, factor: number) => void;
   addTo: (key: string, amount: number) => void;
+  provide: (key: string, value: unknown) => void;
 }): void {
   const { totals, factors } = ownedEffects(state.modules.knowledge);
   for (const [key, value] of totals) addTo(key, value);
   for (const [key, value] of factors) modify(key, value);
+
+  const on = ownedFlags(state.modules.knowledge);
+  for (const flag of FLAG_KEYS) provide(flag, on.has(flag));
 }
 
 export default defineModule({
@@ -42,6 +55,7 @@ export default defineModule({
       phase: 'pre',
       order: 1,
       contributes: CONTRIBUTED,
+      provides: FLAG_KEYS,
       run: contributeEffects
     },
 
@@ -61,6 +75,7 @@ export default defineModule({
         phase: 'pre',
         order: 1,
         contributes: CONTRIBUTED,
+        provides: FLAG_KEYS,
         run: contributeEffects
       },
 
@@ -100,6 +115,7 @@ export default defineModule({
         phase: 'pre',
         order: 1,
         contributes: CONTRIBUTED,
+        provides: FLAG_KEYS,
         run: contributeEffects
       },
       {
