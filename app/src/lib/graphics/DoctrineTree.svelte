@@ -10,7 +10,8 @@
     /** Node ids whose effects are not wired yet, so they are not for sale. */
     dormant = new Set<string>(),
     selected = null,
-    onselect
+    onselect,
+    priceOf
   }: {
     nodes: KnowledgeNode[];
     owned: ReadonlySet<string>;
@@ -19,6 +20,8 @@
     dormant?: ReadonlySet<string>;
     selected?: string | null;
     onselect?: (id: string) => void;
+    /** What a node costs, so the price sits on its face. */
+    priceOf?: (node: KnowledgeNode) => { points: number; money: number };
   } = $props();
 
   /*
@@ -35,7 +38,7 @@
    * tree was the first thing Eric described about the whole game.
    */
   const COL = 98;
-  const ROW = 146;
+  const ROW = 158;
   const R = 26;
   const PAD = { x: 54, top: 46, bottom: 34 };
 
@@ -123,6 +126,10 @@
    * rather than a long name. Greedy packing into two balanced lines keeps every
    * node the same height, so the rows stay rows.
    */
+  /** 25.000 → "25K". A price on a 90px-wide node has room for four characters. */
+  const short = (money: number) =>
+    money >= 1_000_000 ? `${Math.round(money / 100_000) / 10}M` : `${Math.round(money / 1000)}K`;
+
   function wrap(name: string): string[] {
     const words = name.split(/[\s-]+/);
     if (words.length <= 1) return words;
@@ -164,6 +171,7 @@
       {@const pos = positions.get(n.id)}
       {#if pos}
         {@const st = state(n)}
+        {@const cost = priceOf?.(n)}
         <g
           class="node {st}" class:sel={selected === n.id}
           role="button" tabindex="0"
@@ -176,10 +184,32 @@
           {#if shape === 'ring'}
             <circle class="hole" cx={pos.x} cy={pos.y} r={R * 0.45} />
           {/if}
-          <text class="tiernum" x={pos.x} y={pos.y + 5}>{n.tier}</text>
+          <!--
+            The node's own icon, not its tier number.
+
+            Every node in the catalogue carries one and the tree was rendering
+            none of them — fourteen identical outlines with a digit inside,
+            where the content had a brauner Umschlag, a Bolzplatz and a
+            Rechenzentrum sitting unused. The tier is already the row.
+          -->
+          <text class="icon" x={pos.x} y={pos.y + 6}>{n.icon}</text>
           {#each wrap(n.name) as word, wi (wi)}
-            <text class="label" x={pos.x} y={pos.y + R + 15 + wi * 11}>{word}</text>
+            <text class="label" x={pos.x} y={pos.y + R + 14 + wi * 11}>{word}</text>
           {/each}
+          <!--
+            The price on the face of the node.
+
+            This is what turns a diagram into something you plan against: you
+            can see the whole doctrine and what each step costs without opening
+            anything. Owned nodes say so instead, in a word rather than a tick,
+            because a tick and an empty space look alike at a glance.
+          -->
+          <text class="cost" x={pos.x} y={pos.y + R + 14 + wrap(n.name).length * 11 + 2}>
+            {#if st === 'owned'}AKTIV
+            {:else if st === 'dormant'}—
+            {:else if cost}{cost.points} WP · {short(cost.money)}
+            {/if}
+          </text>
         </g>
       {/if}
     {/each}
@@ -208,9 +238,10 @@
     stroke-width: 2;
   }
   .hole { fill: var(--bg-card); }
-  .tiernum {
-    text-anchor: middle; font-size: 13px; font-weight: 700;
-    fill: var(--text-dim); pointer-events: none;
+  .icon { text-anchor: middle; font-size: 19px; pointer-events: none; }
+  .cost {
+    text-anchor: middle; font-size: 9px; font-weight: 700;
+    letter-spacing: .04em; fill: var(--text-dim); pointer-events: none;
   }
   .label {
     text-anchor: middle; font-size: 9.5px; font-weight: 600;
@@ -219,20 +250,21 @@
 
   /* Owned: filled in the doctrine's own colour. */
   .node.owned .mark { fill: var(--doctrine-tint, var(--primary)); stroke: var(--doctrine-tint, var(--primary)); }
-  .node.owned .tiernum { fill: var(--on-fill); }
   .node.owned .label { fill: var(--text-main); }
+  .node.owned .cost { fill: var(--doctrine-tint, var(--primary)); }
 
   /* Open: outlined, not filled. The difference between "yours" and "you could
      have this" has to survive greyscale, so it is fill-versus-outline and not
      two shades of the same colour. */
   .node.open .mark { stroke: var(--doctrine-tint, var(--primary)); stroke-width: 2.5; }
-  .node.open .tiernum, .node.open .label { fill: var(--text-main); }
+  .node.open .label { fill: var(--text-main); }
+  .node.open .cost { fill: var(--text-muted); }
 
   /* Dormant: dashed. Not greyed — grey reads as "locked, keep playing", and
      these are not locked, they are unfinished. The dash says "not yet a thing"
      without pretending the player did something wrong. */
   .node.dormant .mark { stroke-dasharray: 4 4; opacity: .6; }
-  .node.dormant .tiernum, .node.dormant .label { opacity: .55; }
+  .node.dormant .icon, .node.dormant .label, .node.dormant .cost { opacity: .45; }
 
   .node.sel .mark { stroke: var(--text-main); stroke-width: 3; }
   .node:focus-visible { outline: none; }

@@ -80,47 +80,65 @@
   }
 </script>
 
+
+<!--
+  All eight, always, as a grid rather than a list you leave.
+
+  Eric: the prototype "feels more full", and half of that is this. A list you
+  tap into and back out of shows one doctrine at a time and never the system;
+  a grid that stays on screen while you read a tree IS the system, and eight
+  ranks side by side are the whole "what am I giving up" decision in a glance.
+
+  The mark is the doctrine's own silhouette with its abbreviation underneath,
+  so the eight stay separable without colour and at 40px.
+-->
 <Panel title="Doktrin" accent="industry" meta="{k.owned.length} von {knowledgeNodes.length}">
+  <!--
+    One panel, not two.
+
+    The chips and the grid were separate panels with the same meta on both, so
+    the eight doctrines — the thing this screen is for — started below the fold
+    behind a duplicate count and two paragraphs of explanation. The intro said
+    "acht Doktrinen, und die Entscheidung, welche davon du nicht gehst", which
+    the grid says better by existing.
+  -->
   <div class="chips">
     <StatChip label="Wissenspunkte" value={k.points} doc="knowledge.points"
               tone={k.points > 0 ? 'good' : 'neutral'} />
     <StatChip label="Erforscht" value={k.owned.length} doc="knowledge.tree" />
     <StatChip label="Verfügbar" value={counts.live} doc="knowledge.dormant" />
   </div>
-  <p class="intro">
-    Acht Doktrinen, und die Entscheidung, welche davon du nicht gehst.
-    <Doc id="knowledge.tree" />
-  </p>
+  <div class="grid" role="tablist" aria-label="Doktrin wählen">
+    {#each doctrinesInOrder as d (d.id)}
+      {@const mine = rankOf(k, d.id)}
+      {@const total = nodesOf(d.id).length}
+      <!-- docs-check-ignore: switching doctrine is navigation, not a game action -->
+      <button
+        class="cell" class:on={open === d.id}
+        role="tab" aria-selected={open === d.id}
+        aria-label="{d.name}, Rang {mine} von {total}"
+        style="--doctrine-tint: {tintFor(d.id)}"
+        onclick={() => { open = open === d.id ? null : d.id; picked = null; }}
+      >
+        <span class="glyph" aria-hidden="true">{d.glyph}</span>
+        <span class="abbr">{d.abbr}</span>
+        <span class="rank tabular">{mine}/{total}</span>
+        <span class="bar" aria-hidden="true"><i style="width:{(mine / total) * 100}%"></i></span>
+      </button>
+    {/each}
+  </div>
   {#if counts.live < knowledgeNodes.length}
     <p class="muted">
-      {knowledgeNodes.length - counts.live} Knoten sind ausgearbeitet, aber noch nicht spielwirksam
-      und deshalb gesperrt. <Doc id="knowledge.dormant" />
+      {knowledgeNodes.length - counts.live} Knoten sind ausgearbeitet, aber noch nicht
+      spielwirksam und deshalb gesperrt. <Doc id="knowledge.dormant" />
     </p>
   {/if}
 </Panel>
 
 {#if !doctrine}
-  <Panel title="Doktrinen">
-    <ul class="doctrines">
-      {#each doctrinesInOrder as d (d.id)}
-        {@const mine = rankOf(k, d.id)}
-        <!-- docs-check-ignore: a list row is navigation, not a control -->
-        <button class="row" onclick={() => (open = d.id)}>
-          <span class="ico" aria-hidden="true">{d.glyph}</span>
-          <span class="meta">
-            <strong>{d.name}</strong>
-            <small>{d.creed}</small>
-          </span>
-          <span class="rank tabular">{mine}/{nodesOf(d.id).length}</span>
-          <span class="chev" aria-hidden="true">›</span>
-        </button>
-      {/each}
-    </ul>
-  </Panel>
+  <p class="hint">Wähle eine Doktrin, um ihren Baum zu sehen.</p>
 {:else}
   <Panel title={doctrine.name} accent="industry" meta="Rang {rankOf(k, doctrine.id)}">
-    <!-- docs-check-ignore: back link, not a control -->
-    <button class="back" onclick={() => (open = null)}>← Alle Doktrinen</button>
     <p class="intro">{doctrine.creed}</p>
     <ul class="affinity">
       {#each doctrinesInOrder.filter((o) => o.id !== doctrine.id && affinityOf(doctrine.id, o.id) !== 'neutral') as other (other.id)}
@@ -154,6 +172,7 @@
         dormant={dormantIds}
         selected={picked}
         onselect={(id) => (picked = picked === id ? null : id)}
+        priceOf={(n) => costOf(n, level)}
       />
     </div>
     <ul class="key">
@@ -201,6 +220,27 @@
 {/if}
 
 <style>
+  .hint { padding: var(--s6) 0; text-align: center; color: var(--text-dim); font-size: var(--fs-caption); }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s2); }
+  .cell {
+    display: grid; justify-items: center; gap: 2px;
+    min-height: var(--tap); padding: var(--s2) var(--s1);
+    background: var(--bg-sunken); border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    font: inherit; color: var(--text-muted); cursor: pointer;
+  }
+  /* Selection is a border in the doctrine's own colour plus the filled bar —
+     not a background wash, which would fight the glyph sitting on it. */
+  .cell.on { border-color: var(--doctrine-tint); color: var(--text-main); }
+  .cell:focus-visible { outline: 2px solid var(--text-main); outline-offset: 2px; }
+  .glyph { font-size: 18px; line-height: 1; }
+  .abbr { font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+  .cell .rank { font-size: var(--fs-caption); font-weight: 700; }
+  .bar {
+    width: 100%; height: 3px; border-radius: 2px;
+    background: var(--border-strong); overflow: hidden;
+  }
+  .bar i { display: block; height: 100%; background: var(--doctrine-tint); }
   .tree { margin: 0 calc(var(--s3) * -1); }
   .key {
     list-style: none; margin: var(--s3) 0 0; padding: 0;
@@ -213,7 +253,9 @@
   .sw.open { border-color: var(--primary); }
   .sw.dorm { border-style: dashed; opacity: .6; }
   .hint { color: var(--text-dim); font-size: var(--fs-caption); text-align: center; padding: var(--s4) 0; }
-  .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); margin-bottom: var(--s3); }
+  /* Three across even at 375px: two-and-a-lonely-one wastes a row, and these
+     three belong together as one reading. */
+  .chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin-bottom: var(--s3); }
   .intro { color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-body); }
   .muted { color: var(--text-dim); font-size: var(--fs-caption); line-height: var(--lh-body); margin-top: var(--s2); }
 
@@ -223,16 +265,6 @@
     padding: var(--s2) 0; min-height: var(--tap);
   }
 
-  .doctrines { list-style: none; margin: 0; padding: 0; }
-  .row {
-    display: flex; align-items: center; gap: var(--s3); width: 100%; text-align: left;
-    background: none; border: 0; border-bottom: 1px solid var(--border);
-    padding: var(--s2) 0; cursor: pointer; font-family: inherit; min-height: var(--tap);
-  }
-  .row .ico { flex: none; font-size: 22px; }
-  .row .meta { flex: 1; min-width: 0; }
-  .row strong { display: block; font-size: var(--fs-body); color: var(--text-main); }
-  .row small { display: block; font-size: var(--fs-caption); color: var(--text-muted); }
   .rank { flex: none; font-family: var(--font-num); font-size: var(--fs-caption); color: var(--text-dim); }
   .chev { flex: none; color: var(--text-dim); }
 
