@@ -7,6 +7,30 @@ import {
 } from './rules';
 import { autoLineup, teamStrength, isAvailable } from '../squad/rules';
 
+/**
+ * What a point of refereeing bias is worth, in strength.
+ *
+ * The prototype shifted a win probability directly: `userFavoredProb += 0.05`
+ * against a base of `0.5 + strengthDiff × 0.02`. Solving that, five percent of
+ * win probability is two and a half strength points — so a whole point of bias
+ * is fifty, and the tree's `refBias: 0.05` lands exactly where it did before.
+ *
+ * Derived rather than chosen, which is the only reason a number this large is
+ * safe. Picked by feel it would be a balance decision hidden inside a unit
+ * conversion, and nobody would ever find it.
+ */
+export const REFEREE_STRENGTH_POINTS = 50;
+
+/**
+ * The same conversion for Resilienz, and deliberately worth less per point.
+ *
+ * A referee tilts the whole match; a comeback bonus applies to forty-five
+ * minutes, and only to the forty-five minutes that begin with us behind. Given
+ * the same rate it would be the better buy in every doctrine that offers both,
+ * which is not what the tier costs say either node is meant to be.
+ */
+export const COMEBACK_STRENGTH_POINTS = 30;
+
 /** Our club's current display name, which the editor may have changed. */
 function ourName(state: { modules: { league: { levels: { id: string; name: string }[][]; playerClubId: string } } }): string {
   for (const level of state.modules.league.levels) {
@@ -47,7 +71,8 @@ export default defineModule({
         contributes: ['squad.fitnessLoss'],
         consumes: [
           'squad.strengthBonus', 'matchday.homeStrength',
-          'matchday.awayStrength', 'matchday.goalChanceBonus'
+          'matchday.awayStrength', 'matchday.goalChanceBonus',
+          'matchday.refereeBias'
         ],
         run({ state, emit, provide, modify, total, factor }) {
           const squad = state.modules.squad;
@@ -77,7 +102,25 @@ export default defineModule({
           // Home and away are separate buckets: a node that makes you better on
           // the road is a different promise from one that fortifies your ground,
           // and summing them would quietly pay out both everywhere.
-          const external = total('squad.strengthBonus')
+          /*
+           * The whistles, in the only currency this model has.
+           *
+           * The prototype shifted a win probability: `userFavoredProb += 0.05`
+           * against a base of `0.5 + strengthDiff × 0.02`, which makes five
+           * percent worth two and a half strength points. The port draws each
+           * side's goals separately and has no probability term to add to, so
+           * the conversion happens here — once, in the module that owns the
+           * model — rather than a percentage being written into a strength
+           * number where nothing would ever think to question it.
+           *
+           * Home and away alike. The prototype flipped the sign when away,
+           * which reads as a doctrine that hurts you on the road until you
+           * notice `userFavoredProb` means "the HOME side scores": the flip is
+           * a coordinate transform, not a design.
+           */
+          const referee = total('matchday.refereeBias') * REFEREE_STRENGTH_POINTS;
+
+          const external = total('squad.strengthBonus') + referee
             + (isHome ? total('matchday.homeStrength') : total('matchday.awayStrength'));
           const base = teamStrength(squad, false, external);
           const strength = effectiveStrength(m, base, isHome);
@@ -113,8 +156,11 @@ export default defineModule({
          */
         phase: 'post',
         order: 5,
-        consumes: ['league.result', 'league.opponentStrength', 'squad.strength'],
-        run({ state, query, rng }) {
+        consumes: [
+          'league.result', 'league.opponentStrength', 'squad.strength',
+          'matchday.comeback'
+        ],
+        run({ state, query, rng, total }) {
           const m = state.modules.matchday;
 
           const result = query<{
@@ -163,6 +209,14 @@ export default defineModule({
             ourStrength: report.ourStrength,
             opponentStrength: report.opponentStrength,
             matchday: state.meta.matchday,
+            /*
+             * Read here rather than in `pre`, and it works because a modifier
+             * is contributed once per tick and stays readable for the whole of
+             * it — knowledge writes at `pre`/1 and this is `post`/5. Captured
+             * at kickoff so a node bought during the interval cannot change a
+             * match that is already half played.
+             */
+            comeback: Math.round(total('matchday.comeback') * COMEBACK_STRENGTH_POINTS),
             subsUsed: 0,
             subs: []
           };

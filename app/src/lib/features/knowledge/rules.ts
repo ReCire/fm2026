@@ -108,7 +108,21 @@ export const EFFECTS: Partial<Record<FxKey, Effect>> = {
   pressureMod:       { key: 'press.suspicion',            arity: 'total' },
   penaltyMod:        { key: 'press.penalty',              arity: 'factor' },
   boardFloor:        { key: 'board.floor',                arity: 'max' },
-  boardGain:         { key: 'board.trust',                arity: 'total' }
+  boardGain:         { key: 'board.trust',                arity: 'total' },
+
+  /*
+   * The two matchday keys, which needed no new economy and no new screen — a
+   * fact `npm run census` produced and neither of us guessed.
+   *
+   * Both are `total` in the CONTENT's own fractional units, and matchday
+   * converts. `refBias: 0.05` reads "+5% Siegwahrscheinlichkeit" in the tree
+   * and becomes strength points in the model, because the port's simulation
+   * has no win-probability term to add a percentage to. One conversion, in the
+   * module that owns the model, rather than a percentage smuggled into a
+   * strength number that nothing would ever question.
+   */
+  refBias:           { key: 'matchday.refereeBias',       arity: 'total' },
+  comeback:          { key: 'matchday.comeback',          arity: 'total' }
 };
 
 /** Every bus key this module can write. Declared statically on the hook. */

@@ -69,6 +69,17 @@ export const LiveSchema = z.object({
   /** Our strength this match, kept so the second half can be replayed. */
   ourStrength: z.number().int(),
   opponentStrength: z.number().int(),
+  /**
+   * Strength held back for a second half we go into behind — Resilienz, and
+   * nothing at all when we are level or ahead.
+   *
+   * Stored on the live match rather than read when it is needed, because the
+   * half-time and substitution paths run from a UI action and have no tick
+   * context to ask the modifier bus with. Captured at kickoff, with every
+   * other doctrine effect, so a node bought at the interval cannot change a
+   * match that is already half played.
+   */
+  comeback: z.number(),
   /** Index into league.fixtures for the match this is narrating. */
   matchday: z.number().int(),
   /** Three, and they do not come back — see substitute.ts. */
@@ -118,7 +129,8 @@ export function createMatchday(_rng: Rng): MatchdayState {
 /** v3: the live match gains the half-time decision. */
 /** v4: counts career wins, which no surviving state could answer. */
 /** v5: the live match gains substitutions. */
-export const MATCHDAY_VERSION = 5;
+/** v6: a live match carries the Resilienz it kicked off with. */
+export const MATCHDAY_VERSION = 6;
 
 export function migrateMatchday(old: unknown, _from: number): MatchdayState {
   const base = old as Partial<MatchdayState>;
