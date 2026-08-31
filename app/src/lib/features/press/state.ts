@@ -2,12 +2,18 @@ import { z } from 'zod';
 import { CAUSES } from './content';
 
 /**
- * What has been written about the club, and how hot it is.
+ * What has been written about the club, and how much of it the Verband read.
  *
- * Pressure is a TEMPERATURE, not a resource — nothing spends it, it decays
- * toward a baseline, and it rises when something happens worth writing about.
- * A resource would make the shadow doctrine a budget; a temperature makes it a
- * consequence you live with.
+ * Pressure is a TEMPERATURE, not a resource — nothing spends it, and it decays
+ * toward ZERO rather than toward a baseline. A media meter would idle above
+ * zero because everybody gets written about; an investigation meter does not.
+ * A club that has done nothing is not under investigation at a low level, it
+ * is not under investigation, and the screen has to be able to say so.
+ *
+ * It rises because of what the club has DONE, never because of what it lost.
+ * Nine of the thirteen doctrine nodes that touch it raise it. So this is not
+ * something a doctrine buys — it is the bill for the rest of the doctrine, and
+ * a resource would have made it a budget instead of a consequence.
  */
 
 export const StorySchema = z.object({
@@ -45,7 +51,7 @@ export const InvestigationSchema = z.object({
 export type Investigation = z.infer<typeof InvestigationSchema>;
 
 export const PressSchema = z.object({
-  /** 0..100. See `pressContent.baseline` for where it rests. */
+  /** 0..100, resting at 0. See the four bands in content.ts. */
   pressure: z.number().min(0).max(100),
   /** Newest first, capped at `pressContent.feedLength`. */
   feed: z.array(StorySchema),
@@ -67,9 +73,7 @@ declare module '$lib/engine/state' {
 export function createPress(): PressState {
   return {
     /*
-     * Zero, and it matters. A club that has done nothing is not under
-     * investigation at a low level — it is not under investigation, and the
-     * screen should be able to say so. See the note in content.ts.
+     * Zero, and it matters. See the note above, and content.ts.
      */
     pressure: 0,
     feed: [],

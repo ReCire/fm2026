@@ -56,6 +56,26 @@ const CASES: {
   },
   {
     /*
+     * The ultimatum, not the trust number. Trust drifting down is something a
+     * player can look at whenever they like; a stated target with a deadline
+     * on it is a decision, and only the second earns an interruption.
+     */
+    module: 'board',
+    item: 'board.ultimatum',
+    urgency: 'soon',
+    provoke: (g) => {
+      g.modules.board.trust = 8;
+      g.modules.board.ultimatum = {
+        setSeason: g.meta.season,
+        setMatchday: g.meta.matchday,
+        deadline: g.meta.matchday + 8,
+        targetRank: 9,
+        demand: 'Klassenerhalt'
+      };
+    }
+  },
+  {
+    /*
      * Not "the meter is high" — the meter being high is a fact, and the badge
      * is for a decision. A club at 60% with no file open has nothing to do
      * about it yet; a club with a file open has a stretch of matchdays in

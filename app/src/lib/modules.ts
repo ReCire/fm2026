@@ -32,6 +32,7 @@ import knowledge from './features/knowledge/module';
 import campus from './features/campus/module';
 import linkedout from './features/linkedout/module';
 import press from './features/press/module';
+import board from './features/board/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -52,6 +53,7 @@ const declared: readonly ModuleDef[] = [
   knowledge,
   campus,
   press,
+  board,
   linkedout,
   sponsors,
   merch,

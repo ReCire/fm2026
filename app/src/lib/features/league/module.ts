@@ -6,7 +6,7 @@ import {
   playMatchday,
   playerFixture,
   rankOfId,
-  seasonOutcome, developClubs, teamById } from './rules';
+  seasonOutcome, developClubs, teamById, budgetRank } from './rules';
 import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
 import { postToLedger, formatMoney } from '../finance/module';
 
@@ -60,7 +60,8 @@ export default defineModule({
       consumes: ['squad.strength', 'matchday.goalChance', 'league.opponentPenalty'],
       provides: [
         'league.isHome', 'league.opponent', 'league.opponentStrength',
-        'league.level', 'league.result', 'league.clubName'
+        'league.level', 'league.result', 'league.clubName',
+        'league.rank', 'league.budgetRank', 'league.clubCount'
       ],
       run({ state, rng, emit, query, provide, total }) {
         const league = state.modules.league;
@@ -124,7 +125,12 @@ export default defineModule({
           teamById(league, league.playerClubId)?.name ?? 'Dein Verein'
         );
 
+
         const rank = rankOfId(league.levels[league.playerLevel] ?? [], league.playerClubId);
+        provide('league.rank', rank);
+        provide('league.budgetRank', budgetRank(league));
+        provide('league.clubCount', (league.levels[league.playerLevel] ?? []).length);
+
         emit({
           source: 'league',
           severity: us.result === 'win' ? 'good' : us.result === 'loss' ? 'bad' : 'info',
@@ -142,9 +148,27 @@ export default defineModule({
      */
     seasonEnd: {
       phase: 'world',
-      run({ state, emit }) {
+      /*
+       * Ordered before the boardroom's own seasonEnd hook, which is what turns
+       * these four numbers into a verdict. Published rather than recomputed
+       * there, because `applyPromotionRelegation` runs in this same hook and
+       * the table stops meaning what it meant the moment it does — a consumer
+       * deriving the final rank afterwards would read next season's division.
+       */
+      order: 1,
+      provides: [
+        'league.finalRank', 'league.promoted', 'league.relegated',
+        'league.budgetRank', 'league.clubCount', 'league.level'
+      ],
+      run({ state, emit, provide }) {
         const league = state.modules.league;
         const outcome = seasonOutcome(league);
+
+
+        provide('league.level', league.playerLevel);
+        provide('league.finalRank', outcome.rank);
+        provide('league.promoted', outcome.promoted);
+        provide('league.relegated', outcome.relegated);
 
         if (outcome.europe && !league.inEurope) {
           league.inEurope = true;

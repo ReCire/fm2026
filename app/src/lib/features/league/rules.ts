@@ -496,6 +496,25 @@ export function seasonOutcome(league: LeagueState): SeasonOutcome {
   };
 }
 
+/**
+ * Where the club's spending power ranks in its own division. 1 is the richest.
+ *
+ * Derived from squad strength, because that is the only cross-club number the
+ * game has — AI clubs carry a `strength` and no balance sheet. It is a fair
+ * proxy rather than a fudge: a squad is what a budget bought, and the two move
+ * together in the direction that matters. If clubs ever get real finances this
+ * is the one function that changes.
+ *
+ * Published rather than computed by the boardroom, because league owns the club
+ * list and a consumer deriving it would go stale the moment a club develops.
+ */
+export function budgetRank(league: LeagueState): number {
+  const teams = league.levels[league.playerLevel] ?? [];
+  const us = teams.find((t) => t.id === league.playerClubId);
+  if (!us) return Math.max(1, Math.ceil(teams.length / 2));
+  return teams.filter((t) => t.strength > us.strength).length + 1;
+}
+
 export interface Movement {
   team: string;
   from: number;
