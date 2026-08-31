@@ -297,7 +297,13 @@
   .stat.neg { color: var(--neg-ink); }
   .stat.neutral { color: var(--text-dim); }
 
-  .feed { list-style: none; margin: 0; padding: 0; max-height: 46vh; overflow-y: auto; }
+  /* `overscroll-behavior: contain` stops a swipe that runs out of feed at the
+     top or bottom from chaining onto the page behind it — without it, the
+     body's own `overscroll-behavior-y: none` (set to kill the PWA's
+     whole-page rubber-band) does not reach a SECOND scroll container nested
+     inside it, so the bounce this app already went out of its way to remove
+     from the page was still reachable from inside the feed. */
+  .feed { list-style: none; margin: 0; padding: 0; max-height: 46vh; overflow-y: auto; overscroll-behavior: contain; }
   .feed li {
     display: flex; align-items: baseline; gap: var(--s2);
     padding: var(--s2) var(--s3); border-bottom: 1px solid var(--border);
