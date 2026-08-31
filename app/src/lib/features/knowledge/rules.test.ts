@@ -8,7 +8,7 @@ import { applyNarrative } from '../progression/rules';
 import { narratives } from '../progression/content';
 import {
   EFFECTS, CONTRIBUTED, dormancyOf, isLive, census, rankOf, costOf, canBuy,
-  ownedEffects, ownedFlags, SCREEN_READ
+  ownedEffects, ownedFlags, SCREEN_READ, blockers
 } from './rules';
 import { knowledgeNodes, nodeById, tierCost, leagueCostMultiplier, FX_KEYS, doctrines } from './content';
 import { createKnowledge } from './state';
@@ -433,5 +433,44 @@ describe('the tree is mostly buyable', () => {
     const c = census(reachable);
     expect(c.unmapped + c.unread).toBe(knowledgeNodes.length - c.live);
     expect(c.inert, 'a node with no effect of any kind').toBe(0);
+  });
+});
+
+describe('blockers', () => {
+  it('names a reason for every dormant node, and none for a live one', () => {
+    /*
+     * The invariant that keeps this honest: `blockers` and `dormancyOf` read
+     * the same node and must agree about it. Written from what should be true
+     * rather than from either implementation — if one grows a case the other
+     * does not, exactly one of these two halves goes red and it says which.
+     */
+    const named = new Set(blockers(consumed).flatMap((b) => b.nodes));
+    for (const node of knowledgeNodes) {
+      const dormancy = dormancyOf(node, consumed);
+      if (dormancy === 'live' || dormancy === 'inert') {
+        expect(named.has(node.id), `${node.id} is ${dormancy} and was given a blocker`).toBe(false);
+      } else {
+        expect(named.has(node.id), `${node.id} is ${dormancy} with no blocker named`).toBe(true);
+      }
+    }
+  });
+
+  it('is ordered by how much each one is worth', () => {
+    const counts = blockers(consumed).map((b) => b.nodes.length);
+    expect(counts).toEqual([...counts].sort((a, b) => b - a));
+  });
+
+  it('stops naming a key once something reads it', () => {
+    /*
+     * Vary the input, assert the output moves. Pick the biggest blocker, give
+     * it a consumer, and it must leave the list — otherwise the report would
+     * keep sending people to build a thing that already exists.
+     */
+    const worst = blockers(consumed)[0];
+    if (!worst) return;
+    const key = worst.need.startsWith('fx:') ? null : worst.need.replace(/^(flag|reveal|grant):/, '');
+    if (key === null) return; // an unmapped fx needs an EFFECTS entry, not a consumer
+    const after = blockers(new Set([...consumed, key]));
+    expect(after.find((b) => b.need === worst.need)).toBeUndefined();
   });
 });

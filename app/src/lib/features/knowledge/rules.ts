@@ -308,6 +308,62 @@ export function census(consumed: ReadonlySet<string>): Record<Dormancy, number> 
   return out;
 }
 
+/** One reason nodes are dormant, and how many wait on it. */
+export interface Blocker {
+  /** What to build. `fx:pressureMod` needs an EFFECTS entry; the rest need a reader. */
+  need: string;
+  kind: 'unmapped' | 'unread';
+  /** How many nodes this one decision would unblock, in whole or in part. */
+  nodes: string[];
+}
+
+/**
+ * The census says HOW MANY nodes are dormant. This says WHAT TO BUILD.
+ *
+ * Sorted by node count, because that is the ordering question and it is not
+ * one anybody can answer by reading the tree. Sixty dormant nodes looks like
+ * sixty problems; it is eighteen, and the top two are worth twenty-four
+ * between them. We picked the next two systems off this list rather than off
+ * an argument about which sounded more fun, and the list disagreed with the
+ * argument.
+ *
+ * A node appears under every blocker it has, so the counts overlap and do not
+ * sum to the dormant total. That is deliberate — clearing one key can leave a
+ * node dormant on another, and a blocker that only ever appears alongside a
+ * bigger one is worth knowing about before you schedule it alone.
+ */
+export function blockers(consumed: ReadonlySet<string>): Blocker[] {
+  const found = new Map<string, Blocker>();
+  const note = (need: string, kind: Blocker['kind'], id: string) => {
+    const b = found.get(need) ?? { need, kind, nodes: [] };
+    b.nodes.push(id);
+    found.set(need, b);
+  };
+
+  for (const node of knowledgeNodes) {
+    if (dormancyOf(node, consumed) === 'live') continue;
+    for (const key of Object.keys(node.fx ?? {}) as FxKey[]) {
+      const effect = EFFECTS[key];
+      if (!effect) note(`fx:${key}`, 'unmapped', node.id);
+      else if (!consumed.has(effect.key) && !SCREEN_READ.has(effect.key))
+        note(effect.key, 'unread', node.id);
+    }
+    for (const flag of node.flags ?? []) {
+      if (!consumed.has(flag)) note(`flag:${flag}`, 'unread', node.id);
+    }
+    for (const reveal of node.reveal ?? []) {
+      if (!REVEALS_READ.has(reveal)) note(`reveal:${reveal}`, 'unread', node.id);
+    }
+    if (node.grants && !GRANTS_READ.has(node.grants)) {
+      note(`grant:${node.grants}`, 'unread', node.id);
+    }
+  }
+
+  return [...found.values()].sort(
+    (a, b) => b.nodes.length - a.nodes.length || a.need.localeCompare(b.need)
+  );
+}
+
 /**
  * Research a node. Deducts both currencies and records it.
  *

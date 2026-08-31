@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "docs:check": "node scripts/check-docs.mjs",
+    "census": "vite-node scripts/census.ts",
     "verify": "npm run check && npm run docs:check && npm run test"
   },
   "devDependencies": {
