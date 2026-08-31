@@ -34,10 +34,24 @@ export function gainChance(
   player: Player,
   attribute: Attribute,
   intensity: Intensity,
-  personal: boolean
+  personal: boolean,
+  /**
+   * Extra headroom before development starts slowing, for young players.
+   *
+   * This is what "potential" means here. Rather than storing a hidden ceiling
+   * per player — a number the game would know and never show — a doctrine
+   * raises the value at which gains begin to thin out. A prospect with
+   * potential is not someone with a bigger secret number; he is someone who
+   * keeps improving past the point where others stop.
+   *
+   * Young players only, because that is what the node says. Applying it to a
+   * thirty-year-old would make the label a lie.
+   */
+  youthCeiling = 0
 ): number {
   const c = trainingContent;
   const value = player.attributes[attribute];
+  const ceiling = c.diminishFrom + (player.age < c.peakAgeFrom ? youthCeiling : 0);
 
   let chance = c.baseGain * c.intensity[intensity].gain;
 
@@ -50,8 +64,8 @@ export function gainChance(
     chance *= Math.max(0, 1 - (player.age - c.peakAgeTo) * 0.15);
   }
 
-  if (value > c.diminishFrom) {
-    chance *= Math.max(0, 1 - (value - c.diminishFrom) * c.diminishRate);
+  if (value > ceiling) {
+    chance *= Math.max(0, 1 - (value - ceiling) * c.diminishRate);
   }
 
   return Math.max(0, Math.min(1, chance));
@@ -100,7 +114,9 @@ export function trainWeek(
    * multiplier would have been easier and would have made the label a lie —
    * the promised figure has to be the delivered one.
    */
-  devPerSeason = 0
+  devPerSeason = 0,
+  /** `training.youthCeiling` — how much later a prospect stops improving. */
+  youthCeiling = 0
 ): WeekOutcome {
   const outcome: WeekOutcome = { changes: [], recovered: [] };
   const rest = restFor(training.intensity);
@@ -129,7 +145,7 @@ export function trainWeek(
 
     for (const attribute of worked) {
       if (player.attributes[attribute] >= 99) continue;
-      if (!rng.chance(gainChance(player, attribute, training.intensity, personal) * share)) continue;
+      if (!rng.chance(gainChance(player, attribute, training.intensity, personal, youthCeiling) * share)) continue;
       player.attributes[attribute] += 1;
       record(training, outcome, player, attribute, 1);
     }

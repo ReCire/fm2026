@@ -1,6 +1,6 @@
 import { defineModule } from '$lib/engine/module';
 import { YouthSchema, createYouth, YOUTH_VERSION, migrateYouth } from './state';
-import { ageProspects } from './rules';
+import { ageProspects, scoutProspect, scoutRng } from './rules';
 import { capacity } from './rules';
 
 export default defineModule({
@@ -38,10 +38,45 @@ export default defineModule({
      */
     seasonEnd: {
       phase: 'world',
-      run({ state, emit }) {
+      consumes: ['youth.startStrength', 'youth.perSeason'],
+      run({ state, emit, total }) {
         const youth = state.modules.youth;
         const squad = state.modules.squad;
         const { graduates } = ageProspects(youth);
+
+        /*
+         * An academy doctrine makes graduates better, not merely more numerous.
+         * Applied at graduation rather than at scouting so it improves the
+         * prospects already in the building — the player who invests in the
+         * academy should see it in the next class, not the one after.
+         */
+        const boost = total('youth.startStrength');
+        if (boost > 0) {
+          for (const p of graduates) {
+            for (const key of Object.keys(p.attributes) as (keyof typeof p.attributes)[]) {
+              p.attributes[key] = Math.min(99, p.attributes[key] + boost);
+            }
+            p.record.debutStrength += boost;
+          }
+        }
+
+        /*
+         * Free intake. A doctrine that runs a scouting network brings players
+         * in without the club paying a fee — the same act the screen charges
+         * for, arriving as a consequence of what the club has learned.
+         */
+        const intake = total('youth.perSeason');
+        for (let i = 0; i < intake; i++) {
+          const rookie = scoutProspect(scoutRng(youth, state.meta.seed), youth.level);
+          youth.prospects.push(rookie);
+          emit({
+            source: 'youth',
+            severity: 'good',
+            title: `${rookie.name} kommt aus dem Netzwerk`,
+            detail: `${rookie.pos}, ${rookie.age} Jahre — ohne Kosten für den Verein.`,
+            goto: 'youth'
+          });
+        }
 
         for (const player of graduates) {
           // Built by createPlayer at scouting time — pushed as-is, so a

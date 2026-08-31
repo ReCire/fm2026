@@ -8,13 +8,15 @@ import { applyNarrative } from '../progression/rules';
 import { narratives } from '../progression/content';
 import {
   EFFECTS, CONTRIBUTED, dormancyOf, isLive, census, rankOf, costOf, canBuy,
-  ownedEffects, ownedFlags
+  ownedEffects, ownedFlags, SCREEN_READ
 } from './rules';
-import { knowledgeNodes, nodeById, tierCost, leagueCostMultiplier, FX_KEYS } from './content';
+import { knowledgeNodes, nodeById, tierCost, leagueCostMultiplier, FX_KEYS, doctrines } from './content';
 import { createKnowledge } from './state';
 
 const registry = new Registry(modules);
 const consumed = registry.consumedKeys();
+/* A hook consumer OR a screen that honours the key directly — see SCREEN_READ. */
+const reachable = new Set([...consumed, ...SCREEN_READ]);
 
 function career(): GameState {
   const seed = seedFrom('knowledge');
@@ -305,8 +307,13 @@ describe('the gate does not wave through its own blind spot', () => {
       expect(fx.length + (node.flags?.length ?? 0), `${node.id} is live with no effect`)
         .toBeGreaterThan(0);
       for (const key of fx) {
-        expect(EFFECTS[key as keyof typeof EFFECTS], `${node.id}: ${key} is unmapped`).toBeTruthy();
-        expect(consumed.has(EFFECTS[key as keyof typeof EFFECTS]!.key)).toBe(true);
+        const effect = EFFECTS[key as keyof typeof EFFECTS];
+        expect(effect, `${node.id}: ${key} is unmapped`).toBeTruthy();
+        /* Reachable means a hook consumes it OR a screen honours it directly —
+           an action taken by clicking can never read a bus that lives for one
+           tick, so those consumers are listed rather than derived. */
+        const reachable = consumed.has(effect!.key) || SCREEN_READ.has(effect!.key);
+        expect(reachable, `${node.id}: ${effect!.key} reaches nothing`).toBe(true);
       }
     }
   });
@@ -384,5 +391,47 @@ describe('an effect reaches every tick that reads it', () => {
           .toContain(effect!.key);
       }
     }
+  });
+});
+
+describe('the tree is mostly buyable', () => {
+  /*
+   * Eric held a push over this: "the whole doctrine system looks much better on
+   * the index.html, also, it feels more full."
+   *
+   * He was right, and the gate was the cause — 23 of 140 nodes purchasable
+   * against the prototype's 140, so the centrepiece of the game read as a
+   * fraction of the thing it was ported from. The gate was still the correct
+   * call: selling upgrades that reach nothing, at up to €750.000 each, is worse
+   * than showing them locked. The answer was never to open it. The answer was
+   * to make the nodes true, which meant writing nineteen more sentences between
+   * the content's vocabulary and the bus's.
+   *
+   * This asserts the SHAPE — most of the tree is live, and no doctrine is a
+   * dead end — rather than a count, so wiring another key is not a red test.
+   */
+  it('most of the tree can actually be bought', () => {
+    const c = census(reachable);
+    expect(c.live / knowledgeNodes.length, `only ${c.live} of ${knowledgeNodes.length} are live`)
+      .toBeGreaterThan(0.5);
+  });
+
+  it('every doctrine has something to buy, so none is a dead end', () => {
+    for (const d of doctrines) {
+      const own = knowledgeNodes.filter((n) => n.doctrine === d.id);
+      const live = own.filter((n) => isLive(n, reachable)).length;
+      expect(live, `${d.name} has nothing purchasable at all`).toBeGreaterThan(2);
+    }
+  });
+
+  /*
+   * What is left is honest: the remaining nodes need modules nobody has built.
+   * If this list shrinks to nothing while `live` has not moved, something is
+   * being mapped to a key that reaches nowhere.
+   */
+  it('what stays locked is waiting on a feature, not on a mapping', () => {
+    const c = census(reachable);
+    expect(c.unmapped + c.unread).toBe(knowledgeNodes.length - c.live);
+    expect(c.inert, 'a node with no effect of any kind').toBe(0);
   });
 });

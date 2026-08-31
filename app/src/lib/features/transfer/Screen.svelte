@@ -17,6 +17,7 @@
     acceptOffer, rejectOffer, counterOffer, counterQuotes, counterRoundsLeft
   } from './rules';
   import type { Offer } from './state';
+  import { ownedEffects } from '../knowledge/rules';
 
   const transfer = $derived(game.modules.transfer);
   const squad = $derived(game.modules.squad);
@@ -45,15 +46,30 @@
     toast('Verpflichtet', `${signing.player.name} — ${formatMoney(signing.fee)}`, 'good');
   }
 
+  /*
+   * A doctrine that negotiates better on the way out. Read from knowledge
+   * rather than the bus because a sale is a click, and the bus lives for
+   * exactly one tick — see SCREEN_READ in knowledge/rules.ts.
+   *
+   * Applied at BOTH exits. A node that paid out on a quick sale but not on an
+   * accepted bid would be right half the time, which is the worst available
+   * kind of wrong: the player would see it work and then see it not.
+   */
+  const saleFactor = $derived(
+    ownedEffects(game.modules.knowledge).factors.get('transfer.saleValue') ?? 1
+  );
+  const withBonus = (fee: number) => Math.round(fee * saleFactor);
+
   function sellNow(playerId: string) {
     const sale = quickSell(transfer, squad, playerId);
     if (!sale) {
       toast('Nicht möglich', 'Der Kader darf nicht unter elf Spieler fallen.', 'bad');
       return;
     }
-    book(`Blitzverkauf ${sale.player.name}`, sale.fee);
+    const fee = withBonus(sale.fee);
+    book(`Blitzverkauf ${sale.player.name}`, fee);
     finance.transferBudget += sale.budgetShare;
-    toast('Verkauft', `${sale.player.name} — ${formatMoney(sale.fee)}`, 'good');
+    toast('Verkauft', `${sale.player.name} — ${formatMoney(fee)}`, 'good');
   }
 
   function accept(offerId: string) {
@@ -68,9 +84,10 @@
     }
     if (result === 'unknownOffer') return;
 
-    book(`Transfer ${result.player.name} zu ${result.offer.clubName}`, result.fee);
+    const fee = withBonus(result.fee);
+    book(`Transfer ${result.player.name} zu ${result.offer.clubName}`, fee);
     finance.transferBudget += result.budgetShare;
-    toast('Transfer perfekt', `${result.player.name} — ${formatMoney(result.fee)}`, 'good');
+    toast('Transfer perfekt', `${result.player.name} — ${formatMoney(fee)}`, 'good');
   }
 
   function reject(offerId: string) {

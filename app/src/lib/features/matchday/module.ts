@@ -45,7 +45,10 @@ export default defineModule({
         order: 10,
         provides: ['squad.strength', 'matchday.modifiers', 'matchday.goalChance'],
         contributes: ['squad.fitnessLoss'],
-        consumes: ['squad.strengthBonus', 'matchday.homeStrength', 'matchday.goalChanceBonus'],
+        consumes: [
+          'squad.strengthBonus', 'matchday.homeStrength',
+          'matchday.awayStrength', 'matchday.goalChanceBonus'
+        ],
         run({ state, emit, provide, modify, total, factor }) {
           const squad = state.modules.squad;
           const m = state.modules.matchday;
@@ -71,7 +74,11 @@ export default defineModule({
            * number, so it has to read the bus rather than only its own tactics
            * — otherwise a co-trainer's +2 sits in a bucket nobody opens.
            */
-          const external = total('squad.strengthBonus') + (isHome ? total('matchday.homeStrength') : 0);
+          // Home and away are separate buckets: a node that makes you better on
+          // the road is a different promise from one that fortifies your ground,
+          // and summing them would quietly pay out both everywhere.
+          const external = total('squad.strengthBonus')
+            + (isHome ? total('matchday.homeStrength') : total('matchday.awayStrength'));
           const base = teamStrength(squad, false, external);
           const strength = effectiveStrength(m, base, isHome);
 

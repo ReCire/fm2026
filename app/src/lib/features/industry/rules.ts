@@ -81,20 +81,28 @@ export interface BuyQuote {
   limitedBySpace: boolean;
 }
 
-export function buyQuote(industry: IndustryState, materialId: string, wanted: number): BuyQuote {
+export function buyQuote(
+  industry: IndustryState,
+  materialId: string,
+  wanted: number,
+  /** Multiplier on the market price — a doctrine that buys better. */
+  priceFactor = 1
+): BuyQuote {
   const entry = industry.materials[materialId];
   if (!entry) return { units: 0, cost: 0, limitedBySpace: false };
   const units = Math.max(0, Math.min(wanted, spaceLeft(industry)));
   return {
     units,
-    cost: Math.round(units * entry.price),
+    cost: Math.round(units * entry.price * priceFactor),
     limitedBySpace: units < wanted
   };
 }
 
 /** Take delivery. The caller charges, so the money leaves through the ledger. */
-export function buyMaterial(industry: IndustryState, materialId: string, units: number): number {
-  const quote = buyQuote(industry, materialId, units);
+export function buyMaterial(
+  industry: IndustryState, materialId: string, units: number, priceFactor = 1
+): number {
+  const quote = buyQuote(industry, materialId, units, priceFactor);
   const entry = industry.materials[materialId];
   if (!entry || quote.units === 0) return 0;
   entry.stock += quote.units;
@@ -123,21 +131,35 @@ export interface ProducedBatch {
  * reached into two other modules would be the coupling this architecture spends
  * its whole budget avoiding.
  */
-export function produce(industry: IndustryState, wholesaleOf: (itemId: string) => number): ProducedBatch[] {
+export interface ProduceModifiers {
+  /** Multiplier on rated output. */
+  output?: number;
+  /** Multiplier on material consumed per unit. Below 1 is more efficient. */
+  materialUse?: number;
+}
+
+export function produce(
+  industry: IndustryState,
+  wholesaleOf: (itemId: string) => number,
+  mods: ProduceModifiers = {}
+): ProducedBatch[] {
   const batches: ProducedBatch[] = [];
+  const outputMod = mods.output ?? 1;
+  const useMod = mods.materialUse ?? 1;
 
   for (const f of C.factories) {
-    const rated = outputOf(industry, f);
+    const rated = Math.round(outputOf(industry, f) * outputMod);
     if (rated <= 0) continue;
 
     const entry = industry.materials[f.material];
     if (!entry) continue;
 
-    const affordable = f.perUnit > 0 ? Math.floor(entry.stock / f.perUnit) : rated;
+    const perUnit = f.perUnit * useMod;
+    const affordable = perUnit > 0 ? Math.floor(entry.stock / perUnit) : rated;
     const units = Math.min(rated, affordable);
     if (units <= 0) continue;
 
-    const used = units * f.perUnit;
+    const used = units * perUnit;
     entry.stock = Math.max(0, Math.round(entry.stock - used));
 
     batches.push({

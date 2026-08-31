@@ -36,7 +36,7 @@ export default defineModule({
     matchday: {
       phase: 'economy',
       order: 10,
-      consumes: ['league.isHome', 'stadium.fanGain'],
+      consumes: ['league.isHome', 'stadium.fanGain', 'stadium.fanFloor', 'stadium.ticketRevenue'],
       /*
        * Declared, not merely called.
        *
@@ -48,7 +48,7 @@ export default defineModule({
        * exists to prevent. Found by a merch module trying to do it properly.
        */
       provides: ['stadium.attendance'],
-      run({ state, emit, provide, query, total }) {
+      run({ state, emit, provide, query, total, factor }) {
         const stadium = state.modules.stadium;
         const { season, matchday } = state.meta;
 
@@ -74,8 +74,13 @@ export default defineModule({
         const gain = total('stadium.fanGain');
         if (gain !== 0) stadium.fans = Math.max(0, Math.min(100, stadium.fans + gain));
 
+        // A floor, not a bonus: a doctrine that buys the crowd's patience keeps
+        // them from walking away, it does not manufacture enthusiasm.
+        const floor = total('stadium.fanFloor');
+        if (floor > 0) stadium.fans = Math.max(stadium.fans, floor);
+
         const att = attendance(stadium);
-        const income = ticketIncome(stadium);
+        const income = Math.round(ticketIncome(stadium) * factor('stadium.ticketRevenue'));
 
         postToLedger(state.modules.finance, {
           season, matchday, source: 'stadium', reason: 'Zuschauereinnahmen', amount: income

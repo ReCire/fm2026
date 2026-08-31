@@ -3,6 +3,7 @@
   import { Panel, Button, StatChip, DataTable, toast } from '$lib/ui';
   import type { Column } from '$lib/ui';
   import { playerColumns, playerCell } from '../squad/playerColumns';
+  import { ownedEffects } from '../knowledge/rules';
   import type { Player } from '../squad/state';
   import { postToLedger, formatMoney } from '../finance/module';
   import { strengthOf } from '../squad/rules';
@@ -12,9 +13,19 @@
   const youth = $derived(game.modules.youth);
   const finance = $derived(game.modules.finance);
 
+  /* Doctrine effects a click has to honour — the bus lives one tick and this
+     happens when the player presses a button. See SCREEN_READ in
+     knowledge/rules.ts, which is how the dormancy gate knows about these. */
+  const fx = $derived(ownedEffects(game.modules.knowledge).factors);
+  const totals = $derived(ownedEffects(game.modules.knowledge).totals);
+  const scoutFactor = $derived(fx.get('youth.scoutCost') ?? 1);
+  const scoutQuality = $derived(fx.get('youth.scoutQuality') ?? 1);
+  const extraPerMission = $derived(totals.get('youth.scoutCount') ?? 0);
+
   const upgradeCost = $derived(levelUpgradeCost(youth.level));
   const cap = $derived(capacity(youth.level));
-  const nextScoutCost = $derived(scoutCost(youth.level));
+  // A network doctrine can make a mission free outright (factor 0).
+  const nextScoutCost = $derived(Math.max(0, Math.round(scoutCost(youth.level) * scoutFactor)));
 
   function buyUpgrade() {
     if (!canUpgrade(youth)) return;
@@ -49,8 +60,33 @@
       reason: 'Talent gescoutet',
       amount: -nextScoutCost
     });
-    const prospect = scout(youth, scoutRng(youth, game.meta.seed));
-    if (prospect) toast('Talent gefunden', `${prospect.name}, ${prospect.age} Jahre, ${prospect.pos}`, 'good');
+    /*
+     * One mission can bring back more than one player, and a scouting doctrine
+     * makes the ones it finds better. Quality lifts every attribute rather
+     * than the overall, so a scouted prospect is a better FOOTBALLER and not
+     * just a bigger number — the same reason training shapes rather than
+     * inflates.
+     */
+    const found: string[] = [];
+    for (let i = 0; i < 1 + extraPerMission; i++) {
+      if (!canScout(youth)) break;
+      const prospect = scout(youth, scoutRng(youth, game.meta.seed));
+      if (!prospect) break;
+      if (scoutQuality !== 1) {
+        for (const key of Object.keys(prospect.attributes) as (keyof typeof prospect.attributes)[]) {
+          prospect.attributes[key] = Math.max(1, Math.min(99, Math.round(prospect.attributes[key] * scoutQuality)));
+        }
+        prospect.record.debutStrength = strengthOf(prospect);
+      }
+      found.push(`${prospect.name} (${prospect.pos})`);
+    }
+    if (found.length > 0) {
+      toast(
+        found.length === 1 ? 'Talent gefunden' : `${found.length} Talente gefunden`,
+        found.join(', '),
+        'good'
+      );
+    }
   }
 
   /*

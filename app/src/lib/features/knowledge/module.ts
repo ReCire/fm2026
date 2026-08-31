@@ -91,7 +91,18 @@ export default defineModule({
       }
     ],
 
-    seasonEnd: {
+    seasonEnd: [
+      {
+        /* The academy and the network read their effects on the season
+           boundary, so the contribution has to be present there too. Third
+           tick kind, same rule: an effect must exist on every tick that reads
+           it, and the registry refuses to boot when it does not. */
+        phase: 'pre',
+        order: 1,
+        contributes: CONTRIBUTED,
+        run: contributeEffects
+      },
+      {
       phase: 'world',
       order: 50,
       run({ state, emit }) {
@@ -106,6 +117,7 @@ export default defineModule({
           goto: 'knowledge'
         });
       }
-    }
+      }
+    ]
   }
 });

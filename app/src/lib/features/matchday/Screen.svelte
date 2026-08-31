@@ -203,15 +203,23 @@
     font-size: var(--fs-title); font-weight: 800; color: var(--text-main);
     margin-bottom: var(--s2);
   }
+  /* The scorecard: two names either side of one large tabular figure, the
+     way a printed result reads. A single ruleset — this used to be two,
+     the second silently overriding the first's centring with a
+     space-between layout nobody had asked for. */
   .score {
     display: flex; align-items: center; justify-content: center; gap: var(--s3);
-    text-align: center; margin-bottom: var(--s2);
+    margin-bottom: var(--s2);
   }
-  .score .side { flex: 1; font-size: var(--fs-body); color: var(--text-muted); line-height: var(--lh-tight); }
+  .score .side {
+    flex: 1; min-width: 0;
+    font-size: var(--fs-body); font-weight: 700; color: var(--text-muted);
+    line-height: var(--lh-tight); text-align: center;
+  }
   .score .figure {
     font-family: var(--font-num); font-variant-numeric: tabular-nums;
     font-size: var(--fs-display); font-weight: 800; color: var(--text-main);
-    flex: none;
+    flex: none; letter-spacing: -0.02em;
   }
   .where { font-size: var(--fs-caption); color: var(--text-dim); text-align: center; }
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); margin-bottom: var(--s3); }
@@ -230,9 +238,4 @@
   .opt input:focus-visible ~ span { outline: 2px solid var(--primary); outline-offset: 3px; }
   .opt b { display: block; font-size: var(--fs-body); text-transform: capitalize; }
   .opt small { color: var(--text-muted); font-size: var(--fs-caption); }
-
-  .score { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-bottom: var(--s3); }
-  .score strong { font-size: var(--fs-display); }
-  .score span { flex: 1; font-size: var(--fs-caption); color: var(--text-muted); }
-  .score span:last-child { text-align: right; }
 </style>

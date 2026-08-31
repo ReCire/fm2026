@@ -51,11 +51,12 @@ export default defineModule({
     week: {
       phase: 'sim',
       order: 10,
-      consumes: ['training.devPerSeason'],
+      consumes: ['training.devPerSeason', 'training.youthCeiling'],
       run({ state, rng, emit, total }) {
         const training = state.modules.training;
         const outcome = trainWeek(
-          training, state.modules.squad, rng, total('training.devPerSeason')
+          training, state.modules.squad, rng,
+          total('training.devPerSeason'), total('training.youthCeiling')
         );
 
         training.lastWeek = outcome.changes;

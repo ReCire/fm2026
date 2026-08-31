@@ -5,6 +5,7 @@
   import { postToLedger, formatMoney } from '../finance/module';
   import { merchContent } from '../merch/content';
   import { industryContent, materialById } from './content';
+  import { ownedEffects } from '../knowledge/rules';
   import {
     warehouseCapacity, storedTotal, spaceLeft, levelOf, owns, maxLevel,
     nextCost, outputOf, buyQuote, buyMaterial, weeksOfStock, canUpgradeWarehouse,
@@ -13,6 +14,19 @@
 
   const industry = $derived(game.modules.industry);
   const finance = $derived(game.modules.finance);
+
+  /*
+   * Doctrine effects the SCREEN has to honour, read straight from knowledge.
+   *
+   * Buying happens when the player clicks, and the context bus lives for
+   * exactly one tick — so a purchase can never read it. Knowledge is the only
+   * producer of these keys, so asking it directly is a plain cross-feature
+   * call, and `SCREEN_READ` in knowledge/rules.ts is how the dormancy gate
+   * knows these consumers exist.
+   */
+  const priceFactor = $derived(
+    ownedEffects(game.modules.knowledge).factors.get('industry.materialPrice') ?? 1
+  );
 
   const capacity = $derived(warehouseCapacity(industry));
   const stored = $derived(storedTotal(industry));
@@ -36,11 +50,11 @@
   const wanted = (id: string) => amounts[id] ?? 250;
 
   function buy(materialId: string) {
-    const quote = buyQuote(industry, materialId, wanted(materialId));
+    const quote = buyQuote(industry, materialId, wanted(materialId), priceFactor);
     if (quote.units === 0) return toast('Lager voll', 'Kein Platz mehr im Lager.', 'warn');
     if (quote.cost > finance.money) return toast('Zu teuer', 'Das Vereinskonto gibt das nicht her.', 'warn');
 
-    buyMaterial(industry, materialId, quote.units);
+    buyMaterial(industry, materialId, quote.units, priceFactor);
     postToLedger(finance, {
       season: game.meta.season, matchday: game.meta.matchday,
       source: 'industry', reason: `Rohstoff: ${materialById(materialId)?.name ?? materialId}`,
@@ -205,8 +219,8 @@
             <input id="qty-{m.id}" type="number" min="0" step="50" value={wanted(m.id)}
                    oninput={(e) => (amounts[m.id] = Math.max(0, Number(e.currentTarget.value)))} />
             <Button doc="industry.buy" variant="secondary"
-                    label="Kaufen · {formatMoney(buyQuote(industry, m.id, wanted(m.id)).cost)}"
-                    disabled={buyQuote(industry, m.id, wanted(m.id)).cost > finance.money}
+                    label="Kaufen · {formatMoney(buyQuote(industry, m.id, wanted(m.id), priceFactor).cost)}"
+                    disabled={buyQuote(industry, m.id, wanted(m.id), priceFactor).cost > finance.money}
                     onclick={() => buy(m.id)} />
           </div>
         </li>

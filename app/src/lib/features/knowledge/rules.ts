@@ -55,7 +55,39 @@ export const EFFECTS: Partial<Record<FxKey, Effect>> = {
   merchDemand:       { key: 'merch.demand',               arity: 'factor' },
   merchMargin:       { key: 'merch.margin',               arity: 'factor' },
   fanGain:           { key: 'stadium.fanGain',            arity: 'total' },
-  devPerSeason:      { key: 'training.devPerSeason',      arity: 'total' }
+  devPerSeason:      { key: 'training.devPerSeason',      arity: 'total' },
+
+  /*
+   * The second wiring pass. Every key below already had a module that could
+   * read it — the sentence between the two vocabularies had simply never been
+   * written, so 117 of 140 nodes sat visibly locked and the tree read as a
+   * fraction of the prototype it came from. Eric noticed before any of us did:
+   * "the whole doctrine system looks much better on the index.html, it feels
+   * more full."
+   *
+   * The gate was right and the answer was never to open it. The answer was to
+   * make the nodes true.
+   */
+  opsIncome:         { key: 'finance.opsIncome',          arity: 'total' },
+  opexMod:           { key: 'finance.opex',               arity: 'factor' },
+  oppPenalty:        { key: 'league.opponentPenalty',     arity: 'total' },
+  awayStrength:      { key: 'matchday.awayStrength',      arity: 'total' },
+  suspensionMod:     { key: 'squad.suspension',           arity: 'factor' },
+  matDiscount:       { key: 'industry.materialPrice',     arity: 'discount' },
+  matEfficiency:     { key: 'industry.materialUse',       arity: 'discount' },
+  factoryOutput:     { key: 'industry.output',            arity: 'factor' },
+  youthStr:          { key: 'youth.startStrength',        arity: 'total' },
+  youthCount:        { key: 'youth.perSeason',            arity: 'total' },
+  scoutQuality:      { key: 'youth.scoutQuality',         arity: 'factor' },
+  scoutCost:         { key: 'youth.scoutCost',            arity: 'factor' },
+  scoutCount:        { key: 'youth.scoutCount',           arity: 'total' },
+  ticketRevenue:     { key: 'stadium.ticketRevenue',      arity: 'factor' },
+  stadiumCostMod:    { key: 'stadium.buildCost',          arity: 'factor' },
+  fanFloor:          { key: 'stadium.fanFloor',           arity: 'max' },
+  transferBudgetMod: { key: 'finance.transferBudget',     arity: 'factor' },
+  sellBonus:         { key: 'transfer.saleValue',         arity: 'factor' },
+  valueBoost:        { key: 'squad.marketValue',          arity: 'factor' },
+  youthPot:          { key: 'training.youthCeiling',      arity: 'total' }
 };
 
 /** Every bus key this module can write. Declared statically on the hook. */
@@ -77,6 +109,32 @@ export const CONTRIBUTED = [...new Set(Object.values(EFFECTS).map((e) => e!.key)
  * and it is short on purpose.
  */
 export const REVEALS_READ: ReadonlySet<string> = new Set();
+
+/**
+ * Bus keys a SCREEN honours directly, outside any tick.
+ *
+ * The context bus lives for exactly one tick, so an action the player takes by
+ * clicking — buying a material, scouting a prospect, paying for a stand — can
+ * never read it. Those screens call `ownedEffects` instead, which is legitimate
+ * because knowledge is the only producer of these keys and the call is a plain
+ * cross-feature import like `postToLedger`.
+ *
+ * But `consumedKeys()` reads hook declarations, so it cannot see a screen. This
+ * list is how the gate learns about them — the same hand-kept exception as
+ * `REVEALS_READ`, and for the same reason: a consumer that is not a hook cannot
+ * be derived from the registry.
+ *
+ * Anything added here MUST actually be read by a screen. It is the one place in
+ * the gate where a lie is possible, so keep it short and check it.
+ */
+export const SCREEN_READ: ReadonlySet<string> = new Set([
+  'industry.materialPrice',
+  'youth.scoutQuality',
+  'youth.scoutCost',
+  'youth.scoutCount',
+  'stadium.buildCost',
+  'transfer.saleValue'
+]);
 export const GRANTS_READ: ReadonlySet<string> = new Set();
 
 export type Dormancy = 'live' | 'unmapped' | 'unread' | 'inert';
@@ -115,7 +173,8 @@ export function dormancyOf(node: KnowledgeNode, consumed: ReadonlySet<string>): 
   if (fx.some((k) => !EFFECTS[k])) return 'unmapped';
   // A flag is idempotent and never summed, so it needs a reader of its own name.
   if (flags.some((f) => !consumed.has(f))) return 'unread';
-  if (fx.some((k) => !consumed.has(EFFECTS[k]!.key))) return 'unread';
+  const reachable = (key: string) => consumed.has(key) || SCREEN_READ.has(key);
+  if (fx.some((k) => !reachable(EFFECTS[k]!.key))) return 'unread';
   return 'live';
 }
 

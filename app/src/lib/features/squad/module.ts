@@ -119,7 +119,7 @@ export default defineModule({
       phase: 'post',
       consumes: [
         'squad.fitnessLoss', 'squad.injuryRisk', 'squad.injuryDuration',
-        'squad.moraleFloor', 'league.result'
+        'squad.moraleFloor', 'squad.suspension', 'squad.marketValue', 'league.result'
       ],
       run({ state, rng, emit, factor, total, query }) {
         const squad = state.modules.squad;
@@ -138,6 +138,22 @@ export default defineModule({
          * so seven predicates out of nineteen could never fire, and the feature
          * would have looked merely rare instead of broken.
          */
+        /*
+         * Two doctrine effects that belong to the player rather than to a
+         * match. Applied after the match so they land on the state everything
+         * else has already finished writing.
+         */
+        const suspensionFactor = factor('squad.suspension');
+        const valueFactor = factor('squad.marketValue');
+        if (suspensionFactor !== 1 || valueFactor !== 1) {
+          for (const p of squad.players) {
+            if (suspensionFactor !== 1 && p.suspended > 0) {
+              p.suspended = Math.max(0, Math.round(p.suspended * suspensionFactor));
+            }
+            if (valueFactor !== 1) p.marketValue = Math.round(p.marketValue * valueFactor);
+          }
+        }
+
         const result = query<{ goalsAgainst: number } | null>('league.result', null);
         const cleanSheet = !!result && result.goalsAgainst === 0;
         for (const p of squad.players) {

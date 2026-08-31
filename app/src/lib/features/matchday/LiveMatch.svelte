@@ -6,6 +6,7 @@
   import { pendingDecision, applyHalfTime } from './halftime';
   import { save } from '$lib/state/persist.svelte';
   import { beatsUpTo, scoreAt, type Beat, type BeatKind } from './narrate';
+  import type { Option } from './intervene';
 
   let { clubName }: { clubName: string } = $props();
 
@@ -80,6 +81,62 @@
     if (b.kind === 'kickoff' || b.kind === 'halftime' || b.kind === 'fulltime') return 'neutral';
     return b.ours ? 'ours' : 'theirs';
   }
+
+  /*
+   * The trade, made visible.
+   *
+   * `label` + `detail` describe an option in prose; a manager choosing under a
+   * clock reads numbers faster than sentences, and prose alone is exactly how
+   * this panel drifted into looking like a free upgrade button. Each figure
+   * gets the same glyph-plus-word treatment as the result banner — direction
+   * as the glyph (▲ up, ▼ down, ■ unchanged), cost or benefit as the colour —
+   * because "risk went up" and "risk went down" cannot be told apart by an
+   * arrow alone when a rising risk is the bad direction.
+   *
+   * A zero entry is omitted rather than shown as "±0": `HOLD` already says
+   * "kostet nichts" in its own detail line, and four empty badges under it
+   * would just be that sentence said again, worse.
+   */
+  type Tone = 'pos' | 'neg' | 'neutral';
+  function glyphOf(delta: number): string {
+    return delta > 0 ? '▲' : delta < 0 ? '▼' : '■';
+  }
+  function statBadges(o: Option): { label: string; value: string; glyph: string; tone: Tone }[] {
+    const badges: { label: string; value: string; glyph: string; tone: Tone }[] = [];
+    if (o.swing !== 0) {
+      badges.push({
+        label: 'Stärke', value: `${o.swing > 0 ? '+' : ''}${o.swing}`,
+        glyph: glyphOf(o.swing), tone: o.swing > 0 ? 'pos' : 'neg'
+      });
+    }
+    // Cost, not the raw field: fitnessCost is what is TAKEN, so a negative
+    // cost (REST) is fitness GAINED — the badge reports the effect on the
+    // player, not the sign the data model happens to store it with.
+    const fitnessDelta = -o.fitnessCost;
+    if (fitnessDelta !== 0) {
+      badges.push({
+        label: 'Fitness', value: `${fitnessDelta > 0 ? '+' : ''}${fitnessDelta}`,
+        glyph: glyphOf(fitnessDelta), tone: fitnessDelta > 0 ? 'pos' : 'neg'
+      });
+    }
+    if (o.morale !== 0) {
+      badges.push({
+        label: 'Moral', value: `${o.morale > 0 ? '+' : ''}${o.morale}`,
+        glyph: glyphOf(o.morale), tone: o.morale > 0 ? 'pos' : 'neg'
+      });
+    }
+    // A real multiplier, shown as one — not converted into a percentage the
+    // model does not actually compute.
+    const riskDelta = o.injuryRisk - 1;
+    if (riskDelta !== 0) {
+      const mult = Math.round(o.injuryRisk * 100) / 100;
+      badges.push({
+        label: 'Risiko', value: `×${mult}`,
+        glyph: riskDelta > 0 ? '▲' : '▼', tone: riskDelta > 0 ? 'neg' : 'pos'
+      });
+    }
+    return badges;
+  }
 </script>
 
 {#if live}
@@ -87,8 +144,15 @@
     <header>
       <div class="clock">
         <!-- The minute is the only thing on screen that is moving, so it is the
-             only thing that gets the live mark. -->
-        {#if !finished}<i class="dot" aria-label="läuft"></i>{/if}
+             only thing that gets the live mark. A boxed "LIVE" tag rather than
+             a bare dot: the dot alone repeats what the pulse already animates,
+             the word is what makes it legible to someone who has motion
+             turned off, or who glances at a still screenshot. -->
+        {#if !finished}
+          <span class="live-tag"><i class="dot" aria-hidden="true"></i>LIVE</span>
+        {:else}
+          <span class="ft-tag">ABPFIFF</span>
+        {/if}
         <span class="min tabular">{minute}'</span>
       </div>
       <div class="board">
@@ -105,6 +169,7 @@
         <p class="q">{decision.question}</p>
         <ul class="opts">
           {#each decision.options as o (o.id)}
+            {@const badges = statBadges(o)}
             <li>
               <!-- The options are data, so their text cannot come from the
                    registry the way a fixed control's does. -->
@@ -112,6 +177,15 @@
               <button type="button" class="opt" onclick={() => decide(o.id)}>
                 <b>{o.label}</b>
                 <small>{o.detail}</small>
+                {#if badges.length}
+                  <span class="stats">
+                    {#each badges as bdg (bdg.label)}
+                      <span class="stat {bdg.tone}">
+                        <i class="glyph" aria-hidden="true">{bdg.glyph}</i>{bdg.label} {bdg.value}
+                      </span>
+                    {/each}
+                  </span>
+                {/if}
               </button>
             </li>
           {/each}
@@ -154,15 +228,32 @@
   header { padding: var(--s3); border-bottom: 1px solid var(--border); }
 
   .clock { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s2); }
+
+  .live-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px var(--s2) 2px 6px;
+    border-radius: 4px;
+    background: var(--c-live);
+    color: var(--on-fill);
+    font-size: 10px; font-weight: 800; letter-spacing: .04em;
+  }
+  .ft-tag {
+    padding: 2px var(--s2);
+    border-radius: 4px;
+    background: var(--bg-inset);
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    font-size: 10px; font-weight: 800; letter-spacing: .04em;
+  }
   .dot {
-    width: 8px; height: 8px; border-radius: 50%; background: var(--c-live);
+    width: 6px; height: 6px; border-radius: 50%; background: var(--on-fill);
     animation: pulse 1.6s ease-in-out infinite;
   }
   /* A pulsing dot is decoration for anyone who does not want motion; the
-     minute counter carries the same fact without it. */
+     "LIVE" text and the minute counter carry the same fact without it. */
   @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
-  .min { font-family: var(--font-num); font-size: var(--fs-caption); color: var(--c-live-ink); }
+  .min { font-family: var(--font-num); font-size: var(--fs-caption); color: var(--c-live-ink); font-weight: 700; }
   .done .min { color: var(--text-muted); }
 
   .board { display: flex; align-items: center; gap: var(--s3); }
@@ -189,6 +280,22 @@
   .opt:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   .opt b { display: block; font-size: var(--fs-body); color: var(--text-main); }
   .opt small { display: block; font-size: var(--fs-caption); color: var(--text-muted); line-height: var(--lh-tight); }
+
+  /* The cost sits next to the benefit, in the same row, at the same weight —
+     the whole point is that neither reads as the "real" number and the other
+     as fine print. */
+  .stats { display: flex; flex-wrap: wrap; gap: var(--s1); margin-top: var(--s2); }
+  .stat {
+    display: inline-flex; align-items: center;
+    padding: 1px 6px; border-radius: 999px;
+    background: var(--bg-inset);
+    font-size: var(--fs-caption); font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .glyph { margin-right: 3px; }
+  .stat.pos { color: var(--pos-ink); }
+  .stat.neg { color: var(--neg-ink); }
+  .stat.neutral { color: var(--text-dim); }
 
   .feed { list-style: none; margin: 0; padding: 0; max-height: 46vh; overflow-y: auto; }
   .feed li {

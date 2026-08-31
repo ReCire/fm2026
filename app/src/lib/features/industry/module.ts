@@ -71,7 +71,8 @@ export default defineModule({
     week: {
       phase: 'economy',
       order: 20,
-      run({ state, rng, emit }) {
+      consumes: ['industry.output', 'industry.materialUse', 'industry.materialPrice'],
+      run({ state, rng, emit, factor }) {
         const industry = state.modules.industry;
 
         driftPrices(industry, rng);
@@ -90,7 +91,10 @@ export default defineModule({
           });
         }
 
-        const batches = produce(industry, wholesaleOf);
+        const batches = produce(industry, wholesaleOf, {
+          output: factor('industry.output'),
+          materialUse: factor('industry.materialUse')
+        });
         industry.lastRun = batches.map((b) => ({
           factoryId: b.factoryId, units: b.units,
           materialCost: b.materialCost, wholesale: b.wholesale

@@ -53,9 +53,33 @@ export default defineModule({
     matchday: {
       phase: 'economy',
       order: 100,
-      run({ state, emit }) {
+      consumes: ['finance.opsIncome', 'finance.opex', 'finance.transferBudget'],
+      run({ state, emit, total, factor }) {
         const finance = state.modules.finance;
         const { season, matchday } = state.meta;
+
+        /*
+         * Operating income the club earns away from the pitch — a doctrine that
+         * builds a business rather than a team. Booked here, last in the
+         * economy phase, so it lands on the same balance as everything else and
+         * shows up in the ledger where the player looks for it.
+         */
+        const ops = total('finance.opsIncome');
+        if (ops !== 0) {
+          post(finance, {
+            season, matchday, source: 'finance',
+            reason: 'Betriebseinnahmen', amount: ops
+          });
+        }
+
+        // Running costs, scaled. Applied to the wage budget rather than to
+        // wages themselves: this is what the club can AFFORD to run, and squad
+        // already owns what it actually pays.
+        const opex = factor('finance.opex');
+        if (opex !== 1) finance.wageBudget = Math.round(finance.wageBudget * opex);
+
+        const budget = factor('finance.transferBudget');
+        if (budget !== 1) finance.transferBudget = Math.round(finance.transferBudget * budget);
 
         /*
          * Recorded here because this hook runs last in the economy phase, after

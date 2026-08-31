@@ -6,6 +6,7 @@
   import CampusMap from '$lib/graphics/CampusMap.svelte';
   import { development } from '$lib/graphics/campus';
   import { teamById } from '../league/rules';
+  import { ownedEffects } from '../knowledge/rules';
 
   const stadium = $derived(game.modules.stadium);
   const finance = $derived(game.modules.finance);
@@ -19,11 +20,19 @@
   // No campus module yet, so nothing is built beyond what the club starts with.
   const built = $derived(development());
 
+  /* Cheaper stands, from a doctrine. Read here rather than off the bus because
+     building is a click, and the bus lives for exactly one tick. */
+  const buildFactor = $derived(
+    ownedEffects(game.modules.knowledge).factors.get('stadium.buildCost') ?? 1
+  );
+  const priceOf = (base: number) => Math.round(base * buildFactor);
+
   function expand(blockId: string) {
     const quote = expansionQuote(stadium, blockId);
     if (!quote) return;
-    if (finance.money < quote.cost) {
-      toast('Zu teuer', `Es fehlen ${formatMoney(quote.cost - finance.money)}.`, 'bad');
+    const cost = priceOf(quote.cost);
+    if (finance.money < cost) {
+      toast('Zu teuer', `Es fehlen ${formatMoney(cost - finance.money)}.`, 'bad');
       return;
     }
     post(finance, {
@@ -31,7 +40,7 @@
       matchday: game.meta.matchday,
       source: 'stadium',
       reason: `Ausbau ${stadium.blocks[blockId]!.name}`,
-      amount: -quote.cost
+      amount: -cost
     });
     stadium.blocks[blockId]!.cap += quote.seats;
     toast('Ausbau beauftragt', `+${quote.seats} Plätze`, 'good');
@@ -83,8 +92,8 @@
         <Button
           doc="stadium.expand"
           variant="secondary"
-          label="+{block.addSeats} · {formatMoney(block.cost)}"
-          disabled={finance.money < block.cost}
+          label="+{block.addSeats} · {formatMoney(priceOf(block.cost))}"
+          disabled={finance.money < priceOf(block.cost)}
           onclick={() => expand(id)}
         />
       </div>
