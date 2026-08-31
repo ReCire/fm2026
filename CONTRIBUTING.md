@@ -144,6 +144,33 @@ Related, and the same shape one level up: **an effect must exist on every tick
 kind that reads it.** A value contributed on `matchday` is not there on `week`,
 and the registry will tell you so by refusing to start.
 
+## The four ways a thing ships connected to nothing
+
+Named because we keep finding the same bug wearing different clothes, and
+because the fourth is the one no test catches.
+
+| | the hole |
+|---|---|
+| **computed and never read** | a value exists, nothing consumes it |
+| **declared and never written** | a field exists, nothing fills it |
+| **tested and never reachable** | a path works, no player can get to it |
+| **present and never drawn** | the data is complete, correct, loaded — and the screen renders a subset of it |
+
+The first three all have a hole somewhere a sufficiently suspicious test can
+find. The fourth has no hole at all. Every assertion about the doctrine
+catalogue passed: the icons were there, the prices computed, 140 nodes had 140
+names. The bug was entirely in what the template chose not to reference, and
+there is no failing state to assert against — only an absence you have to
+already suspect.
+
+Eric found it by putting the prototype and the port side by side. Neither
+session could have: we both knew what was supposed to be there and read it in
+whether it rendered or not.
+
+**When porting a screen, diff the FIELDS the source reads against the fields
+the port reads.** Not the data — the references. That would have found `icon`
+in ten seconds.
+
 ## Three rules that came out of real bugs
 
 **Vary the input across its range and assert the output moves.** Every tuneable
