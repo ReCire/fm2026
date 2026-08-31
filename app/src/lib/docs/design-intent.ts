@@ -747,6 +747,41 @@ export const designIntent = defineIntent([
       'Give a category no tier-1 name and a fourth-division club has no possible partner in it: the screen renders an empty list rather than an error. This already happened to tech, which bottomed out at tier 2 until a test went looking.',
     module: 'content',
     source: 'fm-03-design'
+  },
+
+  // ------------------------------------------------------------ linkedout --
+  {
+    id: 'linkedout.wageFromCompetence',
+    constant: 'wageFromCompetence.curve',
+    value: 'curve 0.055 with noise 300, giving roughly 4.000 to 24.000 EUR a season',
+    rationale:
+      'Measured against the only number that matters here: over three seasons a competent director leaves the club about 90.000 EUR poorer in cash and one player better off, so a wage much above 30.000 EUR a season makes a good executive strictly worse than doing the job yourself. The ladder has to sit clearly under that, because the thing being bought is not a bonus — it is the decisions leaving your desk.',
+    failureMode:
+      'The prototype curve of 0.9 priced a competent executive at 221.000 EUR a season. Nothing would have errored: the marketplace would have listed people, the wages would have been charged correctly, and no player would ever have hired anybody. A feature dead on arrival for a reason only arithmetic can show, exactly like the factories nobody could reach. The noise term has its own failure: drop it below about 250 and the competence bands stop overlapping, the wage predicts the competence perfectly, and hiring collapses into buying the dearest name you can afford.',
+    module: 'linkedout',
+    source: 'fm-03-design, against architecture measurement'
+  },
+  {
+    id: 'linkedout.premiumWage',
+    constant: 'premium.wageMultiplier',
+    value: '2.4x, putting the locked candidate near 58.000 EUR a season',
+    rationale:
+      'Deliberately above the ceiling the rest of the ladder sits under. The paywalled profile is always better than anything else on the page AND priced beyond what he is worth, so the joke lands mechanically rather than only in the copy.',
+    failureMode:
+      'Bring this under the ceiling and Premium becomes the correct purchase. The satire then argues the opposite of what it means: a paywall that sells a genuinely better executive has stopped being a joke about career networks and become one.',
+    module: 'linkedout',
+    source: 'fm-03-design'
+  },
+  {
+    id: 'linkedout.refreshEvery',
+    constant: 'refreshEvery',
+    value: '4 matchdays',
+    rationale:
+      'About a month. The pool has to move without needing to be checked weekly: a list that never refreshes is a menu, and a menu has no moment in it, while one that turns over every week is a slot machine and punishes looking away.',
+    failureMode:
+      'Chosen rather than measured, which is the honest state of it. With two hireable roles and six or seven contacts a draw, a bad roll cannot lock a department — but that stops being true the moment more autopilots land and the field spreads thinner. Re-measure when the hireable roles reach four.',
+    module: 'linkedout',
+    source: 'fm-03-design'
   }
 ] as const);
 

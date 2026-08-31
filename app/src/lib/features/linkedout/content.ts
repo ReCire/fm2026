@@ -282,11 +282,39 @@ export const linkedoutContent = {
   /** Contacts drawn per refresh, before the locked profile. */
   contactsPerRefresh: [5, 7] as const,
   /**
-   * Wage is derived from competence, imperfectly, and that is the whole
-   * decision. A perfectly priced market has no bargains and no traps, so
-   * hiring becomes arithmetic. The noise is what makes it judgement.
+   * Matchdays before the field turns over.
+   *
+   * Three, because the pool has to feel like it is moving without the player
+   * having to check it weekly. A list that never refreshes is a menu and a
+   * menu has no moment in it; one that refreshes every week is a slot machine
+   * and punishes looking away.
    */
-  wageFromCompetence: { curve: 0.9, noise: 4_000, step: 100 },
+  refreshEvery: 4,
+  /**
+   * Wage from competence, imperfectly, and the imperfection is the decision.
+   *
+   * A perfectly priced market has no bargains and no traps, so hiring becomes
+   * arithmetic rather than judgement. The noise is what leaves room for a good
+   * call and a bad one, and it overlaps the bands on purpose: a weak executive
+   * can cost more than a strong one is worth.
+   *
+   * The curve was 0.9 — the prototype's, carried over without checking it
+   * against this economy. That priced a competent executive at €221.000 a
+   * season against a ceiling of about €30.000, so nobody would ever have hired
+   * one and the whole department would have been dead on arrival. Same mistake
+   * as the knowledge tree's costs, one week later.
+   *
+   * At 0.055 a strong executive is roughly €17.000 a season and a weak one
+   * €5.000 — a clear minority of what delegation actually costs you, which is
+   * the decisions themselves.
+   *
+   * `noise` is 300 rather than 150 because at 150 the bands did not overlap:
+   * a competence-45 executive was ALWAYS cheaper than a competence-80 one, so
+   * the wage predicted the competence perfectly and hiring collapsed into
+   * "buy the dearest one you can afford". A market needs a bargain and a trap
+   * in it or it is a price list.
+   */
+  wageFromCompetence: { curve: 0.055, noise: 300, step: 10 },
   /**
    * One locked profile per refresh, behind "LinkedOut Premium".
    *
