@@ -33,7 +33,22 @@ export default defineModule({
     week: {
       phase: 'world',
       order: 10,
-      run({ state, rng }) { developClubs(state.modules.league, rng); }
+      /*
+       * Which division we are in is a fact about the club, not about a match,
+       * and it is read on the week as well — `linkedout` sizes its contact
+       * pool by it, `merch` and `sponsors` by theirs on the matchday. It was
+       * published on the matchday tick only, so a week-tick consumer found no
+       * producer and the registry refused to boot.
+       *
+       * Third time this week: an effect must exist on every tick kind that
+       * reads it. The check catches it every time, which is the point, but it
+       * keeps being written.
+       */
+      provides: ['league.level'],
+      run({ state, rng, provide }) {
+        provide('league.level', state.modules.league.playerLevel);
+        developClubs(state.modules.league, rng);
+      }
     },
     /**
      * The whole pyramid plays its round in the `sim` phase — before anything
@@ -42,12 +57,12 @@ export default defineModule({
      */
     matchday: {
       phase: 'sim',
-      consumes: ['squad.strength', 'matchday.goalChance'],
+      consumes: ['squad.strength', 'matchday.goalChance', 'league.opponentPenalty'],
       provides: [
         'league.isHome', 'league.opponent', 'league.opponentStrength',
         'league.level', 'league.result'
       ],
-      run({ state, rng, emit, query, provide }) {
+      run({ state, rng, emit, query, provide, total }) {
         const league = state.modules.league;
         const matchday = state.meta.matchday;
 
@@ -64,12 +79,21 @@ export default defineModule({
         // If some module has already published the strength of the eleven this
         // tick, our own fixture uses it; otherwise the stored table strength
         // stands in. Either way league does not import squad.
+        /*
+         * A doctrine that makes every opponent weaker — the intelligence and
+         * dark-arts nodes. Applied to the strength we take in rather than to
+         * theirs, because `playMatchday` resolves the WHOLE pyramid and
+         * weakening every club in the country would also weaken the three
+         * clubs above us in the table. The effect the player was sold is
+         * "easier for us", not "worse football everywhere".
+         */
+        const penalty = total('league.opponentPenalty');
         const published = query<number>('squad.strength', -1);
         const report = playMatchday(
           league,
           matchday,
           rng,
-          published > 0 ? published : undefined,
+          published > 0 ? published + penalty : undefined,
           query<number>('matchday.goalChance', 1)
         );
 

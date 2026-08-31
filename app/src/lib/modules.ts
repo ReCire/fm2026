@@ -30,6 +30,7 @@ import contracts from './features/contracts/module';
 import cup from './features/cup/module';
 import knowledge from './features/knowledge/module';
 import campus from './features/campus/module';
+import linkedout from './features/linkedout/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -49,6 +50,7 @@ const declared: readonly ModuleDef[] = [
   staff,
   knowledge,
   campus,
+  linkedout,
   sponsors,
   merch,
   industry,
