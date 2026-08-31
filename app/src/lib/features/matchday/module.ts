@@ -162,7 +162,9 @@ export default defineModule({
             decided: null,
             ourStrength: report.ourStrength,
             opponentStrength: report.opponentStrength,
-            matchday: state.meta.matchday
+            matchday: state.meta.matchday,
+            subsUsed: 0,
+            subs: []
           };
 
           /*

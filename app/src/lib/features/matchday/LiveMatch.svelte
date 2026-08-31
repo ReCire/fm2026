@@ -1,9 +1,11 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { game } from '$lib/state/game.svelte';
-  import { Button } from '$lib/ui';
+  import { Button, Sheet } from '$lib/ui';
   import { start, pause, release, skipToEnd, dismiss, atInterval } from '$lib/state/live.svelte';
   import { pendingDecision, applyHalfTime } from './halftime';
+  import { canSubstitute, benchFor, onPitch, applySubstitution, MAX_SUBS } from './substitute';
+  import { strengthOf } from '../squad/rules';
   import { save } from '$lib/state/persist.svelte';
   import { beatsUpTo, scoreAt, type Beat, type BeatKind } from './narrate';
   import type { Option } from './intervene';
@@ -46,6 +48,40 @@
     start();
   }
 
+  /*
+   * Substitutions.
+   *
+   * Only offered while the clock is stopped — the swing this computes has to
+   * read `live.minute` and the eleven at one consistent instant, and pairing
+   * that with a running clock is a race this screen does not need to take on
+   * for a decision nobody plays out in real time anyway; Pause already exists
+   * for exactly this.
+   */
+  let subsSheetOpen = $state(false);
+  /** null = choosing who comes off; set = choosing who comes on. */
+  let pickedOut = $state<string | null>(null);
+
+  const canSub = $derived(live ? canSubstitute(game) : false);
+  const pitch = $derived(live ? onPitch(game) : []);
+  const bench = $derived(live ? benchFor(game) : []);
+  const subsLeft = $derived(MAX_SUBS - (live?.subsUsed ?? 0));
+
+  function openSubs() {
+    pickedOut = null;
+    subsSheetOpen = true;
+  }
+
+  function confirmSub(inId: string) {
+    if (!pickedOut) return;
+    const applied = applySubstitution(game, pickedOut, inId);
+    // Save immediately, same reasoning as the half-time decision: a
+    // substitution happens between ticks, so the autosave-on-commit never
+    // sees it on its own.
+    if (applied) void save();
+    subsSheetOpen = false;
+    pickedOut = null;
+  }
+
   const home = $derived(live?.isHome ? clubName : (live?.opponent ?? ''));
   const away = $derived(live?.isHome ? (live?.opponent ?? '') : clubName);
   const shownScore = $derived<[number, number]>(live?.isHome ? score : [score[1], score[0]]);
@@ -74,7 +110,7 @@
 
   const GLYPH: Record<BeatKind, string> = {
     kickoff: '○', goal: '⚽', chance: '↗', save: '✋', foul: '✕',
-    card: '▮', injury: '✚', halftime: '⏸', fulltime: '⏹'
+    card: '▮', injury: '✚', halftime: '⏸', fulltime: '⏹', sub: '⇄'
   };
 
   function toneOf(b: Beat): 'ours' | 'theirs' | 'neutral' {
@@ -201,6 +237,10 @@
         <Button doc="matchday.skip" variant="ghost" onclick={skipToEnd} />
       {:else}
         <Button doc="matchday.resume" onclick={start} />
+        {#if canSub}
+          <Button doc="matchday.substitute" variant="secondary"
+                  label="Wechsel ({subsLeft})" onclick={openSubs} />
+        {/if}
         <Button doc="matchday.skip" variant="ghost" onclick={skipToEnd} />
       {/if}
     </div>
@@ -217,6 +257,47 @@
       {/each}
     </ol>
   </section>
+
+  <Sheet bind:open={subsSheetOpen} title={pickedOut ? 'Wer kommt rein?' : 'Wer geht raus?'}>
+    {#if !pickedOut}
+      <!-- Step 1: who comes off. The current eleven, in lineup order. -->
+      <ul class="picker">
+        {#each pitch as p (p.id)}
+          <li>
+            <!-- docs-check-ignore: documented as a group (matchday.substitute) -->
+            <button type="button" class="row" onclick={() => (pickedOut = p.id)}>
+              <span class="name">{p.name}</span>
+              <span class="pos">{p.pos}</span>
+              <span class="stat tabular">Stärke {strengthOf(p)} · Fitness {p.fitness}</span>
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <!-- Step 2: who comes on. The bench — everyone available and not
+           already out there, with the SAME live-adjusted figure as step 1,
+           so the trade reads at a glance rather than needing a mental
+           subtraction. -->
+      <ul class="picker">
+        {#each bench as p (p.id)}
+          <li>
+            <!-- docs-check-ignore: documented as a group (matchday.substitute) -->
+            <button type="button" class="row" onclick={() => confirmSub(p.id)}>
+              <span class="name">{p.name}</span>
+              <span class="pos">{p.pos}</span>
+              <span class="stat tabular">Stärke {strengthOf(p)} · Fitness {p.fitness}</span>
+            </button>
+          </li>
+        {:else}
+          <li class="none">Keine Bank verfügbar.</li>
+        {/each}
+      </ul>
+      <!-- docs-check-ignore: navigation back to step 1, not a game action -->
+      <button type="button" class="back" onclick={() => (pickedOut = null)}>
+        ← Anderen auswählen
+      </button>
+    {/if}
+  </Sheet>
 {/if}
 
 <style>
@@ -321,4 +402,23 @@
   .feed li.goal { background: var(--primary-glow); }
   .feed li.goal .t { font-weight: 700; }
   .tabular { font-variant-numeric: tabular-nums; }
+
+  /* The substitution picker, inside the Sheet. */
+  .picker { list-style: none; margin: 0 0 var(--s2); padding: 0; display: grid; gap: var(--s2); }
+  .picker .row {
+    display: flex; align-items: center; gap: var(--s2); width: 100%;
+    min-height: var(--tap); padding: var(--s2) var(--s3);
+    background: var(--bg-inset); border: 1px solid var(--border);
+    border-radius: var(--r-sm); cursor: pointer; font: inherit; text-align: left;
+  }
+  .picker .row:hover { border-color: var(--primary-ink); }
+  .picker .name { flex: 1; min-width: 0; color: var(--text-main); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .picker .pos { flex: none; color: var(--text-dim); font-size: var(--fs-caption); }
+  .picker .stat { flex: none; color: var(--text-muted); font-size: var(--fs-caption); }
+  .picker .none { padding: var(--s3); color: var(--text-muted); font-size: var(--fs-caption); text-align: center; }
+  .back {
+    display: block; width: 100%; min-height: var(--tap);
+    background: none; border: 0; color: var(--text-muted);
+    font: inherit; font-size: var(--fs-caption); cursor: pointer;
+  }
 </style>

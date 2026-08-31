@@ -38,6 +38,14 @@ export const matchdayDocs = defineDocs({
     since: '0.2.0',
     related: ['matchday.live']
   },
+  'matchday.substitute': {
+    label: 'Wechsel',
+    tooltip: 'Bring jemanden von der Bank, während die Uhr steht. Drei pro Spiel, keine Rücknahme.',
+    manual: '## Wechsel\n\nWähle erst, wer runter geht, dann, wer rein kommt. Der Rest des Spiels wird ab dieser Minute neu ausgespielt — mit der Stärke, die der Tausch tatsächlich ergibt, nicht mit einer erfundenen.\n\nEin Einwechselspieler ist nicht automatisch besser: seine Stärke zählt zusammen mit seiner Fitness, genau wie beim Ausgewechselten. Frische Beine gegen müde ist der eigentliche Tausch — manchmal lohnt er sich, manchmal nicht.\n\nDrei Wechsel pro Spiel, und ein verbrauchter kommt nicht zurück.',
+    why: 'Die Bank existierte, aber nichts, was der Spieler tat, konnte sie je aufs Feld bringen — Fitness verfiel, doch kein Ergebnis konnte sich dadurch je ändern, während ein Spiel lief. Das ist dieselbe Lücke wie ein Wert, der berechnet und nie gelesen wird, nur auf der anderen Seite: hier stand die Mechanik, und der Bildschirm zeigte sie nicht. Begrenzt auf drei, damit der letzte Wechsel in der sechzigsten Minute eine Entscheidung bleibt, die man bereuen kann.',
+    since: '0.7.0',
+    related: ['matchday.live', 'matchday.halftime', 'squad.fitness']
+  },
   'matchday.dismiss': {
     label: 'Bericht schließen',
     tooltip: 'Schließt den Spielverlauf. Der Spielbericht bleibt erhalten.',

@@ -15,7 +15,7 @@ import type { Rng } from '$lib/engine/rng';
  */
 export const BEAT_KINDS = [
   'kickoff', 'goal', 'chance', 'save', 'foul', 'card',
-  'injury', 'halftime', 'fulltime'
+  'injury', 'halftime', 'fulltime', 'sub'
 ] as const;
 export type BeatKind = (typeof BEAT_KINDS)[number];
 

@@ -70,7 +70,14 @@ export const LiveSchema = z.object({
   ourStrength: z.number().int(),
   opponentStrength: z.number().int(),
   /** Index into league.fixtures for the match this is narrating. */
-  matchday: z.number().int()
+  matchday: z.number().int(),
+  /** Three, and they do not come back — see substitute.ts. */
+  subsUsed: z.number().int().min(0).max(3),
+  subs: z.array(z.object({
+    minute: z.number().int(),
+    outId: z.string(),
+    inId: z.string()
+  })).max(3)
 });
 export type Live = z.infer<typeof LiveSchema>;
 
@@ -110,7 +117,8 @@ export function createMatchday(_rng: Rng): MatchdayState {
 
 /** v3: the live match gains the half-time decision. */
 /** v4: counts career wins, which no surviving state could answer. */
-export const MATCHDAY_VERSION = 4;
+/** v5: the live match gains substitutions. */
+export const MATCHDAY_VERSION = 5;
 
 export function migrateMatchday(old: unknown, _from: number): MatchdayState {
   const base = old as Partial<MatchdayState>;
