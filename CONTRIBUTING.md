@@ -87,10 +87,19 @@ remote and leaves the working tree exactly as it was. What moves under you is
 **another session committing**, which happens constantly. Assume the tree has
 changed since you last looked at it.
 
-1. **Stage explicitly.** `git add <paths>`, never `-A` or `.`. With three
-   sessions in one tree, `-A` sweeps up somebody else's half-written file and
-   commits it under your name. `git status` will routinely show work that is
-   not yours; leave it alone.
+1. **Stage FILES, never directories.** `git add a/b/thing.ts`, never `-A`,
+   never `.`, and never `git add src/lib/features/matchday`.
+
+   The directory form is the one that catches you, because it reads as
+   explicit. I staged nine feature directories for a wiring pass and committed
+   117 lines of another session's half-finished component under my own name —
+   having written the "stage explicitly" rule myself, and followed it to the
+   letter. A directory is not a path; it is a wildcard that looks like a
+   decision.
+
+   Before you commit, read `git diff --cached --stat` and check every line of
+   it is yours. With three sessions, `git status` routinely shows work that is
+   not — leave it alone.
 
 2. **Never `stash`, `checkout`, `restore` or `clean` a path you do not own.**
    Not even to check something. I stashed a peer's in-flight component to see
