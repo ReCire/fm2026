@@ -8,7 +8,6 @@
   import {
     categories, roleById, pendingRoles, bandFor, copy
   } from './content';
-  import { MODULES_WITH_AUTOPILOT } from './module';
   import { canHire, hire, dismiss, employed, wageBill, moduleFor } from './rules';
   import type { Contact } from './state';
 
@@ -17,7 +16,10 @@
   const finance = $derived(game.modules.finance);
 
   const registered = new Set(registry.all.map((m) => m.id));
-  const withAutopilot = new Set(MODULES_WITH_AUTOPILOT);
+  /* Same derivation the tick uses via `ctx.autopilots` — from the registry, so
+     a screen cannot tell the player a department is delegable when the tick
+     that would run it disagrees. */
+  const withAutopilot = new Set(registry.all.filter((m) => m.autopilot).map((m) => m.id));
 
   const team = $derived(employed(lo, progression));
   const bill = $derived(wageBill(lo, progression));

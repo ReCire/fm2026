@@ -3,7 +3,6 @@ import { Registry } from '$lib/engine/registry';
 import { modules } from '$lib/modules';
 import { createRng, seedFrom } from '$lib/engine/rng';
 import { createLinkedOut } from './state';
-import { MODULES_WITH_AUTOPILOT } from './module';
 import {
   refresh, isRefreshDue, wageFor, ceilingFor, canHire, hire, dismiss,
   employed, wageBill, moduleFor
@@ -12,6 +11,14 @@ import { hireableRoles, linkedoutContent, roles } from './content';
 import type { ProgressionState } from '../progression/state';
 
 const registry = new Registry(modules);
+/*
+ * The same derivation `ctx.autopilots` uses, from the same registry.
+ *
+ * This used to be a hand-kept list in `module.ts` with a test asserting it had
+ * not drifted — a second source for one fact, guarded rather than removed.
+ * `ctx.autopilots` made the list unnecessary, so the list and its guard both
+ * went: the best fix for two sources is one source, not a test.
+ */
 const autopilots = new Set(registry.all.filter((m) => m.autopilot).map((m) => m.id));
 const MATCHDAYS = 34;
 
@@ -20,23 +27,9 @@ const progression = (): ProgressionState => ({
   tutorialStep: null, started: true
 });
 
-describe('the autopilot list', () => {
-  it('agrees with the registry', () => {
-    /*
-     * `module.ts` names the autopilot-carrying modules by hand, because a
-     * module cannot import the registry that contains it without a cycle. That
-     * is a second source for one fact, so it gets the test that stops it
-     * drifting — the drift direction being "offers a hire that silences a
-     * department nobody runs", which is the trap this whole gate exists for.
-     *
-     * `core` is excluded: it has an autopilot and is not a department.
-     */
-    const real = [...autopilots].filter((id) => id !== 'core').sort();
-    expect([...MODULES_WITH_AUTOPILOT].sort()).toEqual(real);
-  });
-
+describe('what can be handed over', () => {
   it('only ever offers roles whose department something can run', () => {
-    for (const role of hireableRoles(new Set(MODULES_WITH_AUTOPILOT))) {
+    for (const role of hireableRoles(autopilots)) {
       expect(autopilots, `${role.id} is hireable but ${role.module} has no autopilot`)
         .toContain(role.module);
     }
@@ -95,11 +88,11 @@ describe('the pool', () => {
   it('draws a field, and only for roles that can be run', () => {
     const state = createLinkedOut(createRng(1));
     const rng = createRng(seedFrom('pool'));
-    refresh(state, rng, 1, 3, new Set(MODULES_WITH_AUTOPILOT));
+    refresh(state, rng, 1, 3, autopilots);
 
     expect(state.contacts.length).toBeGreaterThanOrEqual(linkedoutContent.contactsPerRefresh[0]);
     for (const c of state.contacts) {
-      expect(MODULES_WITH_AUTOPILOT, `${c.roleId} cannot be run`).toContain(moduleFor(c));
+      expect(autopilots, `${c.roleId} cannot be run`).toContain(moduleFor(c));
     }
   });
 
@@ -113,11 +106,11 @@ describe('the pool', () => {
 
   it('locks exactly one profile until Premium, and never locks it after', () => {
     const state = createLinkedOut(createRng(1));
-    refresh(state, createRng(seedFrom('lock')), 1, 3, new Set(MODULES_WITH_AUTOPILOT));
+    refresh(state, createRng(seedFrom('lock')), 1, 3, autopilots);
     expect(state.contacts.filter((c) => c.locked)).toHaveLength(1);
 
     state.premium = true;
-    refresh(state, createRng(seedFrom('lock2')), 5, 3, new Set(MODULES_WITH_AUTOPILOT));
+    refresh(state, createRng(seedFrom('lock2')), 5, 3, autopilots);
     expect(state.contacts.filter((c) => c.locked)).toHaveLength(0);
   });
 
@@ -139,10 +132,10 @@ describe('the pool', () => {
     let total = 0;
     const DRAWS = 40;
     for (let i = 0; i < DRAWS; i++) {
-      refresh(state, rng, i * 4, 3, new Set(MODULES_WITH_AUTOPILOT));
+      refresh(state, rng, i * 4, 3, autopilots);
       total += state.contacts.filter((c) => !c.locked).length;
     }
-    const perRolePerDraw = total / DRAWS / MODULES_WITH_AUTOPILOT.length;
+    const perRolePerDraw = total / DRAWS / autopilots.size;
     expect(perRolePerDraw, 'a bad roll would lock a department').toBeGreaterThan(1.5);
   });
 });
@@ -150,7 +143,7 @@ describe('the pool', () => {
 describe('hiring', () => {
   const setup = () => {
     const state = createLinkedOut(createRng(1));
-    refresh(state, createRng(seedFrom('hire')), 1, 3, new Set(MODULES_WITH_AUTOPILOT));
+    refresh(state, createRng(seedFrom('hire')), 1, 3, autopilots);
     return { state, p: progression(), contact: state.contacts.find((c) => !c.locked)! };
   };
 

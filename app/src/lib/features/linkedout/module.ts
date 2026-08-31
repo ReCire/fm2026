@@ -47,23 +47,13 @@ export default defineModule({
       phase: 'world',
       order: 40,
       consumes: ['league.level'],
-      run({ state, rng, emit, query }) {
+      run({ state, rng, emit, query, autopilots }) {
         const lo = state.modules.linkedout;
         const matchday = state.meta.matchday;
 
-        /*
-         * Which departments can be handed over is derived here rather than
-         * stored, because the answer changes when a module gains an autopilot
-         * and a stored copy would go stale in the direction of "offers a hire
-         * that silences a department nobody runs".
-         */
-        const withAutopilot = new Set(
-          [...MODULES_WITH_AUTOPILOT].filter((id) => id in state.modules)
-        );
-
         if (isRefreshDue(lo, matchday)) {
           const before = lo.contacts.length;
-          refresh(lo, rng, matchday, query<number>('league.level', 3), withAutopilot);
+          refresh(lo, rng, matchday, query<number>('league.level', 3), autopilots);
           /*
            * Only announced when the field actually changes from nothing to
            * something. A "new contacts available" event every three weeks for a
@@ -123,15 +113,6 @@ export default defineModule({
   }
 });
 
-/**
- * Which modules ship an autopilot.
- *
- * Named here rather than read off the registry because a module cannot import
- * the registry that contains it without a cycle. A test asserts this list and
- * the registry agree, so it cannot drift into offering a hire for a department
- * that would go dark.
- */
-export const MODULES_WITH_AUTOPILOT: readonly string[] = ['transfer', 'contracts'];
 
 /** The department a hired contact is running, for the shell's labels. */
 export function departmentOf(roleId: string): string | undefined {
