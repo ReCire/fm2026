@@ -111,6 +111,30 @@ changed since you last looked at it.
    Without this every commit reads as `ReCire`, including Eric's, and nobody can
    tell who did what afterwards.
 
+## Wire the provider first, the consumer second
+
+A context key that is **provided and unread** is inert. The tick runs, nothing
+uses the value, nobody notices.
+
+A context key that is **read and unprovided** refuses to boot the registry —
+and because every test file builds one, that is the entire suite red for every
+session in the tree, not just yours.
+
+The asymmetry is complete and it is entirely in the ordering of two edits. So
+when you add an effect: write the `provides`/`contributes` side first, commit or
+at least land it in the tree, and only then add the `consumes`. If you are
+interrupted between the two, you have left something harmless behind instead of
+a stop-the-world.
+
+Three keys went in the wrong order in one week — `training.devPerSeason`,
+`youth.startStrength`, `league.level` — all in the same direction, all taking
+26 test files down with them. The check is right to be strict; the cost of an
+in-flight edit is what the ordering fixes.
+
+Related, and the same shape one level up: **an effect must exist on every tick
+kind that reads it.** A value contributed on `matchday` is not there on `week`,
+and the registry will tell you so by refusing to start.
+
 ## Three rules that came out of real bugs
 
 **Vary the input across its range and assert the output moves.** Every tuneable

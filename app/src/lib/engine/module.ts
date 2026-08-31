@@ -84,6 +84,19 @@ export interface TickContext {
    * with no trade attached.
    */
   delegation?: DelegationInfo;
+
+  /**
+   * Which modules ship an autopilot, straight from the registry.
+   *
+   * A module cannot import the registry that contains it without a cycle, so
+   * `linkedout` kept a hand-written list of them — and the direction that list
+   * drifts is "offers a hire that silences a department nobody runs", which is
+   * the exact trap the whole feature exists to avoid. A list whose staleness
+   * reintroduces the bug it was written to prevent should not be a list.
+   *
+   * The clock has the registry, so it answers instead.
+   */
+  autopilots: ReadonlySet<string>;
 }
 
 export interface Hook {

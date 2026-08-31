@@ -515,3 +515,45 @@ describe('previewing the pre phase', () => {
     expect(() => previewPre(r, game)).not.toThrow();
   });
 });
+
+describe('which departments can be handed over', () => {
+  /*
+   * `linkedout` kept a hand-written list of modules with an autopilot, because
+   * a module cannot import the registry that contains it without a cycle. The
+   * direction that list drifts is "offers a hire that silences a department
+   * nobody runs" — the exact trap the feature exists to prevent. A list whose
+   * staleness reintroduces the bug it was written to stop should not be a list.
+   *
+   * The clock has the registry, so it answers instead.
+   */
+  it('reports exactly the modules that ship one', () => {
+    const game = freshGame();
+    let seen: ReadonlySet<string> | undefined;
+    const spy = modules.map((m) =>
+      m.id === 'core'
+        ? { ...m, hooks: { matchday: { phase: 'pre' as const, run: (ctx: any) => { seen = ctx.autopilots; } } } }
+        : m
+    );
+    const r = new Registry(spy);
+    const seed = createRng(1);
+    for (const m of r.all) (game.modules as any)[m.id] ??= m.state.create(seed);
+
+    runTick(r, game, 'matchday');
+
+    const expected = new Set(r.all.filter((m) => m.autopilot).map((m) => m.id));
+    expect(seen, 'no hook was handed the set at all').toBeTruthy();
+    expect([...seen!].sort()).toEqual([...expected].sort());
+    expect(seen!.size, 'no department is delegable, so the set proves nothing')
+      .toBeGreaterThan(0);
+  });
+
+  it('is the same set the preview sees', () => {
+    const game = freshGame();
+    // A screen asking "what could I hand over" must get the same answer as a
+    // tick, or LinkedOut would list a role the engine would not run.
+    const fromRegistry = new Set(registry.all.filter((m) => m.autopilot).map((m) => m.id));
+    expect(fromRegistry.has('transfer')).toBe(true);
+    expect(fromRegistry.has('contracts')).toBe(true);
+    expect(fromRegistry.has('core'), 'core is not a department').toBe(false);
+  });
+});

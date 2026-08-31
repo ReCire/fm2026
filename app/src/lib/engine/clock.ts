@@ -56,6 +56,15 @@ export function runTick(
   // move money, generate events, or advance its own state behind their back.
   const hooks = registry.hooks(kind).filter(({ module }) => module.gate?.(state) ?? true);
 
+  /*
+   * Which departments can actually be handed over. Computed once per tick from
+   * the registry, so no module has to keep its own copy of an answer that
+   * changes the day somebody writes an autopilot.
+   */
+  const autopilots: ReadonlySet<string> = new Set(
+    registry.all.filter((m) => m.autopilot).map((m) => m.id)
+  );
+
   for (const { module, phase, hook } of hooks) {
     /*
      * A stream per module per tick, derived through a full avalanche mix.
@@ -77,6 +86,7 @@ export function runTick(
       state,
       rng,
       kind,
+      autopilots,
       emit: (e) => events.push(e),
       query: <T>(key: string, fallback: T): T =>
         provided.has(key) ? (provided.get(key) as T) : fallback,
@@ -216,6 +226,10 @@ export function previewPre(registry: Registry, state: GameState, kind: TickKind 
     .hooks(kind)
     .filter(({ module, phase }) => phase === 'pre' && (module.gate?.(state) ?? true));
 
+  const previewAutopilots: ReadonlySet<string> = new Set(
+    registry.all.filter((m) => m.autopilot).map((m) => m.id)
+  );
+
   for (const { module, hook } of hooks) {
     const rng = createRng(mixSeed(scratch.meta.seed, `${module.id}#${kind}#${scratch.meta.tick}`));
     try {
@@ -223,6 +237,7 @@ export function previewPre(registry: Registry, state: GameState, kind: TickKind 
         state: scratch,
         rng,
         kind,
+        autopilots: previewAutopilots,
         emit: () => {},
         query: <T>(key: string, fallback: T): T =>
           provided.has(key) ? (provided.get(key) as T) : fallback,
