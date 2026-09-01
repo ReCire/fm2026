@@ -199,8 +199,9 @@
     color: var(--text-muted);
     background: var(--bg-inset);
     border: 1px solid var(--border-strong);
-    border-radius: 999px;
+    border-radius: 16px;
     padding: 0 6px;
+    padding-bottom: 2px;
   }
   .open.now {
     color: var(--on-fill-alt);
