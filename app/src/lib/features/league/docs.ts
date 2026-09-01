@@ -88,4 +88,14 @@ export const leagueDocs = defineDocs({
     since: '0.2.0',
     related: ['league.position']
   }
+  'league.season': {
+    label: 'Saisonabschluss',
+    tooltip:
+      'Was die Saison war — und wie laut das Spiel es sagt. Nicht jede Saison ist eine Meldung wert.',
+    manual:
+      '## Saisonabschluss\n\nAm Ende jeder Saison steht eine von acht Bilanzen: Deutscher Meister, Meister der Liga, Aufstieg, Aufstieg über die Relegation, Europapokal erreicht, Klasse gehalten, Abstieg — oder schlicht eine beendete Saison.\n\nDie Lautstärke richtet sich nach dem Ergebnis. Ein Aufstieg nimmt den ganzen Bildschirm ein, ein elfter Platz eine Zeile.\n\nEin Abstieg bekommt genauso viel Platz wie ein Aufstieg — aber einen anderen Ton.',
+    why: 'Lautstärke und Ton sind bewusst zwei getrennte Grössen. Zu einer einzigen „Wichtigkeit" zusammengefasst würde der Bildschirm entweder einen Abstieg bejubeln oder ihn in einer grauen Zeile verstecken, und beides ist schlechter als ein schlichter Satz. Und der Mittelfeldplatz bleibt bewusst leise: eine Feier, die bei Platz elf genauso laut ausfällt wie beim Aufstieg, ist eine Feier, die beim nächsten Mal niemand mehr glaubt. Das häufigste Ergebnis schützt alle anderen.',
+    since: '0.4.0',
+    related: ['league.table', 'board.trust']
+  },
 });
