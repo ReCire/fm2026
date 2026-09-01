@@ -181,12 +181,13 @@
       {columns}
       rows={history}
       id={(v: Verdict) => `s${v.season}`}
-      title={(v: Verdict) => `Saison ${v.season + 1}`}
+      title={(v: Verdict) => `Saison ${v.season}`}
       defaultSort="season"
     >
       {#snippet cell(v: Verdict, key: string)}
         {#if key === 'season'}
-          {v.season + 1}
+          <!-- No +1: `meta.season` counts from 1 already. -->
+          {v.season}
         {:else if key === 'demand'}
           {v.demand}{#if v.promoted}<span class="tag">Aufstieg</span>{/if}{#if v.relegated}<span
               class="tag">Abstieg</span

@@ -30,8 +30,13 @@
   const exposed = $derived(press.pressure >= INVESTIGATION_FROM);
   const chance = $derived(press.investigation ? Math.round(raidChance(press.pressure) * 100) : 0);
 
+  /*
+   * `meta.season` already counts from 1 — see `state/game.svelte.ts`. The +1 I
+   * had here printed "S2" on a story two inches under a header reading
+   * "Saison 1", which only a screenshot finds.
+   */
   function when(story: Story): string {
-    return `S${story.season + 1} · ST ${story.matchday}`;
+    return `S${story.season} · ST ${story.matchday}`;
   }
 
   /**
@@ -82,7 +87,7 @@
 </Panel>
 
 {#if press.investigation}
-  <Panel title="Akte beim Verband" accent="danger" meta="seit S{press.investigation.openedSeason + 1} · ST {press.investigation.openedMatchday}">
+  <Panel title="Akte beim Verband" accent="danger" meta="seit S{press.investigation.openedSeason} · ST {press.investigation.openedMatchday}">
     <div class="chips">
       <StatChip
         label="Razzia-Wahrscheinlichkeit"
