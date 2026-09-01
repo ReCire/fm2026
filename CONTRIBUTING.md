@@ -241,6 +241,30 @@ The third is worse than no test, because it gets read as coverage. If the
 comment says "no two", the assertion says no two.
 
 
+## If a screen computes it, move it one file down
+
+There is no component test in this project. So anything a surface derives can
+only ever be checked by looking at it — and the cases worth checking are
+usually the ones that are awkward to produce in a live save.
+
+Three instances, found separately by three sessions before anybody named it:
+
+| computed in | moved to | the case it was hiding |
+|---|---|---|
+| `Leaderboard.svelte` | `ui/rank.ts` | ties share a rank and the next one skips: 1, 2, 2, 4 |
+| `matchday/Screen.svelte` | rules | `subSwing` and the trade badges |
+| `progression/Screen.svelte` | `content/badges.ts` | a secret badge already earned — and a save holding a badge whose feature was later removed, which made a career read 23 of 22 |
+
+The last one is the argument. It was in neither the screen's version nor the
+review of it, and it appeared the moment the logic became a function, because
+**writing "what should be true" for a function forces the question "what could
+be handed to this"** — which staring at a `$derived` over one live save never
+asks. You get one state per save; you get every state per test.
+
+The rule is not "extract everything". A screen mapping a field to a label is a
+screen. The line is whether you would want to assert it: if the answer is yes,
+it is logic that happens to live in a template, and it belongs one file down.
+
 ## Three rules that came out of real bugs
 
 **Vary the input across its range and assert the output moves.** Every tuneable
