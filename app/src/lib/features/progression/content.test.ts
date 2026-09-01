@@ -14,7 +14,7 @@ const gated = new Set(registry.all.filter((m) => m.gate).map((m) => m.id));
  * Listed out loud so a rename shows up in review instead of becoming a silent
  * no-op, and so this file says which half of the roadmap is fiction.
  */
-const ROADMAP = new Set(['fans', 'europe', 'holding', 'rawMaterials', 'stocks']);
+const ROADMAP = new Set(['fans', 'holding', 'rawMaterials', 'stocks']);
 
 describe('every narrative reaches the whole game', () => {
   it('opens every gated department, eventually', () => {

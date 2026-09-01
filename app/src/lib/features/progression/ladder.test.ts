@@ -56,6 +56,6 @@ describe('the unlock ladders', () => {
       narratives.flatMap((n) => [...n.unlockedAtStart, ...n.unlockOrder])
         .filter((id) => !known.has(id))
     );
-    expect([...ghosts].sort()).toEqual(['europe', 'fans', 'holding', 'rawMaterials', 'stocks']);
+    expect([...ghosts].sort()).toEqual(['fans', 'holding', 'rawMaterials', 'stocks']);
   });
 });

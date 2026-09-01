@@ -33,6 +33,7 @@ import campus from './features/campus/module';
 import linkedout from './features/linkedout/module';
 import press from './features/press/module';
 import board from './features/board/module';
+import europe from './features/europe/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -54,6 +55,7 @@ const declared: readonly ModuleDef[] = [
   campus,
   press,
   board,
+  europe,
   linkedout,
   sponsors,
   merch,

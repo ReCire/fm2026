@@ -146,6 +146,22 @@ export default defineModule({
      * the promotion bonus lands on a settled balance rather than a half-built
      * one — and so the table that decides promotion is final.
      */
+    /*
+     * Who is in Europe, published in August.
+     *
+     * `inEurope` is written at the END of the previous season and read at the
+     * START of this one, which is the one direction the flag has ever been
+     * meant to travel. Europe draws its groups off this and nothing else.
+     */
+    seasonStart: {
+      phase: 'world',
+      order: 1,
+      provides: ['league.inEurope'],
+      run({ state, provide }) {
+        provide('league.inEurope', state.modules.league.inEurope);
+      }
+    },
+
     seasonEnd: {
       phase: 'world',
       /*

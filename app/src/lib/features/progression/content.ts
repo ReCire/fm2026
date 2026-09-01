@@ -69,7 +69,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 150_000,
     startingTransferBudget: 100_000,
     unlockedAtStart: [...CORE, 'stadium'],
-    unlockOrder: ['staff', 'sponsors', 'merch', 'industry', 'fans'],
+    unlockOrder: ['staff', 'sponsors', 'merch', 'europe', 'industry', 'fans'],
     difficulty: 'normal'
   },
   {
@@ -83,7 +83,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 2_400_000,
     startingTransferBudget: 1_800_000,
     unlockedAtStart: [...CORE, 'stadium', 'transfer', 'staff', 'sponsors'],
-    unlockOrder: ['merch', 'industry', 'europe', 'fans'],
+    unlockOrder: ['merch', 'europe', 'industry', 'fans'],
     difficulty: 'hart'
   },
   {
@@ -97,7 +97,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 6_000_000,
     startingTransferBudget: 3_000_000,
     unlockedAtStart: [...CORE, 'stadium', 'transfer', 'holding'],
-    unlockOrder: ['industry', 'merch', 'staff', 'sponsors', 'rawMaterials', 'stocks'],
+    unlockOrder: ['industry', 'merch', 'staff', 'sponsors', 'europe', 'rawMaterials', 'stocks'],
     difficulty: 'ruhig'
   },
   {
@@ -111,7 +111,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 400_000,
     startingTransferBudget: 50_000,
     unlockedAtStart: [...CORE, 'youth'],
-    unlockOrder: ['staff', 'sponsors', 'merch', 'industry', 'fans'],
+    unlockOrder: ['staff', 'sponsors', 'europe', 'merch', 'industry', 'fans'],
     difficulty: 'hart'
   },
   {
@@ -133,7 +133,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: -1_800_000,
     startingTransferBudget: 0,
     unlockedAtStart: [...CORE],
-    unlockOrder: ['sponsors', 'staff', 'merch', 'industry', 'fans'],
+    unlockOrder: ['sponsors', 'staff', 'merch', 'europe', 'industry', 'fans'],
     difficulty: 'brutal'
   }
 ]);
