@@ -221,6 +221,26 @@ which ran a season instead of modelling one, found it in a second.
 **Model the system in one test and run it in another. Only one of them can be
 wrong about what the system contains.**
 
+### Three ways a test is the thing that is wrong
+
+All three were collected in one afternoon, and all three read as green or as a
+bug report about the code.
+
+| | the tell | ours |
+|---|---|---|
+| **written from the code** | it models the implementation, so it agrees with it by construction | the press unit test counted a raid as publishing ONE story; the code publishes two, and the real meter settled at a permanent 60% |
+| **under-powered** | it fails, and the failure describes the test rather than the system | "the final can be lost" at strength 70 — a 70 reaches one final in two hundred seasons |
+| **claims more than it asserts** | the comment is the coverage; the assertion is not | "no two narratives share an unlock order", asserting `> 1` distinct — which only rules out all five being identical, and two had been matching for weeks |
+
+The second is the dangerous one to debug, because a red test is normally the
+system's problem. **Measure before you change the code it accuses.** Running
+the tournament 200 times took a minute and turned a suspected bug into a
+distribution worth keeping.
+
+The third is worse than no test, because it gets read as coverage. If the
+comment says "no two", the assertion says no two.
+
+
 ## Three rules that came out of real bugs
 
 **Vary the input across its range and assert the output moves.** Every tuneable
