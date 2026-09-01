@@ -129,7 +129,8 @@ export const EFFECTS: Partial<Record<FxKey, Effect>> = {
    * tree, and until the Champions Cup existed they paid into nothing. A
    * `factor`, so `euroBonus: 1` doubles a campaign rather than adding a euro.
    */
-  euroBonus:         { key: 'europe.prize',               arity: 'factor' }
+  euroBonus:         { key: 'europe.prize',               arity: 'factor' },
+  wonderkid:         { key: 'youth.wonderkids',           arity: 'total' }
 };
 
 /** Every bus key this module can write. Declared statically on the hook. */

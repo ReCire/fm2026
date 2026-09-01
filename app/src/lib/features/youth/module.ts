@@ -1,6 +1,6 @@
 import { defineModule } from '$lib/engine/module';
 import { YouthSchema, createYouth, YOUTH_VERSION, migrateYouth } from './state';
-import { ageProspects, scoutProspect, scoutRng } from './rules';
+import { ageProspects, scoutProspect, scoutRng, scoutJewel } from './rules';
 import { capacity } from './rules';
 
 export default defineModule({
@@ -38,7 +38,7 @@ export default defineModule({
      */
     seasonEnd: {
       phase: 'world',
-      consumes: ['youth.startStrength', 'youth.perSeason'],
+      consumes: ['youth.startStrength', 'youth.perSeason', 'youth.wonderkids'],
       run({ state, emit, total }) {
         const youth = state.modules.youth;
         const squad = state.modules.squad;
@@ -74,6 +74,28 @@ export default defineModule({
             severity: 'good',
             title: `${rookie.name} kommt aus dem Netzwerk`,
             detail: `${rookie.pos}, ${rookie.age} Jahre — ohne Kosten für den Verein.`,
+            goto: 'youth'
+          });
+        }
+
+        /*
+         * Juwelen, after the ordinary intake and counted separately.
+         *
+         * He arrives with no title, which is the whole design — see
+         * content/talents.ts. A doctrine buys a boy worth training; whether he
+         * becomes a Jahrhunderttalent depends on whether he GAINS twenty-five
+         * points under this manager, which the talent predicates test and this
+         * hook does not get to decide.
+         */
+        const jewels = total('youth.wonderkids');
+        for (let i = 0; i < jewels; i++) {
+          const jewel = scoutJewel(scoutRng(youth, state.meta.seed), youth.level);
+          youth.prospects.push(jewel);
+          emit({
+            source: 'youth',
+            severity: 'good',
+            title: `${jewel.name} ist etwas anderes`,
+            detail: `${jewel.pos}, ${jewel.age} Jahre. Der Chefscout sagt sonst nie etwas.`,
             goto: 'youth'
           });
         }

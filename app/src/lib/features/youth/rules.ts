@@ -61,6 +61,25 @@ export function scoutProspect(rng: Rng, level: number): Player {
   return prospect;
 }
 
+/**
+ * A Juwel: the same act as scouting, aimed higher and younger.
+ *
+ * Deliberately built on `scoutProspect`'s own band rather than on a fixed
+ * range, so a doctrine that improves the academy improves its jewels too. The
+ * prototype used a flat 62–72 regardless of academy level, which made the node
+ * worth less every time the club got better at youth work — the one direction
+ * an academy doctrine should never point.
+ */
+export function scoutJewel(rng: Rng, level: number): Player {
+  const band = strengthBand(level);
+  const bonus = youthContent.wonderkidBonus;
+  const prospect = createPlayer(rng, rng.pick(POSITIONS), band.min + bonus, band.max + bonus);
+  // The youngest the academy takes them. Age is half the gift.
+  prospect.age = youthContent.scoutAgeMin;
+  prospect.record.debutAge = prospect.age;
+  return prospect;
+}
+
 export function scout(youth: YouthState, rng: Rng): Player | undefined {
   if (!canScout(youth)) return undefined;
   const prospect = scoutProspect(rng, youth.level);

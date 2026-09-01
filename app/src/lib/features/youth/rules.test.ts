@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
   levelUpgradeCost, capacity, strengthBand, scoutCost, canUpgrade, canScout,
-  upgrade, scout, scoutProspect, scoutRng, ageProspects
+  upgrade, scout, scoutProspect, scoutRng, ageProspects, scoutJewel
 } from './rules';
 import { createYouth } from './state';
 import { strengthOf } from '../squad/rules';
 import { youthContent } from './content';
 import { createRng } from '$lib/engine/rng';
+import { NO_TALENT } from '$lib/content/talents';
 
 const fresh = (seed = 1) => createYouth(createRng(seed));
 
@@ -142,5 +143,57 @@ describe('ageProspects', () => {
     const outcome = ageProspects(y);
     expect(outcome.graduates).toHaveLength(0);
     expect(y.prospects).toHaveLength(1);
+  });
+});
+
+describe('Juwelen', () => {
+  /*
+   * `wonderkid` is three doctrine nodes and was unmapped until now. The
+   * prototype's version generated a flat 62–72 regardless of academy level and
+   * stamped a trait on at birth; both are things this port has explicit
+   * doctrine against.
+   */
+  it('is better and younger than the ordinary intake', () => {
+    const level = 3;
+    const jewel = scoutJewel(createRng(9), level);
+    const band = strengthBand(level);
+    expect(strengthOf(jewel)).toBeGreaterThan(band.max);
+    expect(jewel.age).toBe(youthContent.scoutAgeMin);
+  });
+
+  it('gets better as the academy does, rather than worse', () => {
+    /*
+     * The prototype's flat band made this node worth LESS every time the club
+     * improved at youth work — the one direction an academy doctrine must
+     * never point. Built on the academy's own band instead, so the two
+     * investments compound.
+     */
+    const early = strengthOf(scoutJewel(createRng(4), 1));
+    const late = strengthOf(scoutJewel(createRng(4), 5));
+    expect(late).toBeGreaterThan(early);
+  });
+
+  it('arrives with no title, because the title has to be earned', () => {
+    /*
+     * The rule from content/talents.ts, asserted where it can be broken: a
+     * Jahrhunderttalent who is seventeen and already eighty is a spawn roll
+     * wearing a medal. Every `earn` predicate tests a CHANGE, and a name
+     * stamped on at birth would make all of them decorative.
+     */
+    for (let seed = 0; seed < 20; seed++) {
+      const jewel = scoutJewel(createRng(seed), 3);
+      expect(jewel.trait, 'a jewel was born with a name on it').toBe(NO_TALENT);
+    }
+  });
+
+  it('records the debut it actually arrived at', () => {
+    /*
+     * `debutStrength` and `debutAge` are what every talent measures a change
+     * FROM. A jewel whose record said he debuted at the ordinary band would be
+     * credited with fourteen points he was given rather than earned.
+     */
+    const jewel = scoutJewel(createRng(2), 3);
+    expect(jewel.record.debutAge).toBe(jewel.age);
+    expect(jewel.record.debutStrength).toBe(strengthOf(jewel));
   });
 });

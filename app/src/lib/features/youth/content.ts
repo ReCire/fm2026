@@ -27,6 +27,21 @@ export const YouthContentSchema = z.object({
   /** A prospect is scouted in at this age range… */
   scoutAgeMin: z.number().int().min(14),
   scoutAgeMax: z.number().int().min(14),
+  /**
+   * How far above the academy's own band a Juwel starts.
+   *
+   * Better AND younger, which in this model are the same investment: gains
+   * scale with how far a player is below the diminishing point and with how
+   * far he is under peak age, so a fifteen-year-old fourteen points clear of
+   * his intake is someone who will still be improving when they have stopped.
+   *
+   * He does NOT arrive with a name. See content/talents.ts: a
+   * "Jahrhunderttalent" who is seventeen and already eighty is a spawn roll
+   * wearing a medal, and every `earn` predicate tests a CHANGE rather than a
+   * level. The doctrine buys a boy worth training; the title is still earned
+   * under the manager who trained him.
+   */
+  wonderkidBonus: z.number().int().min(0),
   /** …and automatically graduates into the first team at this age. */
   graduationAge: z.number().int().min(15),
   /** Base cost of scouting one new prospect. */
@@ -51,6 +66,7 @@ export const youthContent: YouthContent = YouthContentSchema.parse({
 
   scoutAgeMin: 15,
   scoutAgeMax: 17,
+  wonderkidBonus: 14,
   graduationAge: 18,
 
   scoutCost: 12_000,
