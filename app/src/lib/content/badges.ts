@@ -252,7 +252,7 @@ const catalogue: Badge[] = [
     name: 'Namensgeber',
     desc: 'Einen Hauptsponsor unter Vertrag genommen.',
     requires: ['sponsors'],
-    test: (s) => s.modules.sponsors.active !== null
+    test: (s) => s.modules.sponsors.contracts.length > 0
   },
   {
     id: 'stadium20k',

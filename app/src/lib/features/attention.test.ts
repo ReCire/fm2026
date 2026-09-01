@@ -125,7 +125,7 @@ const CASES: {
     item: 'sponsors.unsigned',
     urgency: 'now',
     provoke: (g) => {
-      g.modules.sponsors.active = null;
+      g.modules.sponsors.contracts = [];
       g.modules.sponsors.offers.push({
         id: 's1',
         archetypeId: 'a',

@@ -164,10 +164,10 @@ describe('every test is reachable', () => {
       millionaire: (g) => { g.modules.finance.money = 1_150_000; },
       debtfree: (g) => { g.modules.finance.loanDebt = 0; g.modules.finance.money = 250_000; },
       sponsor: (g) => {
-        g.modules.sponsors.active = {
+        g.modules.sponsors.contracts = [{
           name: 'Bäckerei Schmitz', periodic: 4_000, winBonus: 500,
           matchdaysRemaining: 30, totalDuration: 34
-        };
+        }];
       },
       stadium20k: (g) => {
         for (const b of Object.values(g.modules.stadium.blocks)) b.cap = 3_000;
