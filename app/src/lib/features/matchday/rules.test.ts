@@ -1,3 +1,5 @@
+import { comebackFor } from './outcome';
+import { REFEREE_STRENGTH_POINTS, COMEBACK_STRENGTH_POINTS } from './module';
 import { describe, it, expect } from 'vitest';
 import {
   modifiers, effectiveStrength, fitnessMultiplier, goalChance, moraleDelta,
@@ -168,5 +170,52 @@ describe('results', () => {
 
   it('has empty form before anything has been played', () => {
     expect(formLetters(fresh())).toBe('');
+  });
+});
+
+describe('the two doctrine keys the matchday model owns', () => {
+  /*
+   * Six nodes buy `refBias` and three buy `comeback`, and until now both were
+   * unmapped — nine nodes of the tree waiting on no new economy, no new
+   * screen, and nobody having looked. `npm run census` found them; neither
+   * fussballmanager-15 nor I would have guessed they were there.
+   */
+  it('converts refereeing bias at the rate the prototype implied', () => {
+    /*
+     * The unit conversion, asserted rather than trusted. The prototype shifted
+     * a win probability of `0.5 + strengthDiff × 0.02` by the raw fx value, so
+     * five percent is two and a half strength points. Derived, not chosen —
+     * and this is the check that it stayed derived, because a number this
+     * large is only safe while it can be recomputed from something.
+     */
+    const winProbabilityPerStrengthPoint = 0.02;
+    expect(REFEREE_STRENGTH_POINTS).toBe(1 / winProbabilityPerStrengthPoint);
+  });
+
+  it('makes Resilienz worth less per point than a referee', () => {
+    /*
+     * A referee tilts the whole match; Resilienz applies to forty-five minutes,
+     * and only to the forty-five that begin with us behind. At the same rate it
+     * would be the better buy in every doctrine offering both, which is not
+     * what the tier costs say either node is.
+     */
+    expect(COMEBACK_STRENGTH_POINTS).toBeLessThan(REFEREE_STRENGTH_POINTS);
+  });
+
+  it('spends Resilienz only from behind, in both directions', () => {
+    /*
+     * Vary the input, assert the output moves — and assert it does NOT move on
+     * the other side. A bonus that also applied while winning would be a flat
+     * strength node with a more interesting name, and nothing about the effect
+     * label would give it away.
+     */
+    const live = { comeback: 9 };
+    expect(comebackFor(live, 0, 2)).toBe(9);
+    expect(comebackFor(live, 1, 1)).toBe(0);
+    expect(comebackFor(live, 3, 1)).toBe(0);
+  });
+
+  it('gives a club with no such node nothing at all', () => {
+    expect(comebackFor({ comeback: 0 }, 0, 3)).toBe(0);
   });
 });

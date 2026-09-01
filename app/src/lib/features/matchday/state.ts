@@ -95,6 +95,16 @@ export type Live = z.infer<typeof LiveSchema>;
 export const MatchdaySchema = z.object({
   /** Null when no match is being watched. */
   live: LiveSchema.nullable(),
+  /**
+   * What has been arranged for the next match, and nothing beyond it.
+   *
+   * The same lifecycle as `formation`, `style` and `talk` — chosen before
+   * kickoff, spent by it — except that this one clears itself afterwards
+   * rather than persisting. A sabotage that stayed selected would quietly bill
+   * a club every week for a decision it took once, and the Ermittlungsdruck
+   * would climb with nobody having chosen it a second time.
+   */
+  plannedSabotage: z.string().nullable(),
   formation: z.enum(FORMATIONS),
   style: z.enum(STYLES),
   talk: z.enum(TALKS),
@@ -121,7 +131,8 @@ declare module '$lib/engine/state' {
 
 export function createMatchday(_rng: Rng): MatchdayState {
   return {
-    live: null, formation: '4-4-2', style: 'ausgeglichen', talk: 'ruhig',
+    live: null, plannedSabotage: null,
+    formation: '4-4-2', style: 'ausgeglichen', talk: 'ruhig',
     lastReport: null, recent: [], careerWins: 0
   };
 }
@@ -130,12 +141,16 @@ export function createMatchday(_rng: Rng): MatchdayState {
 /** v4: counts career wins, which no surviving state could answer. */
 /** v5: the live match gains substitutions. */
 /** v6: a live match carries the Resilienz it kicked off with. */
-export const MATCHDAY_VERSION = 6;
+/** v7: what has been arranged for Saturday, and nothing beyond it. */
+export const MATCHDAY_VERSION = 7;
 
 export function migrateMatchday(old: unknown, _from: number): MatchdayState {
   const base = old as Partial<MatchdayState>;
   return {
     live: null,
+    // Never carried across a migration. A sabotage belongs to one specific
+    // fixture, and an old save cannot say which one it was arranged for.
+    plannedSabotage: null,
     formation: base.formation ?? '4-4-2',
     style: base.style ?? 'ausgeglichen',
     talk: base.talk ?? 'ruhig',

@@ -2,6 +2,9 @@ import type { MatchdayState, Report, Formation, Style, Talk } from './state';
 import type { Player } from '../squad/state';
 import { strengthOf } from '../squad/rules';
 import { matchdayContent as C } from './content';
+import { sabotageById, canArrange } from './sabotage';
+import { postToLedger } from '../finance/module';
+import type { FinanceState } from '../finance/state';
 
 /**
  * Pre-match rules. Pure functions over plain data.
@@ -143,4 +146,53 @@ export function scorersFor(squad: { players: readonly Player[]; lineup: readonly
       // is still far less likely to score than a poor striker.
       weight: (SCORING_WEIGHT[p.pos] ?? 1) * (0.6 + strengthOf(p) / 100)
     }));
+}
+
+/**
+ * Arrange something for Saturday.
+ *
+ * The money leaves through the ledger like every other cost in the game — a
+ * purchase that silently decremented a balance would be invisible in the one
+ * place a player looks to understand where their money went, and this is
+ * precisely the purchase somebody will later want to find.
+ *
+ * The Ermittlungsdruck is NOT charged here. It is charged when the match is
+ * played, in matchday's `pre` hook, because that is when the thing actually
+ * happens — arranging it and then not playing should not make anybody curious.
+ */
+export function arrangeSabotage(
+  m: MatchdayState,
+  finance: FinanceState,
+  meta: { season: number; matchday: number },
+  id: string
+): { ok: true } | { ok: false; reason: string } {
+  const sabotage = sabotageById.get(id);
+  if (!sabotage) return { ok: false, reason: 'Diese Operation gibt es nicht.' };
+  if (m.plannedSabotage) {
+    return { ok: false, reason: 'Für dieses Spiel ist bereits etwas arrangiert.' };
+  }
+  if (!canArrange(sabotage, finance.money)) {
+    return { ok: false, reason: 'Das Vereinskonto gibt das nicht her.' };
+  }
+
+  postToLedger(finance, {
+    season: meta.season,
+    matchday: meta.matchday,
+    source: 'matchday',
+    reason: `Beratungshonorar — ${sabotage.label}`,
+    amount: -sabotage.moneyCost
+  });
+  m.plannedSabotage = sabotage.id;
+  return { ok: true };
+}
+
+/**
+ * Call it off, and get nothing back.
+ *
+ * The money is gone. Somebody has already been paid, and a refund would make
+ * arranging one a free option to browse — which is the whole point of it
+ * costing money before it costs you anything else.
+ */
+export function cancelSabotage(m: MatchdayState): void {
+  m.plannedSabotage = null;
 }

@@ -6,6 +6,7 @@ import {
   fitnessMultiplier, goalChance, scorersFor
 } from './rules';
 import { autoLineup, teamStrength, isAvailable } from '../squad/rules';
+import { sabotageById, cappedSwing as sabotageSwing } from './sabotage';
 
 /**
  * What a point of refereeing bias is worth, in strength.
@@ -68,13 +69,13 @@ export default defineModule({
         phase: 'pre',
         order: 10,
         provides: ['squad.strength', 'matchday.modifiers', 'matchday.goalChance'],
-        contributes: ['squad.fitnessLoss'],
+        contributes: ['squad.fitnessLoss', 'press.suspicion'],
         consumes: [
           'squad.strengthBonus', 'matchday.homeStrength',
           'matchday.awayStrength', 'matchday.goalChanceBonus',
           'matchday.refereeBias'
         ],
-        run({ state, emit, provide, modify, total, factor }) {
+        run({ state, emit, provide, modify, addTo, total, factor }) {
           const squad = state.modules.squad;
           const m = state.modules.matchday;
 
@@ -120,7 +121,19 @@ export default defineModule({
            */
           const referee = total('matchday.refereeBias') * REFEREE_STRENGTH_POINTS;
 
+          /*
+           * What was arranged for today, spent today.
+           *
+           * The money left when it was ordered — see `arrangeSabotage` — so
+           * all that happens here is the advantage and the bill at the
+           * Verband. Cleared at the end of this hook, so a club that does it
+           * once is not billed for it every week afterwards.
+           */
+          const plan = m.plannedSabotage ? sabotageById.get(m.plannedSabotage) : undefined;
+          if (plan) addTo('press.suspicion', plan.pressureCost);
+
           const external = total('squad.strengthBonus') + referee
+            + (plan ? sabotageSwing(plan) : 0)
             + (isHome ? total('matchday.homeStrength') : total('matchday.awayStrength'));
           const base = teamStrength(squad, false, external);
           const strength = effectiveStrength(m, base, isHome);
@@ -135,6 +148,13 @@ export default defineModule({
           // rather than provided, because more than one system will want to
           // move this and none of them should know about the others.
           provide('matchday.goalChance', goalChance(m) * factor('matchday.goalChanceBonus'));
+
+          /*
+           * Spent. Cleared here rather than in `post`, so that a matchday with
+           * no fixture — a cup week, a season boundary — does not silently eat
+           * something the player paid for and expected to use on Saturday.
+           */
+          m.plannedSabotage = null;
 
           const available = squad.players.filter(isAvailable).length;
           if (available < 11) {

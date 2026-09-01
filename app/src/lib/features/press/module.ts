@@ -110,14 +110,23 @@ export default defineModule({
         const suspicion = total('press.suspicion', 0);
 
         /*
-         * Decay first, then add. The other order lets a node's own contribution
-         * decay on the matchday it was applied, which quietly makes every
-         * `pressureMod` node cheaper than its number says — the kind of
-         * off-by-one-tick that never shows up as a bug, only as a system that
-         * does not bite as hard as it reads.
+         * Decay first, and ONLY decay. The suspicion arrives below, as the
+         * weight of the story it produces.
+         *
+         * It used to be added here as well, and a test caught what that cost:
+         * a sabotage advertising "+18 Ermittlungsdruck" moved the needle 25,
+         * because the headline it triggered carried its own weight on top. The
+         * player was shown one number and charged another, which is the exact
+         * thing the printed board target exists to prevent, pointed the other
+         * way.
+         *
+         * One movement, one headline, one number. It also keeps the promise
+         * the feed was built on — every point of pressure has a line
+         * underneath it saying where it came from — which the old version
+         * broke silently for the largest movements in the game.
          */
         press.pressure = clampPressure(
-          press.pressure - decayOf(press.pressure) * (forgetsFaster ? FORGETS_FASTER : 1) + suspicion
+          press.pressure - decayOf(press.pressure) * (forgetsFaster ? FORGETS_FASTER : 1)
         );
 
         /* ── 2. What was written ────────────────────────────────────────── */
@@ -138,7 +147,17 @@ export default defineModule({
               n: Math.max(result?.goalsAgainst ?? 0, press.unbeaten, 1)
             }),
             cause,
-            weight: headline.weight
+            /*
+             * A suspicion story weighs what was actually done, not what the
+             * content guessed it might weigh. The headline is the REPORT of a
+             * doctrine node or a sabotage, so its weight has to be the thing
+             * being reported — otherwise the tree's "+3 Ermittlungsdruck" and
+             * the needle disagree, and the feed's whole promise goes with it.
+             *
+             * Every other cause keeps its own weight, because nothing else is
+             * reporting a number the player was already quoted.
+             */
+            weight: cause === 'suspicion' ? Math.round(suspicion) : headline.weight
           });
         }
 
