@@ -102,30 +102,23 @@
     </table>
   </div>
 
-  <!-- Narrow: rows, not a squeezed table. Sorting is a select rather than a
-       row of headers, because on a phone there are no headers to click — and
-       being able to order a squad by fitness matters more on the small screen,
-       where you can see six rows at once instead of twenty. -->
+  <!-- Narrow: rows, not a squeezed table. Sorting is a row of chips rather
+       than a select, because a select hides every option behind a tap and
+       renders in the OS's own idea of a form control — the one element on the
+       screen that looks like a tax office. A chip per column shows what you
+       can sort by at a glance; tapping the active chip again reverses it,
+       which is the same contract the wide layout's headers keep. -->
   {#if sortable.length > 0}
-    <div class="sortbar">
-      <label for="sort-by">Sortieren</label>
-      <!-- docs-check-ignore: view ordering, labelled inline; changes nothing in the game -->
-      <select id="sort-by" value={sort?.key ?? ''}
-              onchange={(e) => {
-                const c = columns.find((x) => x.key === e.currentTarget.value);
-                sort = c ? nextSort(c, null) : null;
-              }}>
-        <option value="">Standard</option>
-        {#each sortable as c (c.key)}<option value={c.key}>{c.label}</option>{/each}
-      </select>
-      {#if sort}
-        <!-- docs-check-ignore: reverses the ordering above, labelled -->
-        <button type="button" class="dir"
-                aria-label={sort.dir === 'asc' ? 'Aufsteigend, umkehren' : 'Absteigend, umkehren'}
-                onclick={() => (sort = { key: sort!.key, dir: sort!.dir === 'asc' ? 'desc' : 'asc' })}>
-          {sort.dir === 'asc' ? '▲' : '▼'}
+    <div class="sortbar" role="group" aria-label="Sortieren nach">
+      {#each sortable as c (c.key)}
+        <!-- docs-check-ignore: view ordering, named by the column itself; changes nothing in the game -->
+        <button type="button" class="chip" class:on={sort?.key === c.key}
+                aria-pressed={sort?.key === c.key}
+                onclick={() => (sort = nextSort(c, sort))}>
+          {c.label}
+          {#if sort?.key === c.key}<i aria-hidden="true">{sort.dir === 'asc' ? '▲' : '▼'}</i>{/if}
         </button>
-      {/if}
+      {/each}
     </div>
   {/if}
   <ul class="narrow">
@@ -188,18 +181,20 @@
   .sort.on i { opacity: 1; }
   .sort:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-  .sortbar { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) 0; }
-  .sortbar label { font-size: var(--fs-caption); color: var(--text-muted); }
-  .sortbar select {
-    font: inherit; font-size: var(--fs-caption); color: var(--text-main);
+  .sortbar {
+    display: flex; gap: var(--s2); padding: var(--s2) 0;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .chip {
+    flex: 0 0 auto; min-height: var(--tap); padding: 0 var(--s3);
+    display: inline-flex; align-items: center; gap: 4px;
     background: var(--bg-inset); border: 1px solid var(--border);
-    border-radius: var(--r-sm); padding: 0 var(--s2); min-height: var(--tap);
+    border-radius: var(--r-lg); color: var(--text-muted);
+    font: inherit; font-size: var(--fs-caption); font-weight: 700; cursor: pointer;
   }
-  .sortbar .dir {
-    min-width: var(--tap); min-height: var(--tap);
-    background: var(--bg-inset); color: var(--text-main);
-    border: 1px solid var(--border); border-radius: var(--r-sm); cursor: pointer;
-  }
+  .chip.on { background: var(--primary); border-color: var(--primary); color: var(--on-fill); }
+  .chip i { font-style: normal; font-size: 9px; }
+  .chip:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
   .wide { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { border-collapse: collapse; width: 100%; font-size: var(--fs-body); }
