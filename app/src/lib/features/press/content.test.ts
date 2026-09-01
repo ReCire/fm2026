@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   bands, bandFor, headlines, CAUSES, WEIGHTED, pressContent, QUIET,
-  INVESTIGATION_FROM, copy
+  INVESTIGATION_FROM, copy, suspicionCandidates, suspicionScale
 } from './content';
 
 describe('the meter', () => {
@@ -112,5 +112,73 @@ describe('the two kinds of quiet', () => {
       expect(q.note.length).toBeGreaterThan(40);
       expect(q.note, 'the note restates the number instead of the fiction').not.toMatch(/\d+\s*%/);
     }
+  });
+});
+
+
+describe('suspicion is a report, not an event', () => {
+  const suspicion = headlines.filter((h) => h.cause === 'suspicion');
+
+  it('never adds a weight of its own', () => {
+    /*
+     * The bug this file now guards against: a sabotage advertising +18
+     * Ermittlungsdruck moved the needle 25, because press added the contributed
+     * amount AND the headline's own content weight on top.
+     *
+     * A suspicion story REPORTS a number the player was already quoted — a
+     * node's "+3", or the price of a sabotage. If the sentence carries a second
+     * number, the tree and the needle disagree and the feed's whole promise
+     * goes with it. Same failure as a target a manager was never shown, pointed
+     * the other way.
+     */
+    for (const h of suspicion) expect(h.weight, h.text).toBe(0);
+  });
+
+  it('keeps severity and weight as separate fields', () => {
+    // One field with two meanings is what we are fixing; reusing `weight` as a
+    // severity hint would have rebuilt the same bug in a nicer costume.
+    for (const h of suspicion) expect(h.severity, h.text).toBeGreaterThan(0);
+    for (const h of headlines.filter((x) => x.cause !== 'suspicion')) {
+      expect(h.severity, `${h.text} carries a severity it cannot use`).toBeUndefined();
+    }
+  });
+
+  it('still counts as a cause that moves the needle', () => {
+    // WEIGHTED is declared, not derived. Derived from the table it would now
+    // drop suspicion — and the feed would stop marking the one line the player
+    // actually paid for.
+    expect(WEIGHTED.has('suspicion')).toBe(true);
+  });
+
+  it('matches the sentence to the size of the thing', () => {
+    /*
+     * A flat draw across all six made the loudest purchase in the game
+     * announce itself as a filing query two thirds of the time.
+     */
+    const quiet = suspicionCandidates(3);
+    const loud = suspicionCandidates(18);
+    const worstQuiet = Math.max(...quiet.map((h) => h.severity ?? 0));
+    const bestLoud = Math.min(...loud.map((h) => h.severity ?? 0));
+    expect(worstQuiet).toBeLessThanOrEqual(bestLoud);
+    expect(loud.some((h) => h.text.includes('Parkhaus'))).toBe(true);
+  });
+
+  it('can reach every sentence it owns', () => {
+    // A headline no amount can draw is a headline that was never written.
+    const reachable = new Set<string>();
+    for (let amount = 1; amount <= 40; amount++) {
+      for (const h of suspicionCandidates(amount)) reachable.add(h.text);
+    }
+    expect(reachable.size, 'a suspicion headline is unreachable').toBe(suspicion.length);
+  });
+
+  it('never gets milder as the amount grows', () => {
+    let previous = 0;
+    for (let amount = 1; amount <= 40; amount++) {
+      const top = Math.max(...suspicionCandidates(amount).map((h) => h.severity ?? 0));
+      expect(top, `severity dropped at ${amount}`).toBeGreaterThanOrEqual(previous);
+      previous = top;
+    }
+    expect(suspicionScale.quiet).toBeLessThan(suspicionScale.loud);
   });
 });

@@ -122,24 +122,41 @@ export const HeadlineSchema = z.object({
   /** `{club}`, `{opponent}`, `{n}` and `{sum}` are filled at write time. */
   text: z.string().min(10),
   /**
-   * Added to the meter. Zero for anything that is only football.
+   * Added to the meter. Zero for anything that is only football — and zero for
+   * every `suspicion` headline, which is the part worth reading twice.
+   *
+   * A suspicion story is a REPORT of something the player was already quoted a
+   * number for: a doctrine node's "+3 Ermittlungsdruck", or the price of a
+   * sabotage. Press writes it into the feed weighing what was actually done, so
+   * a weight here as well would be charged on top — which is exactly what it
+   * was doing, turning an advertised +18 into a needle that moved 25.
    *
    * Templates rather than generated prose: a headline is a joke with a fixed
    * rhythm, and the rhythm is what makes it read as a headline rather than as
    * a sentence about football.
    */
-  weight: z.number().int()
+  weight: z.number().int(),
+  /**
+   * How big a thing this sentence is about, for `suspicion` only.
+   *
+   * A separate field rather than reusing `weight`, because one field with two
+   * meanings is the failure this whole change is fixing. `weight` answers "what
+   * did this do to the meter"; `severity` answers "how loud a sentence is
+   * this". Beraterhonorare and a Parkhaus voucher are not the same news, and
+   * the amount is what decides which one runs.
+   */
+  severity: z.number().int().min(1).optional()
 });
 export type Headline = z.infer<typeof HeadlineSchema>;
 
 export const headlines: Headline[] = z.array(HeadlineSchema).min(24).parse([
   // ── Verdacht. Das Einzige, was den Zeiger bewegt. ──────────────────────
-  { cause: 'suspicion', text: 'Verband prüft Vorgänge bei {club}', weight: 6 },
-  { cause: 'suspicion', text: 'Was wusste der Trainer? Und ab wann?', weight: 7 },
-  { cause: 'suspicion', text: 'Anonyme Quelle: „Da läuft etwas, das nicht laufen sollte."', weight: 6 },
-  { cause: 'suspicion', text: 'Ein Parkhaus, ein Umschlag, und viele offene Fragen', weight: 8 },
-  { cause: 'suspicion', text: 'Beraterhonorare bei {club}: die Zahlen und die Lücken', weight: 5 },
-  { cause: 'suspicion', text: 'Wer ist eigentlich die Gesellschaft, der euer Trainingsgelände gehört?', weight: 7 },
+  { cause: 'suspicion', text: 'Beraterhonorare bei {club}: die Zahlen und die Lücken', weight: 0, severity: 5 },
+  { cause: 'suspicion', text: 'Verband prüft Vorgänge bei {club}', weight: 0, severity: 6 },
+  { cause: 'suspicion', text: 'Anonyme Quelle: „Da läuft etwas, das nicht laufen sollte."', weight: 0, severity: 6 },
+  { cause: 'suspicion', text: 'Was wusste der Trainer? Und ab wann?', weight: 0, severity: 7 },
+  { cause: 'suspicion', text: 'Wer ist eigentlich die Gesellschaft, der euer Trainingsgelände gehört?', weight: 0, severity: 7 },
+  { cause: 'suspicion', text: 'Ein Parkhaus, ein Umschlag, und viele offene Fragen', weight: 0, severity: 8 },
 
   // ── Razzia. Der Moment, in dem beide Konsequenzen sich berühren. ───────
   { cause: 'raid', text: 'RAZZIA bei {club}: Ermittler tragen Kisten aus der Geschäftsstelle', weight: 12 },
@@ -181,10 +198,58 @@ export const headlines: Headline[] = z.array(HeadlineSchema).min(24).parse([
   { cause: 'quiet', text: 'Platzwart seit 31 Jahren: „Ich habe hier alles gesehen."', weight: 0 }
 ]);
 
-/** Which causes actually move the meter. The screen uses this to mark them. */
-export const WEIGHTED: ReadonlySet<Cause> = new Set(
-  headlines.filter((h) => h.weight !== 0).map((h) => h.cause)
-);
+/**
+ * Which causes can move the meter. The screen uses this to mark them.
+ *
+ * DECLARED rather than derived from the weights, and that changed with the
+ * suspicion fix: every suspicion headline now carries weight 0 in content while
+ * still being the only cause a player can deliberately cause, so deriving this
+ * from the table would quietly drop it and the feed would stop marking the one
+ * line the player paid for.
+ *
+ * A design fact deserves to be stated, and the tests below check the table
+ * against it in both directions rather than the other way round.
+ */
+export const WEIGHTED: ReadonlySet<Cause> = new Set<Cause>([
+  'suspicion', 'raid', 'fine', 'cleared'
+]);
+
+/**
+ * Suspicion headlines, mildest first.
+ *
+ * Ordered here rather than at the call site so the six sentences have exactly
+ * one authority on which of them is the loudest.
+ */
+const suspicionLadder: readonly Headline[] = headlines
+  .filter((h) => h.cause === 'suspicion')
+  .sort((a, b) => (a.severity ?? 0) - (b.severity ?? 0));
+
+/**
+ * Where a suspicion stops being paperwork and starts being a car park.
+ *
+ * Sized against what actually reaches the meter: a doctrine node contributes 3
+ * or 4, and a serious sabotage runs to the high teens. Below `quiet` is the
+ * cost of doing business; above `loud` is a thing somebody will remember.
+ */
+export const suspicionScale = { quiet: 5, loud: 14 } as const;
+
+/**
+ * Which sentences fit a movement of this size.
+ *
+ * Returns candidates rather than one headline, so the RNG stays in rules where
+ * the seed lives — the same split as `pickHeadline`. An 18-point sabotage
+ * should read as a Parkhaus and an envelope; a +3 node should read as consultancy
+ * fees with gaps in them. A flat draw across all six made the loudest purchase
+ * in the game announce itself as a filing query two thirds of the time.
+ */
+export function suspicionCandidates(amount: number): readonly Headline[] {
+  const n = suspicionLadder.length;
+  const third = Math.max(1, Math.round(n / 3));
+  if (amount <= suspicionScale.quiet) return suspicionLadder.slice(0, third);
+  if (amount >= suspicionScale.loud) return suspicionLadder.slice(n - third);
+  const middle = suspicionLadder.slice(third, n - third);
+  return middle.length > 0 ? middle : suspicionLadder;
+}
 
 /* ─────────────────────────────────────────────────────────────────────────
  * Numbers
