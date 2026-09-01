@@ -454,3 +454,58 @@ export function earnableBadges(registeredModules: ReadonlySet<string>): Badge[] 
 export function secretCount(registeredModules: ReadonlySet<string>): number {
   return earnableBadges(registeredModules).filter((b) => b.secret).length;
 }
+
+export interface BadgeDisplay {
+  /** Rendered in full, in catalogue order: everything earned, plus unearned non-secrets. */
+  shown: Badge[];
+  /** Which of `shown` are earned. The surface needs both, and both come from here. */
+  earned: ReadonlySet<string>;
+  /** Unearned secrets. A number, never a list. */
+  lockedSecrets: number;
+  earnedCount: number;
+  total: number;
+}
+
+/**
+ * The three-way split the badge list is: earned, reachable-but-not-yet, and
+ * silhouette.
+ *
+ * Here rather than in the screen because there is no component test in this
+ * project, so a partition living in a `$derived` is a branch that can only be
+ * checked by looking at it — and today alone, three bugs in this repo survived
+ * being looked at and died the moment something ran them. Extracted, the same
+ * logic is ordinary data in and data out, and the cases that are awkward to
+ * reach in a live save (a secret already earned, an empty career, a badge whose
+ * feature is not built) are three lines of test each.
+ *
+ * Same move as pulling `rankEntries` out of Leaderboard, for the same reason.
+ *
+ * The rules it encodes:
+ *  - An UNREACHABLE badge never appears at all — not greyed, not counted. The
+ *    prototype listed badges for a European cup, four factories and a catering
+ *    mile that did not exist, and they sat there looking like failures.
+ *  - An EARNED badge shows in full whether or not it was secret. Withholding
+ *    the punchline after the fact means the joke never lands.
+ *  - An UNEARNED secret is counted and never named, so the count falling from
+ *    eight to seven says something happened without saying what.
+ */
+export function partitionBadges(
+  registeredModules: ReadonlySet<string>,
+  earnedIds: Iterable<string>
+): BadgeDisplay {
+  const earnable = earnableBadges(registeredModules);
+  /*
+   * Narrowed to the earnable set on purpose. A save carrying a badge whose
+   * feature has since been removed must not count towards a total drawn from
+   * the features that exist — otherwise a career reads 23/22.
+   */
+  const earned = new Set([...earnedIds].filter((id) => earnable.some((b) => b.id === id)));
+
+  return {
+    shown: earnable.filter((b) => !b.secret || earned.has(b.id)),
+    earned,
+    lockedSecrets: earnable.filter((b) => b.secret && !earned.has(b.id)).length,
+    earnedCount: earnable.filter((b) => earned.has(b.id)).length,
+    total: earnable.length
+  };
+}

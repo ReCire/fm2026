@@ -7,7 +7,7 @@
   import { Panel, StatChip, Button, Bar, toast } from '$lib/ui';
   import { narrativeById } from './content';
   import { progressRatio, nextUnlock, delegate, revoke, isDelegated } from './rules';
-  import { earnableBadges } from '$lib/content/badges';
+  import { partitionBadges } from '$lib/content/badges';
 
   const p = $derived(game.modules.progression);
   const narrative = $derived(narrativeById(p.narrativeId));
@@ -32,16 +32,21 @@
    * lands and the player is told only that a number moved. Unearned secrets
    * are the only ones that stay a silhouette, counted rather than named.
    */
+  /*
+   * One call, because this project has no component test: a partition living in
+   * a `$derived` can only be checked by looking at it, and the earned-secret
+   * branch is exactly the case a live save is awkward to produce. Extracted to
+   * `content/badges.ts`, the same logic is data in and data out and the awkward
+   * cases are three lines of test each — the same move as `rankEntries`.
+   */
   const registeredModules = $derived(new Set(registry.all.map((mod) => mod.id)));
-  const earnable = $derived(earnableBadges(registeredModules));
-  const earnedIds = $derived(new Set(game.modules.progression.earnedBadges));
-  const earnedCount = $derived(earnable.filter((b) => earnedIds.has(b.id)).length);
-  /** Non-secret, plus any secret already earned — catalogue order preserved. */
-  const shown = $derived(earnable.filter((b) => !b.secret || earnedIds.has(b.id)));
-  /** Only the ones still hidden — this is what makes the count mean something
-      when it changes: watching it drop from 8 to 7 says a secret landed
-      without saying which one. */
-  const lockedSecrets = $derived(earnable.filter((b) => b.secret && !earnedIds.has(b.id)).length);
+  const badgeView = $derived(
+    partitionBadges(registeredModules, game.modules.progression.earnedBadges)
+  );
+  const shown = $derived(badgeView.shown);
+  const earnedIds = $derived(badgeView.earned);
+  const earnedCount = $derived(badgeView.earnedCount);
+  const lockedSecrets = $derived(badgeView.lockedSecrets);
 
   function toggleDelegate(id: string) {
     if (isDelegated(game, id)) {
@@ -87,7 +92,7 @@
   </ul>
 </Panel>
 
-<Panel title="Auszeichnungen" accent="gold" meta="{earnedCount} / {earnable.length}">
+<Panel title="Auszeichnungen" accent="gold" meta="{earnedCount} / {badgeView.total}">
   {#if shown.length === 0 && lockedSecrets === 0}
     <p class="empty">Hier stehen die Auszeichnungen, sobald welche da sind.</p>
   {:else}
