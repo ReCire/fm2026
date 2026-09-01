@@ -68,11 +68,44 @@ describe('every narrative reaches the whole game', () => {
 
 describe('the ladders still differ', () => {
   it('no two narratives meet the game in the same order', () => {
-    // If every ladder converges on one sequence, the five starts are one start
-    // with different opening balances — and the whole point of a narrative is
-    // that it changes the ORDER you meet the game in.
+    /*
+     * If every ladder converges on one sequence, the five starts are one start
+     * with different opening balances — the whole point of a narrative is that
+     * it changes the ORDER you meet the game in.
+     *
+     * This used to assert `> 1`, which is "not ALL of them are identical" and
+     * not what the sentence above says. Two narratives shipped with byte-
+     * identical ladders underneath it, and they were only separated later by
+     * luck: someone adding europe had to put it somewhere and happened to pick
+     * different slots.
+     *
+     * A test whose comment claims more than its assertion is worse than no
+     * test, because it is read as coverage.
+     */
     const shapes = narratives.map((n) => n.unlockOrder.join('>'));
-    expect(new Set(shapes).size, 'two narratives share an unlock order').toBeGreaterThan(1);
+    const duplicates = shapes.filter((s, i) => shapes.indexOf(s) !== i);
+    expect(duplicates, 'these narratives share an unlock order').toEqual([]);
+    expect(new Set(shapes).size).toBe(narratives.length);
+  });
+
+  it('gives each start a first rung that its premise explains', () => {
+    /*
+     * The order is the story, so the FIRST unlock is the thesis. Aufsteiger
+     * needs a back office, the academy needs coaches, the free fall needs cash
+     * this month, the Erbe is one season from the only prize big enough to
+     * clear the debt, and the Investor was never really about football.
+     *
+     * Pinned because these are the five sentences the ladders are for, and a
+     * mechanical reshuffle to satisfy some other rule would quietly cost them.
+     */
+    const first = Object.fromEntries(narratives.map((n) => [n.id, n.unlockOrder[0]]));
+    expect(first).toEqual({
+      aufsteiger: 'staff',
+      erbe: 'europe',
+      investor: 'industry',
+      nachwuchs: 'staff',
+      absturz: 'sponsors'
+    });
   });
 
   it('gives the Investor its factory first and everyone else last', () => {

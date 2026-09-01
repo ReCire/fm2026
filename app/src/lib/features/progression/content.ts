@@ -83,7 +83,13 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 2_400_000,
     startingTransferBudget: 1_800_000,
     unlockedAtStart: [...CORE, 'stadium', 'transfer', 'staff', 'sponsors'],
-    unlockOrder: ['merch', 'europe', 'industry', 'fans'],
+    /*
+     * Europe first, and it is the whole start in one line. This club is already
+     * in the first division, so the Champions Cup is one good season away — and
+     * it is the only prize large enough to clear what the previous manager
+     * spent. He was chasing it too. The difference is that you have to.
+     */
+    unlockOrder: ['europe', 'merch', 'industry', 'fans'],
     difficulty: 'hart'
   },
   {
@@ -111,7 +117,13 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 400_000,
     startingTransferBudget: 50_000,
     unlockedAtStart: [...CORE, 'youth'],
-    unlockOrder: ['staff', 'sponsors', 'europe', 'merch', 'industry', 'fans'],
+    /*
+     * Merch before sponsors, which is the opposite of the Aufsteiger and is the
+     * point of the start. An academy club has NAMES before it has reach: people
+     * buy the shirt because the boy on it went to their school. A sponsor wants
+     * an audience, and this club will not have one for four years.
+     */
+    unlockOrder: ['staff', 'merch', 'sponsors', 'europe', 'industry', 'fans'],
     difficulty: 'hart'
   },
   {
@@ -133,7 +145,13 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: -1_800_000,
     startingTransferBudget: 0,
     unlockedAtStart: [...CORE],
-    unlockOrder: ['sponsors', 'staff', 'merch', 'europe', 'industry', 'fans'],
+    /*
+     * Sponsors then merch, and staff third. A club that has not paid its kit
+     * man in eleven weeks does not open a scouting department before it sells
+     * scarves — everything here is ordered by how fast it becomes money, which
+     * is the only ordering a licence deadline allows.
+     */
+    unlockOrder: ['sponsors', 'merch', 'staff', 'europe', 'industry', 'fans'],
     difficulty: 'brutal'
   }
 ]);
