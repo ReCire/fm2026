@@ -43,12 +43,21 @@ function career(seed = seedFrom('europe-tick'), qualified = true): GameState {
   return g;
 }
 
+/*
+ * `runTick` advances `meta.matchday` and `meta.tick` ITSELF — see clock.ts.
+ *
+ * Every harness written today also advanced them by hand, so each of these
+ * loops was stepping two matchdays at a time. Nothing failed: press and board
+ * count ticks rather than dates, and the europe test passed because all six
+ * European matchdays happen to be odd numbers and an every-other-week clock
+ * lands on odd numbers. A test that passes because of the parity of a content
+ * constant is a test that has told you nothing.
+ *
+ * senior-frontend found it from the other end, reporting that badges "never
+ * seem to actually land" on a real save.
+ */
 function playTo(g: GameState, matchday: number): void {
-  while (g.meta.matchday <= matchday) {
-    runTick(registry, g, 'matchday');
-    g.meta.matchday += 1;
-    g.meta.tick += 1;
-  }
+  while (g.meta.matchday <= matchday) runTick(registry, g, 'matchday');
 }
 
 const euroNodes = knowledgeNodes.filter((n) => (n.fx?.euroBonus ?? 0) > 0);
@@ -140,8 +149,7 @@ describe('a new season', () => {
     playTo(g, C.finalMatchday);
     expect(g.modules.europe.matches.length).toBeGreaterThan(0);
 
-    g.meta.season += 1;
-    g.meta.matchday = 1;
+    runTick(registry, g, 'seasonEnd');
     runTick(registry, g, 'seasonStart');
 
     expect(g.modules.europe.season).toBe(g.meta.season);

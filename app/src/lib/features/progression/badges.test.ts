@@ -180,11 +180,7 @@ describe('through the tick', () => {
 
   it('survives a career without ever throwing', () => {
     const g = career(31337);
-    for (let i = 0; i < 34; i++) {
-      runTick(registry, g, 'matchday');
-      g.meta.matchday += 1;
-      g.meta.tick += 1;
-    }
+    for (let i = 0; i < 34; i++) runTick(registry, g, 'matchday');
     runTick(registry, g, 'seasonEnd');
     expect(earnedBadges(g).length).toBeGreaterThanOrEqual(0);
   });

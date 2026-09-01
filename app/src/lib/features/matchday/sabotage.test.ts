@@ -162,8 +162,6 @@ describe('through the tick', () => {
     expect(g.modules.matchday.plannedSabotage).toBeNull();
     const afterOne = g.modules.press.pressure;
 
-    g.meta.matchday += 1;
-    g.meta.tick += 1;
     runTick(registry, g, 'matchday');
 
     expect(g.modules.press.pressure).toBeLessThanOrEqual(afterOne);

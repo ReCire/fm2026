@@ -33,22 +33,29 @@ function career(seed = seedFrom('board-tick')): GameState {
   return g;
 }
 
+/*
+ * `runTick` advances `meta.matchday` and `meta.tick` ITSELF — see clock.ts.
+ *
+ * Every harness written today also advanced them by hand, so each of these
+ * loops was stepping two matchdays at a time. Nothing failed: press and board
+ * count ticks rather than dates, and the europe test passed because all six
+ * European matchdays happen to be odd numbers and an every-other-week clock
+ * lands on odd numbers. A test that passes because of the parity of a content
+ * constant is a test that has told you nothing.
+ *
+ * senior-frontend found it from the other end, reporting that badges "never
+ * seem to actually land" on a real save.
+ */
 function playMatchdays(g: GameState, count: number): void {
-  for (let i = 0; i < count; i++) {
-    runTick(registry, g, 'matchday');
-    g.meta.matchday += 1;
-    g.meta.tick += 1;
-  }
+  for (let i = 0; i < count; i++) runTick(registry, g, 'matchday');
 }
 
 /** A whole season, including the end-of-season meeting. */
 function playSeason(g: GameState): void {
   const left = Math.max(0, MATCHDAYS_PER_SEASON - g.meta.matchday + 1);
   playMatchdays(g, left);
+  // `seasonEnd` rolls the season and resets the matchday on its own too.
   runTick(registry, g, 'seasonEnd');
-  g.meta.season += 1;
-  g.meta.matchday = 1;
-  g.meta.tick += 1;
 }
 
 const dirtyNodes = knowledgeNodes.filter((n) => (n.fx?.pressureMod ?? 0) > 0);
@@ -121,11 +128,7 @@ describe('the last stretch', () => {
     for (let i = 0; i < MATCHDAYS_PER_SEASON * 3 && !g.modules.board.sacked; i++) {
       playMatchdays(g, 1);
       if (g.modules.board.ultimatum) sawUltimatum = true;
-      if (g.meta.matchday > MATCHDAYS_PER_SEASON) {
-        runTick(registry, g, 'seasonEnd');
-        g.meta.season += 1;
-        g.meta.matchday = 1;
-      }
+      if (g.meta.matchday > MATCHDAYS_PER_SEASON) runTick(registry, g, 'seasonEnd');
     }
 
     if (g.modules.board.sacked) {
