@@ -31,10 +31,10 @@
   const started = $derived(europe.table.length > 0);
 
   const columns: Column[] = [
-    { key: 'club', label: 'Verein', role: 'primary' },
-    { key: 'played', label: 'Sp', role: 'secondary', numeric: true },
-    { key: 'goals', label: 'Tore', role: 'secondary', numeric: true },
-    { key: 'points', label: 'Pkt', role: 'primary', numeric: true }
+    { key: 'club', label: 'Verein', role: 'primary', sort: (e) => nameOf((e as EuroEntry).clubId) },
+    { key: 'played', label: 'Sp', role: 'secondary', numeric: true, sort: (e) => (e as EuroEntry).played },
+    { key: 'goals', label: 'Tore', role: 'secondary', numeric: true, sort: (e) => (e as EuroEntry).goalsFor },
+    { key: 'points', label: 'Pkt', role: 'primary', numeric: true, sort: (e) => (e as EuroEntry).points }
   ];
 
   /**
@@ -89,6 +89,7 @@
           rows={g.rows}
           id={(e: EuroEntry) => e.clubId}
           title={(e: EuroEntry) => nameOf(e.clubId)}
+          highlight={(e: EuroEntry) => ours(e.clubId)}
         >
           {#snippet cell(e: EuroEntry, key: string)}
             {#if key === 'club'}
@@ -202,6 +203,9 @@
     gap: var(--s1);
     align-items: baseline;
   }
+  /* min-width: 0 so a long club name truncates inside its grid track instead
+     of widening it and pushing the score line off a phone screen. */
+  .pairing span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pairing span:last-child { text-align: right; }
   .pending { font-size: var(--fs-caption); color: var(--text-muted); }
   .won { font-size: var(--fs-caption); color: var(--primary-ink); }

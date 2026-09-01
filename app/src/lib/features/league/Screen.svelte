@@ -1,10 +1,31 @@
 <script lang="ts">
   import { game } from '$lib/state/game.svelte';
-  import { Panel, StatChip, Button, DataTable, Leaderboard, Tabs } from '$lib/ui';
+  import { Panel, StatChip, Button, DataTable, Leaderboard, Tabs, type Column } from '$lib/ui';
   import Crest from '$lib/graphics/Crest.svelte';
   import { coloursFor } from '$lib/graphics/clubColours';
   import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
-  import { standings, playerFixture, levelName, matchdayFixtures } from './rules';
+  import { standings, playerFixture, levelName, matchdayFixtures, type TableRow } from './rules';
+
+  /*
+   * Column order and labels follow a printed football table, which is what
+   * every reader of this screen has already learned: rank, club, played,
+   * goals as a SCORE, difference, points. Goals were a `detail` column and
+   * therefore hidden on a phone — but "51:22" is the line a football reader
+   * checks second, after the points.
+   *
+   * Declared here rather than inline because a Svelte template cannot carry a
+   * type assertion, and the sort functions need one. The default order is the
+   * standing; sorting by goals or difference answers "who actually scores"
+   * without leaving the table.
+   */
+  const TABLE_COLUMNS: Column[] = [
+    { key: 'pos',    label: '#',      role: 'primary',   numeric: true, firstClick: 'asc', sort: (t) => (t as TableRow).pos },
+    { key: 'name',   label: 'Verein', role: 'primary',   sort: (t) => (t as TableRow).team.name },
+    { key: 'played', label: 'Sp.',    role: 'secondary', numeric: true, sort: (t) => (t as TableRow).team.played },
+    { key: 'goals',  label: 'Tore',   role: 'secondary', numeric: true, sort: (t) => (t as TableRow).team.goalsFor },
+    { key: 'diff',   label: 'Diff.',  role: 'secondary', numeric: true, sort: (t) => (t as TableRow).goalDifference },
+    { key: 'points', label: 'Pkt.',   role: 'primary',   numeric: true, sort: (t) => (t as TableRow).points }
+  ];
   import SeasonReview from './SeasonReview.svelte';
   import { bandFor as boardBandFor } from '../board/content';
 
@@ -185,24 +206,11 @@
   </div>
 
   <DataTable
-    columns={[
-      /*
-       * Column order and labels follow a printed football table, which is what
-       * every reader of this screen has already learned: rank, club, played,
-       * goals as a SCORE, difference, points. Goals were a `detail` column and
-       * therefore hidden on a phone — but "51:22" is the line a football reader
-       * checks second, after the points.
-       */
-      { key: 'pos',    label: '#',      role: 'primary',   numeric: true },
-      { key: 'name',   label: 'Verein', role: 'primary' },
-      { key: 'played', label: 'Sp.',    role: 'secondary', numeric: true },
-      { key: 'goals',  label: 'Tore',   role: 'secondary', numeric: true },
-      { key: 'diff',   label: 'Diff.',  role: 'secondary', numeric: true },
-      { key: 'points', label: 'Pkt.',   role: 'primary',   numeric: true }
-    ]}
+    columns={TABLE_COLUMNS}
     rows={table}
     id={(t) => t.team.name}
     title={(t) => t.team.name}
+    highlight={(t) => t.team.id === league.playerClubId}
   >
     {#snippet cell(t, key)}
       {#if key === 'pos'}

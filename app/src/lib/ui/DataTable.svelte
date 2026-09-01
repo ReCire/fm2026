@@ -14,7 +14,8 @@
     /** Row heading for the phone layout's detail sheet. */
     title,
     empty = 'Keine Einträge.',
-    defaultSort
+    defaultSort,
+    highlight
   }: {
     columns: Column[];
     rows: T[];
@@ -24,6 +25,13 @@
     empty?: string;
     /** Column key to order by on first render. */
     defaultSort?: string;
+    /**
+     * Marks a row as THE row — the player's own club in a league table, their
+     * own entry in a ranking. One per table by convention. It gets a filled
+     * background and an edge bar, because "where am I?" is the first question
+     * every ranking is asked and bold text alone does not survive a glance.
+     */
+    highlight?: (row: T) => boolean;
   } = $props();
 
   /*
@@ -84,7 +92,7 @@
              per-row state attaches to the wrong player — which makes the player
              distrust every number on screen, including the correct ones. -->
         {#each ordered as r (id(r))}
-          <tr>
+          <tr class:hl={highlight?.(r)}>
             {#each columns as c (c.key)}
               <td class:num={c.numeric}>{@render cell(r, c.key)}</td>
             {/each}
@@ -122,7 +130,7 @@
   {/if}
   <ul class="narrow">
     {#each ordered as r (id(r))}
-      <li>
+      <li class:hl={highlight?.(r)}>
         <div class="lines">
           <p class="line1">
             {#each primary as c (c.key)}<span class:num={c.numeric}>{@render cell(r, c.key)}</span>{/each}
@@ -207,6 +215,22 @@
   }
   td { padding: var(--s2); border-bottom: 1px solid var(--border); }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /*
+   * The highlighted row: a filled ground plus a 3px edge bar, the pattern the
+   * Sportschau table uses for "your club". Two channels on purpose — the fill
+   * alone dies in greyscale, the bar alone is easy to scroll past.
+   */
+  tr.hl td { background: var(--primary-glow); font-weight: 700; }
+  tr.hl td:first-child { box-shadow: inset 3px 0 0 var(--primary); }
+  .narrow li.hl {
+    background: var(--primary-glow);
+    box-shadow: inset 3px 0 0 var(--primary);
+    margin: 0 calc(var(--s2) * -1);
+    padding-left: var(--s2); padding-right: var(--s2);
+    border-radius: var(--r-sm);
+  }
+  .narrow li.hl .line1 { font-weight: 800; }
 
   .narrow { display: none; list-style: none; }
   .narrow li {

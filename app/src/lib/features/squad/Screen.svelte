@@ -1,9 +1,30 @@
 <script lang="ts">
   import { strengthOf } from './rules';
   import { game } from '$lib/state/game.svelte';
-  import { Panel, Button, Bar, DataTable, Leaderboard, toast } from '$lib/ui';
-  import { autoLineup, wageBill, teamStrength, isAvailable, rating } from './rules';
+  import { Panel, Button, Bar, DataTable, Leaderboard, toast, type Column } from '$lib/ui';
+  import { autoLineup, toggleLineup, wageBill, teamStrength, isAvailable, rating } from './rules';
+  import { conditionRank } from './playerColumns';
+  import type { Player } from './state';
   import { formatMoney } from '../finance/rules';
+
+  /*
+   * Declared here rather than inline because a Svelte template cannot carry a
+   * type assertion, and the sort functions need one. Every column sorts:
+   * a 22-man squad you cannot order by wage or age is a list you have to
+   * read twice.
+   */
+  const COLUMNS: Column[] = [
+    { key: 'name', label: 'Name',    role: 'primary',   sort: (p) => (p as Player).name },
+    { key: 'pos',  label: 'Pos',     role: 'primary',   sort: (p) => (p as Player).pos },
+    { key: 'str',  label: 'Stärke',  role: 'secondary', numeric: true, sort: (p) => strengthOf(p as Player) },
+    // Sorted by condition rather than raw fitness, so the injured do not
+    // float to the top of a list read to pick an eleven.
+    { key: 'fit',  label: 'Fitness', role: 'secondary', numeric: true, sort: (p) => conditionRank(p as Player) },
+    { key: 'wage', label: 'Gehalt',  role: 'detail',    numeric: true, sort: (p) => (p as Player).wage },
+    { key: 'age',  label: 'Alter',   role: 'detail',    numeric: true, firstClick: 'asc', sort: (p) => (p as Player).age },
+    // In the eleven first when sorted — the lineup IS the interesting subset.
+    { key: 'elf',  label: 'Startelf', role: 'secondary', sort: (p) => (game.modules.squad.lineup.includes((p as Player).id) ? 0 : 1), firstClick: 'asc' }
+  ];
 
   const squad = $derived(game.modules.squad);
   const sorted = $derived(
@@ -15,6 +36,17 @@
     squad.lineup = autoLineup(squad);
     toast('Aufstellung gesetzt', `Teamstärke ${teamStrength(squad, true)}`, 'good');
   }
+
+  function toggle(p: Player) {
+    const change = toggleLineup(squad, p.id);
+    if (change === 'full') return toast('Elf ist voll', 'Erst jemanden rausnehmen, dann aufstellen.', 'warn');
+    if (change === 'unavailable') return toast('Nicht verfügbar', `${p.name} kann nicht aufgestellt werden.`, 'warn');
+    toast(
+      change === 'added' ? 'Aufgestellt' : 'Auf der Bank',
+      `${p.name} — ${squad.lineup.length} / 11 · Teamstärke ${teamStrength(squad, true)}`,
+      'good'
+    );
+  }
 </script>
 
 <Panel title="Kader" accent="primary" meta="{squad.players.length} Spieler">
@@ -24,6 +56,39 @@
     <span>Aufgestellt <strong class="tabular">{squad.lineup.length} / 11</strong></span>
   </div>
   <Button doc="squad.autoLineup" onclick={setLineup} explain />
+</Panel>
+
+<!-- The team itself, right under the header. The leaderboards used to sit
+     here, which meant opening "my squad" showed statistics before it showed
+     the squad — the one list every visit to this screen is actually for. -->
+<Panel title="Spieler" accent="accent">
+  <DataTable
+    columns={COLUMNS}
+    rows={sorted}
+    id={(p) => p.id}
+    title={(p) => p.name}
+    highlight={(p) => inLineup(p.id)}
+  >
+    {#snippet cell(p, key)}
+      {#if key === 'name'}
+        <span class:out={!isAvailable(p)}>{p.name}</span>
+        {#if p.injured > 0}<span class="badge hurt">🚑 {p.injured}</span>{/if}
+        {#if p.suspended > 0}<span class="badge hurt">🟥 {p.suspended}</span>{/if}
+      {:else if key === 'pos'}<span class="dim">{p.pos}</span>
+      {:else if key === 'str'}{strengthOf(p)}
+      {:else if key === 'fit'}<span class="fitcell"><Bar value={p.fitness} showValue label="Fitness {p.name}" /></span>
+      {:else if key === 'age'}{p.age}
+      {:else if key === 'elf'}
+        <Button
+          doc="squad.toggleLineup"
+          variant={inLineup(p.id) ? 'ghost' : 'secondary'}
+          label={inLineup(p.id) ? 'Rausnehmen' : 'Aufstellen'}
+          disabled={!inLineup(p.id) && (!isAvailable(p) || squad.lineup.length >= 11)}
+          onclick={() => toggle(p)}
+        />
+      {:else}<span class="dim">{formatMoney(p.wage)}</span>{/if}
+    {/snippet}
+  </DataTable>
 </Panel>
 
 <!--
@@ -96,35 +161,6 @@
     />
   </Panel>
 {/if}
-
-<Panel title="Spieler" accent="accent">
-  <DataTable
-    columns={[
-      { key: 'name', label: 'Name',    role: 'primary' },
-      { key: 'pos',  label: 'Pos',     role: 'primary' },
-      { key: 'str',  label: 'Stärke',  role: 'secondary', numeric: true },
-      { key: 'fit',  label: 'Fitness', role: 'secondary', numeric: true },
-      { key: 'wage', label: 'Gehalt',  role: 'detail',    numeric: true },
-      { key: 'age',  label: 'Alter',   role: 'detail',    numeric: true }
-    ]}
-    rows={sorted}
-    id={(p) => p.id}
-    title={(p) => p.name}
-  >
-    {#snippet cell(p, key)}
-      {#if key === 'name'}
-        <span class:out={!isAvailable(p)}>{p.name}</span>
-        {#if inLineup(p.id)}<span class="badge">Elf</span>{/if}
-        {#if p.injured > 0}<span class="badge hurt">🚑 {p.injured}</span>{/if}
-        {#if p.suspended > 0}<span class="badge hurt">🟥 {p.suspended}</span>{/if}
-      {:else if key === 'pos'}<span class="dim">{p.pos}</span>
-      {:else if key === 'str'}{strengthOf(p)}
-      {:else if key === 'fit'}<span class="fitcell"><Bar value={p.fitness} showValue label="Fitness {p.name}" /></span>
-      {:else if key === 'age'}{p.age}
-      {:else}<span class="dim">{formatMoney(p.wage)}</span>{/if}
-    {/snippet}
-  </DataTable>
-</Panel>
 
 <style>
   .summary { display: flex; flex-wrap: wrap; gap: var(--s3); margin-bottom: var(--s3); color: var(--text-muted); font-size: var(--fs-caption); }

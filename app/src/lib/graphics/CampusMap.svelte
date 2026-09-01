@@ -63,6 +63,9 @@
 
   const HINT: Record<string, string> = { klein: 'KLEIN', mittel: 'MITTEL', gross: 'GROSS' };
 
+  /* Unique per instance, so two maps on one page cannot share clip rects. */
+  const uid = `cm${Math.random().toString(36).slice(2, 8)}`;
+
   function label(p: Placed): { name: string; sub: string } {
     if (!p.building) return { name: '+ BAUEN', sub: HINT[p.plot.size] ?? '' };
     if (p.level < 0) return { name: '+ BAUEN', sub: `${HINT[p.plot.size]} — ${p.building.name}` };
@@ -140,16 +143,26 @@
         {@const b = p.level >= 0 ? p.building : null}
         <g
           class="plot {b ? accentOf(b.category) : 'empty'}"
+          class:klein={p.plot.size === 'klein'}
           class:sel={selected === p.plot.id}
           role="button" tabindex="0" aria-label={aria(p)}
           onclick={() => onselect?.(p.plot.id)}
           onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onselect?.(p.plot.id))}
         >
+          <!-- Labels are clipped to their own card. A name that runs onto the
+               neighbouring plot reads as belonging to it, which is worse than
+               a truncated name — the full text lives in the aria-label and in
+               the list below the map either way. -->
+          <clipPath id="{uid}-{p.plot.id}">
+            <rect x={r.x + 2} y={r.y + 2} width={r.w - 4} height={r.h - 4} rx="4" />
+          </clipPath>
           <rect x={r.x} y={r.y} width={r.w} height={r.h} rx="5" />
-          <text class="name" x={r.x + 8} y={r.y + 17}>{l.name}</text>
-          {#if p.plot.size !== 'klein' || p.level < 0}
-            <text class="sub" x={r.x + 8} y={r.y + 29}>{l.sub}</text>
-          {/if}
+          <g clip-path="url(#{uid}-{p.plot.id})">
+            <text class="name" x={r.x + 8} y={r.y + 19}>{l.name}</text>
+            {#if p.plot.size !== 'klein' || p.level < 0}
+              <text class="sub" x={r.x + 8} y={r.y + 33}>{l.sub}</text>
+            {/if}
+          </g>
           {#if b && b.levels.length > 1}
             <!-- Level as marks, not "2/3". A count invites ranking; marks read
                  as a position on a ladder, which is what it is. -->
@@ -213,14 +226,22 @@
 
   .plate rect { fill: var(--bg-body); opacity: 0.82; }
   .plate text {
-    text-anchor: middle; font-size: 11px; font-weight: 700;
+    text-anchor: middle; font-size: 13px; font-weight: 700;
     letter-spacing: .04em; fill: var(--text-main);
   }
 
+  /*
+   * Label sizes are set for the width the map actually renders at: the SVG's
+   * natural 720px scales to ~375px on a phone, so every font here lands at
+   * about half its nominal size. 14px nominal is ~7.3px on screen — the floor
+   * of legible. The old 10.5px was ~5.5px, which is decoration, not a label.
+   */
   .plot { cursor: pointer; }
   .plot > rect { fill: var(--bg-card); stroke: var(--border-strong); stroke-width: 1.5; }
-  .plot .name { font-size: 10.5px; font-weight: 800; letter-spacing: .02em; fill: var(--text-main); }
-  .plot .sub { font-size: 8.5px; fill: var(--text-muted); letter-spacing: .04em; }
+  .plot .name { font-size: 14px; font-weight: 800; letter-spacing: .02em; fill: var(--text-main); }
+  .plot .sub { font-size: 11px; fill: var(--text-muted); letter-spacing: .03em; }
+  /* The small cards cannot carry 14px without clipping half the word away. */
+  .plot.klein .name { font-size: 11.5px; }
   .plot:focus-visible { outline: none; }
   .plot:focus-visible > rect, .plot:hover > rect { stroke-width: 2.5; }
   .plot.sel > rect { stroke: var(--text-main); stroke-width: 2.5; }
@@ -228,7 +249,7 @@
   /* An empty plot is an invitation, so it looks like one: dashed, quiet, and
      labelled with what would fit there. */
   .plot.empty > rect { fill: none; stroke: var(--primary-ink); stroke-dasharray: 5 5; opacity: .75; }
-  .plot.empty .name { fill: var(--primary-ink); font-size: 10px; }
+  .plot.empty .name { fill: var(--primary-ink); font-size: 12px; }
   .plot.empty .sub { fill: var(--text-dim); }
 
   /* Category tint on the card. The fill stays a wash so the label keeps a
@@ -247,10 +268,10 @@
 
   .entrance rect { fill: var(--accent); }
   .entrance text {
-    text-anchor: middle; font-size: 9px; font-weight: 800;
+    text-anchor: middle; font-size: 10.5px; font-weight: 800;
     letter-spacing: .1em; fill: var(--on-fill);
   }
 
   .scale line { stroke: var(--text-dim); stroke-width: 1; }
-  .scale text { font-size: 8px; fill: var(--text-dim); letter-spacing: .06em; }
+  .scale text { font-size: 9px; fill: var(--text-dim); letter-spacing: .06em; }
 </style>

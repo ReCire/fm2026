@@ -2,9 +2,9 @@ import { defineDocs } from '$lib/docs/registry';
 
 export const sponsorsDocs = defineDocs({
   'sponsors.active': {
-    label: 'Aktueller Sponsor',
-    tooltip: 'Der laufende Vertrag: was er pro Spieltag zahlt, was ein Sieg extra bringt, und wie viele Spieltage er noch läuft.',
-    why: 'Ein Vertrag mit sichtbarem Ablauf statt eines Menüpunkts, den man einmal einstellt und vergisst.',
+    label: 'Laufender Vertrag',
+    tooltip: 'Ein laufender Vertrag: was er pro Spieltag zahlt, was ein Sieg extra bringt, und wie viele Spieltage er noch läuft. Wie viele Verträge gleichzeitig laufen können, hängt an der Liga — einer in Liga 4, drei im Oberhaus.',
+    why: 'Verträge mit sichtbarem Ablauf statt eines Menüpunkts, den man einmal einstellt und vergisst. Die Vertragsplätze wachsen mit dem Aufstieg, weil ein Regionalliga-Trikot nur Platz für ein Logo hat.',
     since: '0.3.0',
     related: ['sponsors.offers', 'finance.balance']
   },
@@ -19,8 +19,8 @@ export const sponsorsDocs = defineDocs({
   },
   'sponsors.sign': {
     label: 'Unterschreiben',
-    tooltip: 'Nimmt dieses Angebot an. Das Handgeld wird sofort gutgeschrieben, die anderen Angebote verfallen.',
-    why: 'Der einmalige Charakter der Entscheidung — ein Vertrag pro Slot, kein Sammeln — hält Sponsoring als Nebenschauplatz statt als zweites Finanzsystem.',
+    tooltip: 'Nimmt dieses Angebot an. Das Handgeld wird sofort gutgeschrieben. Solange ein Vertragsplatz frei ist, bleiben die übrigen Angebote unterschreibbar; mit dem letzten Platz verfallen sie.',
+    why: 'Ein Vertrag pro Platz, kein Sammeln — die Vertragsplätze der Liga sind die Grenze, die Sponsoring als Nebenschauplatz statt als zweites Finanzsystem hält.',
     since: '0.3.0',
     related: ['sponsors.offers', 'finance.balance']
   },

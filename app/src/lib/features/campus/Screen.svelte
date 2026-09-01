@@ -137,8 +137,10 @@
 </Panel>
 
 <Panel title="Bauen" accent="accent" meta="{visible.length} Einrichtungen">
-  <!-- Filters scroll sideways rather than wrapping to three rows: a filter bar
-       that pushes the list off the screen has spent the space it was saving. -->
+  <!-- Filters wrap rather than scrolling sideways. The scroll version hid its
+       scrollbar, so on a phone half the categories simply did not exist — a
+       filter you cannot see is a building you never find. Two short rows cost
+       less than an invisible category. -->
   <div class="filters" role="tablist" aria-label="Kategorie">
     <!-- docs-check-ignore: a filter is a view control, not a game action -->
     <button role="tab" aria-selected={filter === 'alle'} class:on={filter === 'alle'}
@@ -228,11 +230,8 @@
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--s2); }
 
   .filters {
-    display: flex; gap: var(--s2); overflow-x: auto; margin: 0 calc(var(--s3) * -1) var(--s3);
-    padding: 0 var(--s3) var(--s2); -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s3);
   }
-  .filters::-webkit-scrollbar { display: none; }
   .filters button {
     flex: 0 0 auto; min-height: var(--tap); padding: 0 var(--s3);
     background: var(--bg-sunken); border: 1px solid var(--border);

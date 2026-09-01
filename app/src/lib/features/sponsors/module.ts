@@ -1,6 +1,6 @@
 import { defineModule } from '$lib/engine/module';
-import { SponsorsSchema, createSponsors, SPONSORS_VERSION } from './state';
-import { advanceContract, matchdayPayout, recordResult, refreshOffers } from './rules';
+import { SponsorsSchema, createSponsors, migrateSponsors, SPONSORS_VERSION } from './state';
+import { advanceContracts, totalPayout, maxSlots, recordResult, refreshOffers } from './rules';
 import { sponsorsContent } from './content';
 import { postToLedger } from '../finance/module';
 import { gatedBy } from '../progression/rules';
@@ -8,12 +8,15 @@ import { gatedBy } from '../progression/rules';
 export default defineModule({
   id: 'sponsors',
   title: 'Sponsoring',
-  summary: 'Ein Sponsoringvertrag: Handgeld, laufende Zahlungen, Siegprämie — und sein Ablauf.',
+  summary: 'Sponsorenverträge: Handgeld, laufende Zahlungen, Siegprämien — und ihr Ablauf.',
   nav: { group: 'Wirtschaft', icon: '🤝', order: 10 },
   requires: ['finance'],
   gate: gatedBy('sponsors'),
 
-  state: { schema: SponsorsSchema, create: createSponsors, version: SPONSORS_VERSION },
+  state: {
+    schema: SponsorsSchema, create: createSponsors,
+    version: SPONSORS_VERSION, migrate: migrateSponsors
+  },
 
   /*
    * Only flagged when there is something to sign. A club with no sponsor and
@@ -22,24 +25,29 @@ export default defineModule({
    */
   attention: (state) => {
     const s = state.modules.sponsors;
-    if (s.active === null && s.offers.length > 0) {
+    if (s.offers.length > 0) {
       return [
         {
           id: 'sponsors.unsigned',
           urgency: 'now' as const,
           label:
             s.offers.length === 1
-              ? 'Ein Sponsorenangebot liegt vor, der Verein hat keinen Hauptsponsor'
-              : `${s.offers.length} Sponsorenangebote liegen vor, der Verein hat keinen Hauptsponsor`
+              ? 'Ein Sponsorenangebot liegt vor, ein Vertragsplatz ist frei'
+              : `${s.offers.length} Sponsorenangebote liegen vor, mindestens ein Vertragsplatz ist frei`
         }
       ];
     }
-    if (s.active && s.active.matchdaysRemaining <= 6) {
+    const endangered = s.contracts.filter((a) => a.matchdaysRemaining <= 6);
+    if (endangered.length > 0) {
+      const soonest = Math.min(...endangered.map((a) => a.matchdaysRemaining));
       return [
         {
           id: 'sponsors.running-out',
-          urgency: s.active.matchdaysRemaining <= 2 ? ('now' as const) : ('soon' as const),
-          label: `${s.active.name} läuft aus — die Anschlussfinanzierung steht nicht`
+          urgency: soonest <= 2 ? ('now' as const) : ('soon' as const),
+          label:
+            endangered.length === 1
+              ? `${endangered[0]!.name} läuft aus — die Anschlussfinanzierung steht nicht`
+              : `${endangered.length} Sponsorenverträge laufen aus — die Anschlussfinanzierung steht nicht`
         }
       ];
     }
@@ -74,25 +82,25 @@ export default defineModule({
           recordResult(sponsors, outcome);
         }
 
-        if (sponsors.active) {
+        if (sponsors.contracts.length > 0) {
           const won = !!result && result.goalsFor > result.goalsAgainst;
           // A marketing director scales sponsoring income the same way they
           // scale merch's online channel — see staff/content.ts.
           const incomeFactor = factor('sponsors.income', 1);
-          const payout = Math.round(matchdayPayout(sponsors.active, won) * incomeFactor);
+          const payout = Math.round(totalPayout(sponsors, won) * incomeFactor);
 
           if (payout > 0) {
+            const names = sponsors.contracts.map((a) => a.name).join(', ');
             postToLedger(state.modules.finance, {
               season,
               matchday,
               source: 'sponsors',
-              reason: `${sponsors.active.name} — Sponsoring`,
+              reason: `${names} — Sponsoring`,
               amount: payout
             });
           }
 
-          const expired = advanceContract(sponsors);
-          if (expired) {
+          for (const expired of advanceContracts(sponsors)) {
             emit({
               source: 'sponsors',
               severity: 'info',
@@ -103,7 +111,7 @@ export default defineModule({
           }
         }
 
-        if (!sponsors.active && sponsors.offers.length === 0) {
+        if (sponsors.contracts.length < maxSlots(level) && sponsors.offers.length === 0) {
           refreshOffers(sponsors, rng, level);
           emit({
             source: 'sponsors',

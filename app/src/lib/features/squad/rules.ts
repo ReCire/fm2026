@@ -163,6 +163,31 @@ export function autoLineup(squad: SquadState): string[] {
   return picked.map((p) => p.id);
 }
 
+export type LineupChange = 'added' | 'removed' | 'full' | 'unavailable';
+
+/**
+ * Put a player into the eleven or take him out, by hand.
+ *
+ * The auto-lineup's doc has promised "man kann jederzeit von Hand nachbessern"
+ * since 0.1.0, and until this function existed that was a lie — the button
+ * filled the eleven and nothing on the screen could change it. The rules the
+ * simulation already enforces apply on the way in: nobody injured or
+ * suspended, never a twelfth man. Taking someone OUT is always allowed,
+ * including below eleven — an incomplete eleven is a visible problem the
+ * player chose, not a state to forbid.
+ */
+export function toggleLineup(squad: SquadState, playerId: string): LineupChange {
+  if (squad.lineup.includes(playerId)) {
+    squad.lineup = squad.lineup.filter((id) => id !== playerId);
+    return 'removed';
+  }
+  const player = squad.players.find((p) => p.id === playerId);
+  if (!player || !isAvailable(player)) return 'unavailable';
+  if (squad.lineup.length >= 11) return 'full';
+  squad.lineup = [...squad.lineup, playerId];
+  return 'added';
+}
+
 /**
  * Effective quality right now.
  *

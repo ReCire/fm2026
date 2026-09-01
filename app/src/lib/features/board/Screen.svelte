@@ -68,7 +68,7 @@
     { key: 'demand', label: 'Ziel', role: 'secondary' },
     { key: 'result', label: 'Platz / erwartet', role: 'secondary' },
     { key: 'delta', label: 'Vertrauen', role: 'primary', numeric: true, sort: (v) => (v as Verdict).delta },
-    { key: 'after', label: 'Stand danach', role: 'detail', numeric: true }
+    { key: 'after', label: 'Stand danach', role: 'detail', numeric: true, sort: (v) => (v as Verdict).trustAfter }
   ];
 
   const history = $derived([...board.verdicts].reverse());

@@ -1,9 +1,24 @@
 <script lang="ts">
   import { game } from '$lib/state/game.svelte';
-  import { Panel, StatChip, DataTable } from '$lib/ui';
+  import { Panel, StatChip, DataTable, type Column } from '$lib/ui';
   import { teamById } from '../league/rules';
   import { careerBestRank, careerBiggestWin } from './rules';
   import type { SeasonRecord } from './state';
+
+  /*
+   * Declared here rather than inline because a Svelte template cannot carry a
+   * type assertion, and the sort functions need one. A career of twenty
+   * seasons earns a "best season first" ordering.
+   */
+  const SEASON_COLUMNS: Column[] = [
+    { key: 'season', label: 'Saison', role: 'primary', numeric: true, sort: (r) => (r as SeasonRecord).season },
+    { key: 'league', label: 'Liga', role: 'primary', sort: (r) => (r as SeasonRecord).league },
+    { key: 'rank', label: 'Platz', role: 'primary', numeric: true, firstClick: 'asc', sort: (r) => (r as SeasonRecord).rank },
+    { key: 'points', label: 'Punkte', role: 'secondary', numeric: true, sort: (r) => (r as SeasonRecord).points },
+    { key: 'goals', label: 'Tore', role: 'secondary', numeric: true, sort: (r) => (r as SeasonRecord).goalsFor },
+    { key: 'outcome', label: 'Verlauf', role: 'detail' },
+    { key: 'win', label: 'Größter Sieg', role: 'detail' }
+  ];
 
   const history = $derived(game.modules.history);
   const league = $derived(game.modules.league);
@@ -51,15 +66,7 @@
 
 <Panel title="Saisons" accent="primary">
   <DataTable
-    columns={[
-      { key: 'season', label: 'Saison', role: 'primary', numeric: true },
-      { key: 'league', label: 'Liga', role: 'primary' },
-      { key: 'rank', label: 'Platz', role: 'primary', numeric: true },
-      { key: 'points', label: 'Punkte', role: 'secondary', numeric: true },
-      { key: 'goals', label: 'Tore', role: 'secondary', numeric: true },
-      { key: 'outcome', label: 'Verlauf', role: 'detail' },
-      { key: 'win', label: 'Größter Sieg', role: 'detail' }
-    ]}
+    columns={SEASON_COLUMNS}
     rows={rows}
     id={(r) => String(r.season)}
     title={(r) => `Saison ${r.season}`}

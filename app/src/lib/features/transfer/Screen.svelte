@@ -16,8 +16,42 @@
     signListing, quickSell, quickSellQuote, negotiationRng,
     acceptOffer, rejectOffer, counterOffer, counterQuotes, counterRoundsLeft
   } from './rules';
-  import type { Offer } from './state';
+  import type { Offer, Listing } from './state';
+  import type { Player } from '../squad/state';
+  import type { Column } from '$lib/ui';
   import { ownedEffects } from '../knowledge/rules';
+
+  /*
+   * Declared here rather than inline because a Svelte template cannot carry a
+   * type assertion, and the sort functions need one. Every player list on
+   * this screen sorts — "who is the strongest I can afford?" is a sorting
+   * question, and without it the answer costs a full read of the table.
+   */
+  const MARKET_COLUMNS: Column[] = [
+    { key: 'name', label: 'Name',   role: 'primary',   sort: (l) => (l as Listing).player.name },
+    { key: 'str',  label: 'Stärke', role: 'primary',   numeric: true, sort: (l) => strengthOf((l as Listing).player) },
+    // The button renders here, but the fee underneath is what it sorts by —
+    // cheapest first, which is how anyone shops a market.
+    { key: 'buy',  label: 'Ablöse', role: 'secondary', firstClick: 'asc', sort: (l) => (l as Listing).fee },
+    { key: 'pos',  label: 'Pos',    role: 'secondary', sort: (l) => (l as Listing).player.pos },
+    { key: 'wage', label: 'Gehalt', role: 'detail',    numeric: true, sort: (l) => (l as Listing).player.wage }
+  ];
+
+  const FREE_COLUMNS: Column[] = [
+    { key: 'name', label: 'Name',     role: 'primary',   sort: (l) => (l as Listing).player.name },
+    { key: 'str',  label: 'Stärke',   role: 'primary',   numeric: true, sort: (l) => strengthOf((l as Listing).player) },
+    { key: 'sign', label: 'Handgeld', role: 'secondary', firstClick: 'asc', sort: (l) => (l as Listing).fee },
+    { key: 'pos',  label: 'Pos',      role: 'secondary', sort: (l) => (l as Listing).player.pos },
+    { key: 'wage', label: 'Gehalt',   role: 'detail',    numeric: true, sort: (l) => (l as Listing).player.wage }
+  ];
+
+  const SELL_COLUMNS: Column[] = [
+    { key: 'name', label: 'Name',      role: 'primary',   sort: (p) => (p as Player).name },
+    { key: 'str',  label: 'Stärke',    role: 'primary',   numeric: true, sort: (p) => strengthOf(p as Player) },
+    { key: 'sell', label: 'Verkauf',   role: 'secondary', sort: (p) => (p as Player).marketValue },
+    { key: 'pos',  label: 'Pos',       role: 'secondary', sort: (p) => (p as Player).pos },
+    { key: 'mv',   label: 'Marktwert', role: 'detail',    numeric: true, sort: (p) => (p as Player).marketValue }
+  ];
 
   const transfer = $derived(game.modules.transfer);
   const squad = $derived(game.modules.squad);
@@ -213,13 +247,7 @@
 
 <Panel title="Verfügbare Spieler" accent="accent" meta="{transfer.market.length} Angebote">
   <DataTable
-    columns={[
-      { key: 'name', label: 'Name',   role: 'primary' },
-      { key: 'str',  label: 'Stärke', role: 'primary',   numeric: true },
-      { key: 'buy',  label: 'Ablöse', role: 'secondary' },
-      { key: 'pos',  label: 'Pos',    role: 'secondary' },
-      { key: 'wage', label: 'Gehalt', role: 'detail',    numeric: true }
-    ]}
+    columns={MARKET_COLUMNS}
     rows={transfer.market}
     id={(l) => l.id}
     title={(l) => l.player.name}
@@ -246,13 +274,7 @@
 
 <Panel title="Ablösefreie Spieler" accent="primary" meta="{transfer.freeAgents.length} Spieler">
   <DataTable
-    columns={[
-      { key: 'name', label: 'Name',     role: 'primary' },
-      { key: 'str',  label: 'Stärke',   role: 'primary',   numeric: true },
-      { key: 'sign', label: 'Handgeld', role: 'secondary' },
-      { key: 'pos',  label: 'Pos',      role: 'secondary' },
-      { key: 'wage', label: 'Gehalt',   role: 'detail',    numeric: true }
-    ]}
+    columns={FREE_COLUMNS}
     rows={transfer.freeAgents}
     id={(l) => l.id}
     title={(l) => l.player.name}
@@ -279,13 +301,7 @@
 <Panel title="Eigene Spieler abgeben" accent="accent" meta="{squad.players.length} im Kader">
   <p class="empty">Ein Blitzverkauf bringt sofort Geld, aber weniger als ein ausgehandelter Transfer.</p>
   <DataTable
-    columns={[
-      { key: 'name', label: 'Name',      role: 'primary' },
-      { key: 'str',  label: 'Stärke',    role: 'primary',   numeric: true },
-      { key: 'sell', label: 'Verkauf',   role: 'secondary' },
-      { key: 'pos',  label: 'Pos',       role: 'secondary' },
-      { key: 'mv',   label: 'Marktwert', role: 'detail',    numeric: true }
-    ]}
+    columns={SELL_COLUMNS}
     rows={sellable}
     id={(p) => p.id}
     title={(p) => p.name}

@@ -1,13 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import {
-  advanceContract,
+  advanceContracts,
   findOffer,
   formFactor,
   levelFactor,
   matchdayPayout,
+  maxSlots,
   recordResult,
   refreshOffers,
-  signOffer
+  signOffer,
+  totalPayout
 } from './rules';
 import { createSponsors } from './state';
 import { createRng } from '$lib/engine/rng';
@@ -37,6 +39,27 @@ describe('levelFactor', () => {
   it('never drops below 1 for a level at or below the weakest', () => {
     expect(levelFactor(3)).toBe(1);
     expect(levelFactor(4)).toBe(1);
+  });
+
+  it('compounds: the top flight is several times Liga 4, not a rounding error', () => {
+    /*
+     * The additive version topped out at ~2×, which read in play as
+     * "sponsoring is capped": a champion's offers were barely distinguishable
+     * from a promoted club's. The exact number is content's business; the
+     * property that it is a MULTIPLE is this test's.
+     */
+    expect(levelFactor(0)).toBeGreaterThan(4);
+  });
+});
+
+describe('maxSlots', () => {
+  it('gives the weakest league exactly one backer', () => {
+    expect(maxSlots(sponsorsContent.weakestLevel)).toBe(1);
+  });
+
+  it('grows on the way up and is capped at the content maximum', () => {
+    expect(maxSlots(2)).toBeGreaterThan(maxSlots(3));
+    expect(maxSlots(0)).toBe(sponsorsContent.maxSlots);
   });
 });
 
@@ -83,26 +106,52 @@ describe('refreshOffers', () => {
 });
 
 describe('signOffer', () => {
-  it('activates the chosen offer and clears the rest', () => {
+  it('signs the chosen offer into a slot and clears the table only when full', () => {
     const s = base();
     refreshOffers(s, createRng(1), 3);
     const target = s.offers[0]!;
-    const signed = signOffer(s, target.id);
+    const signed = signOffer(s, target.id, 1);
 
     expect(signed).toEqual({ name: target.name, fee: target.fee });
-    expect(s.active).toEqual({
-      name: target.name,
-      periodic: target.periodic,
-      winBonus: target.winBonus,
-      matchdaysRemaining: target.duration,
-      totalDuration: target.duration
-    });
+    expect(s.contracts).toEqual([
+      {
+        name: target.name,
+        periodic: target.periodic,
+        winBonus: target.winBonus,
+        matchdaysRemaining: target.duration,
+        totalDuration: target.duration
+      }
+    ]);
+    // The single slot is now full, so the remaining offers vanish with it.
     expect(s.offers).toHaveLength(0);
+  });
+
+  it('keeps the remaining offers signable while slots stay open', () => {
+    const s = base();
+    refreshOffers(s, createRng(1), 0);
+    const [first, second] = [s.offers[0]!, s.offers[1]!];
+
+    signOffer(s, first.id, 3);
+    expect(s.offers.length).toBeGreaterThan(0);
+
+    signOffer(s, second.id, 3);
+    expect(s.contracts).toHaveLength(2);
+  });
+
+  it('refuses a signature when every slot is taken', () => {
+    const s = base();
+    refreshOffers(s, createRng(1), 3);
+    const target = s.offers[0]!;
+    s.contracts = [
+      { name: 'Bestand', periodic: 100, winBonus: 0, matchdaysRemaining: 5, totalDuration: 6 }
+    ];
+    expect(signOffer(s, target.id, 1)).toBeUndefined();
+    expect(s.contracts).toHaveLength(1);
   });
 
   it('returns undefined for an offer that does not exist', () => {
     const s = base();
-    expect(signOffer(s, 'nope')).toBeUndefined();
+    expect(signOffer(s, 'nope', 3)).toBeUndefined();
   });
 
   it('findOffer looks up by id', () => {
@@ -119,21 +168,34 @@ describe('matchdayPayout', () => {
     expect(matchdayPayout(active, false)).toBe(500);
     expect(matchdayPayout(active, true)).toBe(700);
   });
+
+  it('totalPayout sums every running contract', () => {
+    const s = base();
+    s.contracts = [
+      { name: 'A', periodic: 500, winBonus: 200, matchdaysRemaining: 3, totalDuration: 6 },
+      { name: 'B', periodic: 300, winBonus: 100, matchdaysRemaining: 9, totalDuration: 12 }
+    ];
+    expect(totalPayout(s, false)).toBe(800);
+    expect(totalPayout(s, true)).toBe(1100);
+  });
 });
 
-describe('advanceContract', () => {
-  it('counts down and clears the contract at zero', () => {
+describe('advanceContracts', () => {
+  it('counts every contract down and drops the ones that hit zero', () => {
     const s = base();
-    s.active = { name: 'Test', periodic: 100, winBonus: 0, matchdaysRemaining: 2, totalDuration: 2 };
-    expect(advanceContract(s)).toBeUndefined();
-    expect(s.active?.matchdaysRemaining).toBe(1);
-    expect(advanceContract(s)).toEqual({ name: 'Test' });
-    expect(s.active).toBeNull();
+    s.contracts = [
+      { name: 'Kurz', periodic: 100, winBonus: 0, matchdaysRemaining: 1, totalDuration: 6 },
+      { name: 'Lang', periodic: 100, winBonus: 0, matchdaysRemaining: 9, totalDuration: 24 }
+    ];
+    expect(advanceContracts(s)).toEqual([{ name: 'Kurz' }]);
+    expect(s.contracts).toHaveLength(1);
+    expect(s.contracts[0]!.name).toBe('Lang');
+    expect(s.contracts[0]!.matchdaysRemaining).toBe(8);
   });
 
-  it('does nothing without an active contract', () => {
+  it('does nothing without contracts', () => {
     const s = base();
-    expect(advanceContract(s)).toBeUndefined();
+    expect(advanceContracts(s)).toEqual([]);
   });
 });
 
@@ -171,13 +233,15 @@ function newGame(seedText: string, withStaff: string[] = []): GameState {
   unlock(g.modules.progression, 'sponsors');
   for (const id of withStaff) hire(g.modules.staff, id, 0);
   // Sign whatever the first offer is, so a contract is actually paying out.
-  g.modules.sponsors.active = {
-    name: 'Testsponsor',
-    periodic: 1000,
-    winBonus: 0,
-    matchdaysRemaining: 34,
-    totalDuration: 34
-  };
+  g.modules.sponsors.contracts = [
+    {
+      name: 'Testsponsor',
+      periodic: 1000,
+      winBonus: 0,
+      matchdaysRemaining: 34,
+      totalDuration: 34
+    }
+  ];
   return g;
 }
 

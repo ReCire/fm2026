@@ -1,7 +1,25 @@
 <script lang="ts">
   import { game } from '$lib/state/game.svelte';
-  import { Panel, StatChip, DataTable } from '$lib/ui';
+  import { Panel, StatChip, DataTable, type Column } from '$lib/ui';
   import { formatMoney, breakdown } from './rules';
+  import type { LedgerEntry } from './state';
+
+  /*
+   * Declared here rather than inline because a Svelte template cannot carry a
+   * type assertion, and the sort functions need one. A ledger you cannot
+   * order by amount is a ledger you can only skim — "what was the biggest
+   * cost this month?" is a sorting question.
+   */
+  const LEDGER_COLUMNS: Column[] = [
+    { key: 'reason', label: 'Grund',  role: 'primary',   sort: (e) => (e as LedgerEntry).reason },
+    { key: 'amount', label: 'Betrag', role: 'primary',   numeric: true, sort: (e) => (e as LedgerEntry).amount },
+    { key: 'source', label: 'Quelle', role: 'secondary', sort: (e) => (e as LedgerEntry).source },
+    {
+      key: 'md', label: 'ST', role: 'detail', firstClick: 'desc',
+      // Season and matchday folded into one key, so "3.2" sorts after "2.17".
+      sort: (e) => (e as LedgerEntry).season * 1000 + (e as LedgerEntry).matchday
+    }
+  ];
 
   const finance = $derived(game.modules.finance);
   const recent = $derived([...finance.ledger].reverse().slice(0, 40));
@@ -36,12 +54,7 @@
 
 <Panel title="Buchungen" accent="accent" meta="{finance.ledger.length} Einträge">
   <DataTable
-    columns={[
-      { key: 'reason', label: 'Grund',  role: 'primary' },
-      { key: 'amount', label: 'Betrag', role: 'primary',   numeric: true },
-      { key: 'source', label: 'Quelle', role: 'secondary' },
-      { key: 'md',     label: 'ST',     role: 'detail' }
-    ]}
+    columns={LEDGER_COLUMNS}
     rows={recent}
     id={(e) => `${e.season}-${e.matchday}-${e.source}-${e.reason}-${e.amount}`}
     title={(e) => e.reason}

@@ -33,8 +33,10 @@ export const SponsorsContentSchema = z.object({
   archetypes: z.array(SponsorArchetypeSchema).min(1),
   /** Sponsor company names. Offers draw from this pool without repeats where possible. */
   names: z.array(z.string().min(1)).min(1),
-  /** Extra multiplier per league level ABOVE `weakestLevel`. league.level counts down to 0 at the top. */
+  /** Compounding growth per league level ABOVE `weakestLevel` — `(1+step)^levels`. league.level counts down to 0 at the top. */
   levelStep: z.number().min(0),
+  /** Contract slots at the top flight. Lower leagues get fewer — see `maxSlots` in rules.ts. */
+  maxSlots: z.number().int().min(1),
   /** The league level every archetype's base numbers describe — Liga 4, where a career starts. */
   weakestLevel: z.number().int().min(0),
   /** How many recent results `formFactor` looks at. */
@@ -79,7 +81,15 @@ export const sponsorsContent: SponsorsContent = SponsorsContentSchema.parse({
     'TechnoPark Solutions',
     'Grüne Wiese Energie'
   ],
-  levelStep: 0.35,
+  /*
+   * 0.75 compounding: Liga 4 ×1, Liga 3 ×1.75, Liga 2 ×3.06, Bundesliga ×5.36.
+   * The old additive 0.35 topped out at ×2.05 — which is why a champion's
+   * sponsorship read as "capped around 22k" while everything else about the
+   * club had multiplied. The Liga-4 sizing note above still holds: the base
+   * numbers are untouched, only the climb got steeper.
+   */
+  levelStep: 0.75,
+  maxSlots: 3,
   weakestLevel: 3,
   formWindow: 5,
   formFloor: 0.85,

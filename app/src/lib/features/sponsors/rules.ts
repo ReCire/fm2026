@@ -21,9 +21,26 @@ function roundToStep(value: number, step: number): number {
  * `leagueLevel` counts down towards the top flight — 0 is the best division —
  * so a promoted club sees richer sponsors without this file knowing anything
  * about promotion.
+ *
+ * Compounding rather than additive. `1 + levels * step` topped out at about
+ * double, so a Bundesliga club winning everything saw offers a Regionalliga
+ * club could nearly match on a good run — sponsorship money was the one line
+ * that did not know the club had climbed. Compounding at 0.75 per level puts
+ * the top flight around 5.4× Liga 4, before form and before the extra slots.
  */
 export function levelFactor(leagueLevel: number): number {
-  return 1 + Math.max(0, c.weakestLevel - leagueLevel) * c.levelStep;
+  return (1 + c.levelStep) ** Math.max(0, c.weakestLevel - leagueLevel);
+}
+
+/**
+ * How many sponsor contracts the club can hold at once, by league level.
+ *
+ * One local backer in Liga 4, a full commercial department at the top. The
+ * slots are the honest answer to "why is my sponsoring capped": it is not,
+ * but a fourth-division shirt only has room for one logo.
+ */
+export function maxSlots(leagueLevel: number): number {
+  return Math.min(c.maxSlots, 1 + Math.max(0, c.weakestLevel - leagueLevel));
 }
 
 /**
@@ -82,27 +99,41 @@ export interface SignedSponsor {
 }
 
 /**
- * Sign one offer. Whatever else was on the table disappears with it — you are
- * choosing ONE backer, not stacking them.
+ * Sign one offer into a free slot.
+ *
+ * Only the SIGNED offer leaves the table. While slots remain open the rest
+ * stay signable — with three slots, "which one" becomes "which ones, in which
+ * order", and the short/balanced/long shapes finally coexist. The table
+ * clears once every slot is filled.
  */
-export function signOffer(sponsors: SponsorsState, offerId: string): SignedSponsor | undefined {
+export function signOffer(
+  sponsors: SponsorsState,
+  offerId: string,
+  slots: number
+): SignedSponsor | undefined {
   const offer = findOffer(sponsors, offerId);
-  if (!offer) return undefined;
+  if (!offer || sponsors.contracts.length >= slots) return undefined;
 
-  sponsors.active = {
+  sponsors.contracts.push({
     name: offer.name,
     periodic: offer.periodic,
     winBonus: offer.winBonus,
     matchdaysRemaining: offer.duration,
     totalDuration: offer.duration
-  };
-  sponsors.offers = [];
+  });
+  sponsors.offers = sponsors.offers.filter((o) => o.id !== offerId);
+  if (sponsors.contracts.length >= slots) sponsors.offers = [];
   return { name: offer.name, fee: offer.fee };
 }
 
-/** What the active contract pays out this matchday, before any staff modifier. */
+/** What one running contract pays out this matchday, before any staff modifier. */
 export function matchdayPayout(active: ActiveSponsor, won: boolean): number {
   return active.periodic + (won ? active.winBonus : 0);
+}
+
+/** What every running contract pays together. */
+export function totalPayout(sponsors: SponsorsState, won: boolean): number {
+  return sponsors.contracts.reduce((sum, a) => sum + matchdayPayout(a, won), 0);
 }
 
 export interface ContractExpiry {
@@ -110,19 +141,20 @@ export interface ContractExpiry {
 }
 
 /**
- * Age the active contract by one matchday. Returns who just left when the
+ * Age every running contract by one matchday. Returns who just left when a
  * contract runs out, so the caller can tell the player and open the market
  * back up.
  */
-export function advanceContract(sponsors: SponsorsState): ContractExpiry | undefined {
-  const active = sponsors.active;
-  if (!active) return undefined;
-
-  active.matchdaysRemaining -= 1;
-  if (active.matchdaysRemaining > 0) return undefined;
-
-  sponsors.active = null;
-  return { name: active.name };
+export function advanceContracts(sponsors: SponsorsState): ContractExpiry[] {
+  const expired: ContractExpiry[] = [];
+  for (const active of sponsors.contracts) {
+    active.matchdaysRemaining -= 1;
+    if (active.matchdaysRemaining <= 0) expired.push({ name: active.name });
+  }
+  if (expired.length > 0) {
+    sponsors.contracts = sponsors.contracts.filter((a) => a.matchdaysRemaining > 0);
+  }
+  return expired;
 }
 
 /** Record one matchday's result. Keeps only the most recent `formWindow` entries. */

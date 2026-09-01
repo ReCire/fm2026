@@ -164,7 +164,9 @@
     flex: none; font-size: var(--fs-caption); color: var(--accent-ink);
     background: var(--bg-inset); border-radius: var(--r-sm); padding: 1px var(--s2);
   }
-  .head .who { flex: 1; font-size: var(--fs-body); color: var(--text-main); }
+  /* min-width: 0 so a long name truncates instead of pushing the numbers off
+     a phone screen — a flex child refuses to shrink below its content without it. */
+  .head .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-body); color: var(--text-main); }
   .age { font-size: var(--fs-caption); color: var(--text-dim); }
   .gained { font-family: var(--font-num); font-size: var(--fs-caption); color: var(--pos-ink); }
   .gained.down { color: var(--neg-ink); }

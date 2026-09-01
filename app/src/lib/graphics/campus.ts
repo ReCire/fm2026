@@ -23,7 +23,14 @@ export interface Footprint {
 }
 
 export const SITE = { w: 24, d: 24 } as const;
-export const BOWL: Footprint = { x: 8, y: 8, w: 8, d: 8 };
+/*
+ * Wider than deep, because a football pitch is. The bowl was 8×8, which made
+ * the playing surface inside it read as a square — and a square pitch is the
+ * kind of wrong a football player's eye catches before they can say why.
+ * 10×7 keeps the bowl inside the ring roads (they run at 6.6 and 17.4) and
+ * puts the pitch near the real 105:68.
+ */
+export const BOWL: Footprint = { x: 7, y: 8.5, w: 10, d: 7 };
 
 export interface Plot {
   id: string;

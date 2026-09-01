@@ -110,5 +110,7 @@
   .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--s1); }
   .head strong { font-size: var(--fs-body); }
   .head span { color: var(--primary-ink); font-weight: 800; }
-  .comfort { display: flex; gap: var(--s2); font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s2); }
+  /* Body size, not caption: at caption size the three emoji were squint
+     material on a phone, and they are the only glanceable state the block has. */
+  .comfort { display: flex; gap: var(--s3); font-size: var(--fs-body); color: var(--text-muted); margin-bottom: var(--s2); }
 </style>

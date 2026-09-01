@@ -61,6 +61,13 @@ export const squadDocs = defineDocs({
     related: ['squad.fitness'],
     screenshot: 'squad-lineup'
   },
+  'squad.toggleLineup': {
+    label: 'Aufstellen / Rausnehmen',
+    tooltip: 'Nimmt den Spieler in die Startelf auf oder setzt ihn auf die Bank. Verletzte und Gesperrte können nicht aufgestellt werden.',
+    why: 'Die automatische Elf ist ein Vorschlag, keine Entscheidung — wer seinen Torjäger für das schwere Auswärtsspiel schonen will, muss das von Hand tun können.',
+    since: '0.1.0',
+    related: ['squad.autoLineup', 'squad.fitness']
+  },
   'squad.captain': {
     label: 'Kapitän',
     tooltip: 'Der Spielführer. Spieler mit der Eigenschaft "Leader" geben der Mannschaft einen zusätzlichen Bonus.',
