@@ -155,6 +155,7 @@ because the fourth is the one no test catches.
 | **declared and never written** | a field exists, nothing fills it |
 | **tested and never reachable** | a path works, no player can get to it |
 | **present and never drawn** | the data is complete, correct, loaded — and the screen renders a subset of it |
+| **connected and never a decision** | every wire is attached, the numbers move, and there is no choice at the end of it |
 
 The first three all have a hole somewhere a sufficiently suspicious test can
 find. The fourth has no hole at all. Every assertion about the doctrine
@@ -170,6 +171,22 @@ whether it rendered or not.
 **When porting a screen, diff the FIELDS the source reads against the fields
 the port reads.** Not the data — the references. That would have found `icon`
 in ten seconds.
+
+The fifth is quieter than the fourth and the census cannot see it either, for
+the opposite reason: the key IS wired. The prototype's stock market never
+assigned `.price` — read in three places, written in none — so every holding
+was worth what it cost, for a decade. Buying was always right, selling always
+wrong, and two doctrine nodes raised an interest rate.
+
+Nobody noticed because **the dividend worked**. It paid every matchday, the
+bonus applied, the number went up. Nothing looked broken, because nothing was
+broken. There was simply no decision anywhere in it.
+
+fussballmanager-15 nearly filed it as "dividends computed and never paid",
+checked before claiming it, and was wrong about which half was missing. That is
+the tell worth keeping: with the first four you can name the missing wire. Here
+you have to ask **what the player is choosing between**, and be willing to
+answer "nothing".
 
 ## Copy plans, the feed notices, the manual confirms
 
