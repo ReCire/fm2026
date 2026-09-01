@@ -9,7 +9,7 @@ export const europeDocs = defineDocs({
       '## Der Champions Cup\n\nAcht Vereine, zwei Gruppen zu je vier. Gespielt wird an den Ligaspieltagen 3, 7, 11, 15, 19 und 23 — jeder gegen jeden, einmal zu Hause und einmal auswärts.\n\nSieben Gegner sind immer dieselben, von Real Castilla (Stärke 91) bis Beşiktepe (80). Der achte Platz gehört deinem Verein, wenn er qualifiziert ist — sonst rückt Mersey City nach.\n\nDer Wettbewerb wird auch dann gespielt, wenn dein Verein nicht dabei ist. Das ist Absicht: ein Turnier, das nur in den Saisons existiert, in denen man drin ist, bleibt eine fremde Tabelle. So kennt man die acht Namen, bevor man zum ersten Mal gegen sie spielt.',
     why: 'Im Prototyp hatten alle acht Vereine eine Stärke zwischen 84 und 89 — es gab keine gute und keine schlechte Gruppe, nur sechs Münzwürfe mit Namen daran. Elf Punkte Spannweite machen die Auslosung zu einer Information, die man vor dem ersten Spiel lesen kann. Und die Vereinsnamen sind erfunden wie alle anderen im Spiel auch: die Liga wird aus echten Städten und ausgedachten Vereinen erzeugt, die Marken sind Parodien, und ausgerechnet im wichtigsten Wettbewerb des Spiels damit aufzuhören wäre die einzige Stelle, an der der Witz aussetzt.',
     since: '0.4.0',
-    related: ['europe.knockout', 'europe.prizes', 'cup.round']
+    related: ['europe.knockout', 'europe.prizes', 'cup.bracket']
   },
   'europe.knockout': {
     label: 'K.-o.-Runde',
