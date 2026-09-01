@@ -30,7 +30,8 @@ function handMade(teams: LeagueTeam[], playerClubId: string): LeagueState {
     playerClubId,
     levels: [teams],
     fixtures: [generateFixtures(teams.length)],
-    inEurope: false
+    review: null,
+  inEurope: false
   };
 }
 

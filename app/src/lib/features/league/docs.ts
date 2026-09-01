@@ -87,7 +87,7 @@ export const leagueDocs = defineDocs({
     why: 'Gibt der ersten Liga ein Ziel oberhalb des Klassenerhalts. Ohne diesen Platz wäre die Karriere nach dem Aufstieg ins Oberhaus inhaltlich zu Ende.',
     since: '0.2.0',
     related: ['league.position']
-  }
+  },
   'league.season': {
     label: 'Saisonabschluss',
     tooltip:

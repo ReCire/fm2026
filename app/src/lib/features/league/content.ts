@@ -59,9 +59,33 @@ export const LeagueContentSchema = z
     pointsForLoss: z.number().int().min(0),
 
     /** Clubs going up from every division below the first. */
+    /**
+     * Places promoted AUTOMATICALLY. The German system's two, not three.
+     *
+     * Third place does not go up — it earns the right to play for it. See
+     * `playoffPlace`.
+     */
     promotionPlaces: z.number().int().min(0),
     /** Clubs going down from every division above the last. */
     relegationPlaces: z.number().int().min(0),
+    /**
+     * Die Relegation: the finishing place, in the LOWER division, that earns a
+     * two-legged tie against the division above.
+     *
+     * The distinctive rule in German football and the reason 3rd and 16th are
+     * the two most watched positions in the table. 17th and 18th go down and
+     * the top two come up; the last place in each division is decided by a
+     * play-off between the club that nearly stayed and the club that nearly
+     * went up.
+     *
+     * Real, at both boundaries we model it on: Bundesliga 16th versus 2.
+     * Bundesliga 3rd, and 2. Bundesliga 16th versus 3. Liga 3rd. We apply the
+     * same pattern at the bottom boundary too, where the real system differs —
+     * the 3. Liga relegates four to a Regionalliga that is five parallel
+     * divisions with a rotating draw, and modelling that needs a pyramid this
+     * one does not have.
+     */
+    playoffPlace: z.number().int().min(1),
     /** Places in the first division that qualify for Europe. */
     europePlaces: z.number().int().min(0),
 
@@ -143,8 +167,9 @@ export const leagueContent: LeagueContent = LeagueContentSchema.parse({
    * always correct, and three-and-three satisfies it. The invariant was right
    * and the content was wrong.
    */
-  promotionPlaces: 3,
-  relegationPlaces: 3,
+  promotionPlaces: 2,
+  relegationPlaces: 2,
+  playoffPlace: 3,
   europePlaces: 4,
 
   promotionBonus: 1_500_000,

@@ -52,7 +52,8 @@ function handMade(levels: LeagueTeam[][], playerLevel: number): LeagueState {
     playerClubId: `t-${US}`,
     levels,
     fixtures: levels.map((t) => generateFixtures(t.length)),
-    inEurope: false
+    review: null,
+  inEurope: false
   };
 }
 
@@ -467,7 +468,7 @@ describe('applyPromotionRelegation', () => {
     playSeason(state);
     const before = state.levels.map((teams) => standings(teams).map((r) => r.team.name));
 
-    const movements = applyPromotionRelegation(state);
+    const { movements } = applyPromotionRelegation(state);
 
     const pairs = C.levels.length - 1;
     expect(movements.filter((m) => m.direction === 'up')).toHaveLength(pairs * C.promotionPlaces);
@@ -503,7 +504,7 @@ describe('applyPromotionRelegation', () => {
     const state = league(14);
     playSeason(state);
     const last = C.levels.length - 1;
-    const movements = applyPromotionRelegation(state);
+    const { movements } = applyPromotionRelegation(state);
     expect(movements.some((m) => m.direction === 'up' && m.from === 0)).toBe(false);
     expect(movements.some((m) => m.direction === 'down' && m.from === last)).toBe(false);
     expect(movements.every((m) => m.to >= 0 && m.to <= last)).toBe(true);
@@ -533,5 +534,128 @@ describe('applyPromotionRelegation', () => {
 
     expect(state.playerLevel).toBe(expected);
     expect(state.levels[state.playerLevel]!.some((t) => t.id === state.playerClubId)).toBe(true);
+  });
+});
+
+describe('promotion and relegation, the German way', () => {
+  /*
+   * Two up, two down, and the third place decided by a two-legged tie against
+   * the club two off the bottom of the division above. Real at both boundaries
+   * we model it on: Bundesliga 16th versus 2. Bundesliga 3rd, and 2.
+   * Bundesliga 16th versus 3. Liga 3rd.
+   *
+   * The prototype and our first port both moved three automatically, which is
+   * a different sport: it makes third place a formality instead of the most
+   * watched position in the table.
+   */
+  it('promotes two automatically, not three', () => {
+    expect(C.promotionPlaces).toBe(2);
+    expect(C.relegationPlaces).toBe(2);
+    expect(C.playoffPlace).toBe(C.promotionPlaces + 1);
+  });
+
+  it('moves exactly as many up as down, or divisions grow', () => {
+    const state = league(21);
+    playSeason(state);
+    const { movements } = applyPromotionRelegation(state, createRng(4));
+    for (let l = 0; l < C.levels.length; l++) {
+      expect(state.levels[l]!.length, `level ${l} changed size`).toBe(C.teamsPerLevel);
+    }
+    const up = movements.filter((m) => m.direction === 'up').length;
+    const down = movements.filter((m) => m.direction === 'down').length;
+    expect(up).toBe(down);
+  });
+
+  it('plays one tie per boundary, and only when a seed is given', () => {
+    const state = league(22);
+    playSeason(state);
+    const { ties } = applyPromotionRelegation(state, createRng(4));
+    expect(ties).toHaveLength(C.levels.length - 1);
+
+    const noRng = league(22);
+    playSeason(noRng);
+    expect(applyPromotionRelegation(noRng).ties).toHaveLength(0);
+  });
+
+  it('always decides a tie, because a play-off cannot end level', () => {
+    const state = league(23);
+    playSeason(state);
+    const { ties } = applyPromotionRelegation(state, createRng(9));
+    for (const tie of ties) {
+      expect(typeof tie.challengerWon).toBe('boolean');
+      const [c, d] = tie.aggregate;
+      if (c === d) expect(tie.onPenalties, 'a level tie was decided without penalties').toBe(true);
+      else expect(tie.challengerWon).toBe(c > d);
+    }
+  });
+
+  it('plays the second leg at the challenger\'s ground', () => {
+    /*
+     * The German order, and it is not decoration: it hands the second half of
+     * the tie, and any extra time, to the lower-division side's crowd. Checked
+     * through the aggregate, which is the only place the venue is observable.
+     */
+    const state = league(24);
+    playSeason(state);
+    const { ties } = applyPromotionRelegation(state, createRng(2));
+    for (const tie of ties) {
+      const [first, second] = tie.legs;
+      // First leg: defender at home, so the challenger's goals are the away ones.
+      expect(tie.aggregate[0]).toBe(first.awayGoals + second.homeGoals);
+      expect(tie.aggregate[1]).toBe(first.homeGoals + second.awayGoals);
+    }
+  });
+
+  it('lets a play-off actually change who goes up, in both directions', () => {
+    /*
+     * The property that makes the tie a tie. If the challenger always won, it
+     * would be a third automatic promotion with extra steps; if they never
+     * won, third place would be worth nothing at all and the whole rule would
+     * be decoration on a table.
+     */
+    let challengerWins = 0;
+    let defenderWins = 0;
+    for (let seed = 0; seed < 20; seed++) {
+      const state = league(100 + seed);
+      playSeason(state);
+      for (const tie of applyPromotionRelegation(state, createRng(seed)).ties) {
+        if (tie.challengerWon) challengerWins += 1;
+        else defenderWins += 1;
+      }
+    }
+    expect(challengerWins, 'no challenger ever won a play-off').toBeGreaterThan(0);
+    expect(defenderWins, 'no defender ever survived one').toBeGreaterThan(0);
+  });
+
+  it('favours the higher division without making the tie a formality', () => {
+    /*
+     * The defender is a top-flight side that finished 16th; the challenger is
+     * a division below. The defender should win more often than not, and
+     * nowhere near always.
+     */
+    let defenderWins = 0;
+    let total = 0;
+    for (let seed = 0; seed < 30; seed++) {
+      const state = league(200 + seed);
+      playSeason(state);
+      for (const tie of applyPromotionRelegation(state, createRng(seed)).ties) {
+        total += 1;
+        if (!tie.challengerWon) defenderWins += 1;
+      }
+    }
+    const rate = defenderWins / total;
+    expect(rate, `defenders survived ${(rate * 100).toFixed(0)}% — the tie is a formality`)
+      .toBeLessThan(0.9);
+    expect(rate, `defenders survived only ${(rate * 100).toFixed(0)}% — the division above means nothing`)
+      .toBeGreaterThan(0.4);
+  });
+
+  it('never sends a club up from the top or down from the bottom', () => {
+    const state = league(25);
+    playSeason(state);
+    const last = C.levels.length - 1;
+    const { movements } = applyPromotionRelegation(state, createRng(7));
+    expect(movements.some((m) => m.direction === 'up' && m.from === 0)).toBe(false);
+    expect(movements.some((m) => m.direction === 'down' && m.from === last)).toBe(false);
   });
 });

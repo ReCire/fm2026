@@ -81,9 +81,57 @@ export const FixtureSchema = z.object({
 });
 export type Fixture = z.infer<typeof FixtureSchema>;
 
+/**
+ * What the season just gone actually was, written once at the season end.
+ *
+ * Exists because there are five different ways a season can finish and the
+ * celebration has to tell them apart: champion, promoted automatically,
+ * promoted through the Relegation, survived the Relegation, relegated. A
+ * screen that only knows "Meister" has nothing to say to a club that went up
+ * third in a shoot-out, which is the most German way there is to be promoted.
+ *
+ * The division named here is the one just PLAYED, not the one the club is
+ * about to play — the review describes a season that has ended, and reading it
+ * against next season's league is how a promotion ends up congratulating you
+ * on the wrong table.
+ */
+export const SeasonReviewSchema = z.object({
+  season: z.number().int().min(0),
+  level: z.number().int().min(0),
+  levelName: z.string(),
+  rank: z.number().int().min(0),
+  points: z.number().int(),
+  won: z.number().int().min(0),
+  drawn: z.number().int().min(0),
+  lost: z.number().int().min(0),
+  goalsFor: z.number().int().min(0),
+  goalsAgainst: z.number().int().min(0),
+  champion: z.boolean(),
+  promoted: z.boolean(),
+  relegated: z.boolean(),
+  europe: z.boolean(),
+  /** Present only when our club was in one of the two-legged ties. */
+  playoff: z
+    .object({
+      opponent: z.string(),
+      opponentLevel: z.number().int().min(0),
+      legs: z.array(z.object({ homeGoals: z.number().int(), awayGoals: z.number().int() })).length(2),
+      /** [us, them]. */
+      aggregate: z.tuple([z.number().int(), z.number().int()]),
+      won: z.boolean(),
+      onPenalties: z.boolean(),
+      /** `up` when we were the challenger, `down` when we were defending. */
+      direction: z.enum(['up', 'down'])
+    })
+    .nullable()
+});
+export type SeasonReview = z.infer<typeof SeasonReviewSchema>;
+
 export const LeagueSchema = z.object({
   /** Which division the player's club is currently in. 0 = top. */
   playerLevel: z.number().int().min(0),
+  /** The season just gone, or null before the first one has ended. */
+  review: SeasonReviewSchema.nullable(),
   /**
    * WHICH club is ours, by id.
    *
@@ -128,6 +176,7 @@ export function createLeague(rng: Rng): LeagueState {
 
   return {
     playerLevel: leagueContent.startLevel,
+    review: null,
     // Provisional: onboarding replaces this the moment a club is chosen. It is
     // a real id rather than a placeholder so a game that skips onboarding is
     // still coherent.

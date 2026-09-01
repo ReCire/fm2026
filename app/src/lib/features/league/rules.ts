@@ -534,7 +534,91 @@ export interface Movement {
  * Tables are reset and fixtures regenerated afterwards, so the returned state
  * is a complete new season.
  */
-export function applyPromotionRelegation(league: LeagueState): Movement[] {
+/**
+ * Die Relegation: one two-legged tie for the last place in a division.
+ *
+ * The challenger is `playoffPlace` in the lower division; the defender is the
+ * club two off the bottom of the higher one. Real at both boundaries we model:
+ * Bundesliga 16th against 2. Bundesliga 3rd, and 2. Bundesliga 16th against
+ * 3. Liga 3rd.
+ *
+ * First leg at the HIGHER division's ground, second at the lower — the German
+ * order, and it matters because it hands the second half of the tie, and any
+ * extra time, to the challenger's crowd.
+ *
+ * No away goals: the rule was abolished after 2021/22. Level on aggregate goes
+ * to extra time and penalties, resolved here as a weighted coin — a shoot-out
+ * is where being the better side helps least, the same reasoning the Champions
+ * Cup uses.
+ */
+export interface PlayoffTie {
+  challenger: LeagueTeam;
+  defender: LeagueTeam;
+  /** [first leg, second leg], each from the HOME side's perspective. */
+  legs: [{ homeGoals: number; awayGoals: number }, { homeGoals: number; awayGoals: number }];
+  /** [challenger, defender]. */
+  aggregate: [number, number];
+  challengerWon: boolean;
+  onPenalties: boolean;
+}
+
+export function playRelegationTie(
+  rng: Rng,
+  challenger: LeagueTeam,
+  defender: LeagueTeam,
+  playerClubId: string,
+  playerStrength?: number
+): PlayoffTie {
+  const cs = strengthOf(challenger, playerClubId, playerStrength);
+  const ds = strengthOf(defender, playerClubId, playerStrength);
+
+  // First leg at the defender's ground, second at the challenger's.
+  const first = simulateFixture(rng, ds, cs);
+  const second = simulateFixture(rng, cs, ds);
+
+  const challengerGoals = first.awayGoals + second.homeGoals;
+  const defenderGoals = first.homeGoals + second.awayGoals;
+
+  let challengerWon = challengerGoals > defenderGoals;
+  let onPenalties = false;
+  if (challengerGoals === defenderGoals) {
+    onPenalties = true;
+    /*
+     * Slightly weighted, and slightly is the point. Eleven points of gap moves
+     * a shoot-out from even to roughly two to one; it never makes it a
+     * formality, because the whole reason this tie is watched is that it is
+     * not one.
+     */
+    const edge = Math.max(0.25, Math.min(0.75, 0.5 + (cs - ds) * 0.02));
+    challengerWon = rng.chance(edge);
+  }
+
+  return {
+    challenger,
+    defender,
+    legs: [
+      { homeGoals: first.homeGoals, awayGoals: first.awayGoals },
+      { homeGoals: second.homeGoals, awayGoals: second.awayGoals }
+    ],
+    aggregate: [challengerGoals, defenderGoals],
+    challengerWon,
+    onPenalties
+  };
+}
+
+/**
+ * Move everybody, having first played the Relegation ties.
+ *
+ * Two up and two down automatically; the third place in each division is
+ * decided by a tie rather than by the table. `ties` is returned so the season
+ * review can tell the story — a club promoted in a shoot-out did not have the
+ * same season as one that went up in April.
+ */
+export function applyPromotionRelegation(
+  league: LeagueState,
+  rng?: Rng,
+  playerStrength?: number
+): { movements: Movement[]; ties: PlayoffTie[] } {
   const ordered = league.levels.map((teams) => standings(teams).map((r) => r.team));
   const goingUp: LeagueTeam[][] = [];
   const goingDown: LeagueTeam[][] = [];
@@ -545,6 +629,33 @@ export function applyPromotionRelegation(league: LeagueState): Movement[] {
     const down = l < ordered.length - 1 ? Math.min(C.relegationPlaces, table.length - up) : 0;
     goingUp.push(table.slice(0, up));
     goingDown.push(table.slice(table.length - down));
+  }
+
+  /*
+   * Die Relegation, played BEFORE anybody moves.
+   *
+   * One tie per boundary: `playoffPlace` in the lower division against the
+   * club two off the bottom of the higher one. The winner has the place. Only
+   * when the challenger wins does anything change — the defender joins the
+   * relegated and the challenger joins the promoted — which is why this
+   * appends to the same two lists the automatic places filled rather than
+   * running a second movement pass of its own.
+   */
+  const ties: PlayoffTie[] = [];
+  if (rng) {
+    for (let upper = 0; upper < ordered.length - 1; upper++) {
+      const lower = upper + 1;
+      const challenger = ordered[lower]![C.playoffPlace - 1];
+      const defender = ordered[upper]![ordered[upper]!.length - C.relegationPlaces - 1];
+      if (!challenger || !defender) continue;
+
+      const tie = playRelegationTie(rng, challenger, defender, league.playerClubId, playerStrength);
+      ties.push(tie);
+      if (tie.challengerWon) {
+        goingUp[lower]!.push(challenger);
+        goingDown[upper]!.push(defender);
+      }
+    }
   }
 
   const movements: Movement[] = [];
@@ -568,7 +679,7 @@ export function applyPromotionRelegation(league: LeagueState): Movement[] {
   const found = league.levels.findIndex((teams) => teams.some((t) => t.id === league.playerClubId));
   if (found >= 0) league.playerLevel = found;
 
-  return movements;
+  return { movements, ties };
 }
 
 /** Clears every record while keeping the clubs. Used at the turn of a season. */

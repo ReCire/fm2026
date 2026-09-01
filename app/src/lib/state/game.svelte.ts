@@ -93,6 +93,41 @@ export function advance(kind: TickKind = 'matchday'): TickResult {
 }
 
 /**
+ * Cross the season boundary: settle the old one, then draw the new one.
+ *
+ * Two ticks, ONE undo point. `advance` snapshots before every tick, so calling
+ * it twice would leave the intermediate state on the stack — and an undo from
+ * the new season would land the player in a season that had ended and not
+ * begun, with the table already reset, the board's verdict already recorded
+ * and Europe's groups undrawn. There is no moment between these two ticks that
+ * anybody should ever be able to return to.
+ *
+ * The returned result is the pair's events concatenated, because from the
+ * player's side this was one act and the report they read has to cover all of
+ * it — the promotion and the new fixture list arrived together.
+ */
+export function advanceSeason(): TickResult {
+  const ended = advance('seasonEnd');
+  if (ended.failed.length > 0) return ended;
+
+  /*
+   * No second snapshot. `advance` takes one, so this pops the one it just
+   * pushed and leaves the pre-boundary state as the single restore point.
+   */
+  const started = advance('seasonStart');
+  popSnapshot();
+
+  const merged: TickResult = {
+    ...started,
+    events: [...ended.events, ...started.events],
+    failed: [...ended.failed, ...started.failed],
+    timings: [...ended.timings, ...started.timings]
+  };
+  lastTick.result = merged;
+  return merged;
+}
+
+/**
  * Set by the persistence layer at boot. Indirect so the engine and the store
  * stay free of storage concerns, and so tests can run ticks without IndexedDB.
  */

@@ -6,7 +6,7 @@ import {
   playMatchday,
   playerFixture,
   rankOfId,
-  seasonOutcome, developClubs, teamById, budgetRank } from './rules';
+  seasonOutcome, developClubs, teamById, budgetRank, points } from './rules';
 import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
 import { postToLedger, formatMoney } from '../finance/module';
 
@@ -176,7 +176,7 @@ export default defineModule({
         'league.finalRank', 'league.promoted', 'league.relegated',
         'league.budgetRank', 'league.clubCount', 'league.level'
       ],
-      run({ state, emit, provide }) {
+      run({ state, emit, provide, rng }) {
         const league = state.modules.league;
         const outcome = seasonOutcome(league);
 
@@ -233,10 +233,90 @@ export default defineModule({
           });
         }
 
+        /*
+         * The table as it finished, captured BEFORE anybody moves. Everything
+         * below reads from this rather than from `league`, because
+         * `applyPromotionRelegation` resets every record and redraws the
+         * fixtures — a review built afterwards describes next season.
+         */
+        /*
+         * Our strength for the Relegation legs. `squad.strength` is published
+         * on the matchday tick, not this one, so the tie is played against the
+         * club's paper strength — which is right: the eleven that plays a
+         * play-off in May is the eleven the season was played with, and there
+         * is no lineup screen between the last fixture and the tie.
+         */
+        const ourStrength = undefined;
+        const us = teamById(league, league.playerClubId);
+        const finished = us
+          ? {
+              level: league.playerLevel,
+              levelName: levelName(league.playerLevel),
+              rank: outcome.rank,
+              points: points(us),
+              won: us.won,
+              drawn: us.drawn,
+              lost: us.lost,
+              goalsFor: us.goalsFor,
+              goalsAgainst: us.goalsAgainst
+            }
+          : null;
+
         // Moves every club in the pyramid, resets the tables and draws a new
         // schedule. Deliberately after the events above, which describe the
         // season that just ended.
-        const movements = applyPromotionRelegation(league);
+        const { movements, ties } = applyPromotionRelegation(league, rng, ourStrength);
+
+        /*
+         * Our tie, if we were in one. `direction` is what the celebration
+         * needs: surviving a Relegation as the higher-division side and
+         * winning one as the challenger are both relief, and only one of them
+         * is a promotion.
+         */
+        const ourTie = ties.find(
+          (t) => t.challenger.id === league.playerClubId || t.defender.id === league.playerClubId
+        );
+        const wereChallenger = ourTie?.challenger.id === league.playerClubId;
+
+        if (finished) {
+          const wonPlayoff = ourTie
+            ? wereChallenger
+              ? ourTie.challengerWon
+              : !ourTie.challengerWon
+            : false;
+          league.review = {
+            season: state.meta.season,
+            ...finished,
+            champion: finished.rank === 1,
+            promoted: outcome.promoted || (!!ourTie && wereChallenger && wonPlayoff),
+            relegated: outcome.relegated || (!!ourTie && !wereChallenger && !wonPlayoff),
+            europe: outcome.europe,
+            playoff: ourTie
+              ? {
+                  opponent: (wereChallenger ? ourTie.defender : ourTie.challenger).name,
+                  opponentLevel: wereChallenger ? finished.level - 1 : finished.level + 1,
+                  legs: ourTie.legs.map((l) => ({ ...l })),
+                  aggregate: wereChallenger
+                    ? [ourTie.aggregate[0], ourTie.aggregate[1]]
+                    : [ourTie.aggregate[1], ourTie.aggregate[0]],
+                  won: wonPlayoff,
+                  onPenalties: ourTie.onPenalties,
+                  direction: wereChallenger ? 'up' : 'down'
+                }
+              : null
+          };
+
+          if (ourTie) {
+            const won = league.review.playoff!.won;
+            emit({
+              source: 'league',
+              severity: won ? 'good' : 'bad',
+              title: won ? 'Relegation überstanden' : 'Relegation verloren',
+              detail: `${league.review.playoff!.aggregate[0]}:${league.review.playoff!.aggregate[1]} gegen ${league.review.playoff!.opponent}${ourTie.onPenalties ? ' n. E.' : ''}.`,
+              goto: 'league'
+            });
+          }
+        }
         const neighbours = movements.filter(
           (m) => (m.direction === 'up' ? m.to : m.from) === league.playerLevel
         );
