@@ -11,7 +11,7 @@
    * one's consequence printed underneath, where the choice is made), and the
    * individual focus behind a tap on the player's card.
    */
-  import { game, advance } from '$lib/state/game.svelte';
+  import { game } from '$lib/state/game.svelte';
   import { Panel, Button, StatChip, Bar, Sheet, fromEvent, toast } from '$lib/ui';
   import { FOCUS, FOCUS_LABEL, ATTRIBUTE_LABEL, type Focus, type Attribute } from '../squad/attributes';
   import { INTENSITIES } from './state';
@@ -19,10 +19,20 @@
   import { restFor, seasonProgress, focusOf } from './rules';
   import { isAvailable } from '../squad/rules';
   import type { Player } from '../squad/state';
+  import { currentStep, takeStep } from '$lib/shell';
 
   const t = $derived(game.modules.training);
   const squad = $derived(game.modules.squad);
-  const inWeek = $derived(game.modules.core.phase === 'week');
+  /*
+   * Not `core.phase === 'week'` read directly — that was this screen forming
+   * its own opinion of what comes next, the same shape as the dashboard's
+   * hardcoded `advance('matchday')`. The loop grew a third step for the
+   * first time in the project's life and this screen would have kept
+   * insisting the next one was always Spieltag. `currentStep()` is the one
+   * place that question gets asked now.
+   */
+  const step = $derived(currentStep());
+  const inWeek = $derived(step.kind === 'week');
 
   const fit = $derived.by(() => {
     if (squad.players.length === 0) return 0;
@@ -36,7 +46,7 @@
   const movers = $derived([...t.lastWeek].sort((a, b) => b.delta - a.delta));
 
   function trainWeek() {
-    for (const e of advance('week').events) fromEvent(e);
+    for (const e of takeStep().events) fromEvent(e);
   }
 
   /* The focus sheet: one player, every focus as a full-width option. */
@@ -73,7 +83,10 @@
   {#if inWeek}
     <Button doc="game.week" onclick={trainWeek} explain />
   {:else}
-    <p class="dim">Die Woche ist gelaufen. Der nächste Schritt ist der Spieltag.</p>
+    <!-- step.title, not a hardcoded "der Spieltag" — the loop has more than
+         one thing that can come next now, and this line was wrong on a
+         season boundary until it read the same question the button does. -->
+    <p class="dim">Die Woche ist gelaufen. Nächster Schritt: {step.title}.</p>
   {/if}
 </Panel>
 
