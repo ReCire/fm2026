@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { game, advance, lastTick, registry } from '$lib/state/game.svelte';
+  import { game, lastTick, registry } from '$lib/state/game.svelte';
   import { canUndo } from '$lib/state/history.svelte';
   import { undo } from '$lib/state/game.svelte';
   import { Panel, Button, StatChip, fromEvent } from '$lib/ui';
   import { formatMoney, matchdayNet, breakdown } from '$lib/features/finance/rules';
   import { attendance, capacity } from '$lib/features/stadium/rules';
-  import { allAttention } from '$lib/shell';
+  import { allAttention, currentStep, takeStep } from '$lib/shell';
   import { wageBill, teamStrength } from '$lib/features/squad/rules';
 
   const finance = $derived(game.modules.finance);
@@ -19,9 +19,20 @@
   const now = $derived(waiting.filter((w) => w.item.urgency === 'now'));
   const soon = $derived(waiting.filter((w) => w.item.urgency === 'soon'));
 
-  function playMatchday() {
-    const result = advance('matchday');
-    for (const e of result.events) fromEvent(e);
+  /*
+   * The loop's own step, not a hardcoded "play the matchday".
+   *
+   * This screen used to call `advance('matchday')` directly, which is what
+   * left it with nothing to do the moment a season ended without anyone
+   * having taught it a third step existed — the loop had one, this button
+   * just never asked it. `currentStep()`/`takeStep()` is the same contract
+   * matchday's own screen already stands on; wiring this one to it too means
+   * neither screen can drift from what the loop is actually on.
+   */
+  const step = $derived(currentStep());
+
+  function play() {
+    for (const e of takeStep().events) fromEvent(e);
   }
 
   function stepBack() {
@@ -71,6 +82,12 @@
   </Panel>
 {/if}
 
+<!-- Not accented gold on seasonEnd: the step is identical across all eight
+     promotion/relegation outcomes, and the button fires before the loop
+     knows which one this is. Gold reads as good news, and on a relegation
+     it would be lying before the player even clicks. The heading text below
+     carries the "this is different" signal instead — it says what kind of
+     moment this is without saying whether it went well. -->
 <Panel title="Zentrale" accent="accent" meta="Saison {game.meta.season}">
   <div class="chips">
     <StatChip label="Vereins-Konto" value={formatMoney(finance.money)} doc="finance.balance"
@@ -82,8 +99,14 @@
     <StatChip label="Kapazität" value={capacity(stadium).toLocaleString('de-DE')} doc="stadium.capacity" />
   </div>
 
+  <!-- The heading says where the loop is standing; the button says what
+       taking the step does. Both come from the same `step`, so they cannot
+       disagree — same reasoning as matchday's own screen. It is what lets a
+       season-ending step read as a different kind of moment before the
+       click, not just a differently-labelled button after it. -->
+  <p class="step" class:seasonEnd={step.kind === 'seasonEnd'}>{step.title}</p>
   <div class="actions">
-    <Button doc="game.advance" onclick={playMatchday} explain />
+    <Button doc={step.doc} onclick={play} explain />
     <Button doc="game.undo" variant="ghost" onclick={stepBack} disabled={!canUndo()} />
   </div>
 </Panel>
@@ -114,6 +137,8 @@
 
 <style>
   .chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s2); margin-bottom: var(--s3); }
+  .step { font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s2); }
+  .step.seasonEnd { color: var(--accent-ink); font-weight: 700; }
   .actions { display: flex; flex-direction: column; gap: var(--s2); }
   .events { list-style: none; display: flex; flex-direction: column; gap: var(--s2); }
   .events li {
