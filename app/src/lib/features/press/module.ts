@@ -22,6 +22,7 @@ const FORGETS_FASTER = 2;
 import { formatMoney } from '../finance/rules';
 import { postToLedger } from '../finance/module';
 import { brands } from '$lib/content/brands';
+import { grantBadge } from '../progression/rules';
 
 /**
  * Ermittlungsdruck — the bill for the dirty half of the doctrine tree.
@@ -271,6 +272,24 @@ export default defineModule({
            * against each other and lose both halves.
            */
           press.pressure = clampPressure(press.pressure - RAID_RESOLVES);
+
+          /*
+           * Surviving a raid is a MOMENT, not a condition. It was true for one
+           * morning and is not true now, so no amount of polling the current
+           * state will ever find it — which is why the catalogue lets a badge
+           * name the event that grants it, and why this has to be raised from
+           * the place the event happens rather than from the badge check.
+           */
+          const badge = grantBadge(state, 'shadow.raidSurvived');
+          if (badge) {
+            emit({
+              source: 'progression',
+              severity: 'good',
+              title: `${badge.icon} ${badge.name}`,
+              detail: badge.desc,
+              goto: 'progression'
+            });
+          }
 
           emit({
             source: 'press',

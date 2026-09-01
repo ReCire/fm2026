@@ -23,7 +23,7 @@ const autopilots = new Set(registry.all.filter((m) => m.autopilot).map((m) => m.
 const MATCHDAYS = 34;
 
 const progression = (): ProgressionState => ({
-  narrativeId: 'aufsteiger', unlocked: [], seen: [], delegated: {},
+  narrativeId: 'aufsteiger', unlocked: [], earnedBadges: [], seen: [], delegated: {},
   tutorialStep: null, started: true
 });
 

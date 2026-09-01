@@ -1,6 +1,7 @@
 import type { GameState } from '$lib/engine/state';
 import type { ProgressionState } from './state';
 import { narrativeById, type Narrative } from './content';
+import { badges, collectStats, type Badge } from '$lib/content/badges';
 
 /**
  * Unlock and delegation rules. Pure functions over plain data.
@@ -170,4 +171,74 @@ export function progressRatio(p: ProgressionState): number {
   if (!narrative || narrative.unlockOrder.length === 0) return 1;
   const done = narrative.unlockOrder.filter((id) => p.unlocked.includes(id)).length;
   return done / narrative.unlockOrder.length;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Badges
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Award every badge whose condition is true and which is not already held.
+ *
+ * Returns the NEWLY earned ones, so the caller can announce them without
+ * re-reading the list and diffing it. Idempotent by construction: a badge
+ * already in `earnedBadges` is skipped before its predicate ever runs, which
+ * matters because several of them stay true forever once they are true.
+ *
+ * `earnable` is passed in rather than derived here, because reachability is a
+ * question about the REGISTRY — which modules exist — and rules files do not
+ * get to see the registry that contains them. A badge for a feature that has
+ * not shipped is hidden rather than permanently at zero; see `isEarnable`.
+ */
+export function awardBadges(
+  state: GameState,
+  earnable: readonly Badge[]
+): Badge[] {
+  const p = state.modules.progression;
+  const held = new Set(p.earnedBadges);
+  const stats = collectStats(state);
+  const won: Badge[] = [];
+
+  for (const badge of earnable) {
+    if (held.has(badge.id)) continue;
+    /*
+     * No `test` means the badge is granted by an EVENT — "you survived a raid"
+     * was true for ninety minutes and is not true now, and no amount of
+     * looking at the current state will ever find it. Polling one of those
+     * would silently never award it, which is the failure this whole file is
+     * about.
+     */
+    if (!badge.test) continue;
+    if (!badge.test(state, stats)) continue;
+    p.earnedBadges.push(badge.id);
+    won.push(badge);
+  }
+  return won;
+}
+
+/**
+ * Award a badge for something that HAPPENED, by the key its content declares.
+ *
+ * Called by whoever raises the moment — press, when a club survives a raid —
+ * rather than by the catalogue, which cannot see a moment at all. Returns the
+ * badge when it is newly earned and `undefined` otherwise, so a caller can
+ * announce it without checking first.
+ *
+ * Silently does nothing for a key no badge claims. That is deliberate: the
+ * alternative is that deleting a badge breaks the module that grants it, and a
+ * feature should not be able to fail because an achievement was retired.
+ */
+export function grantBadge(state: GameState, key: string): Badge | undefined {
+  const badge = badges.find((b) => b.grantedBy === key);
+  if (!badge) return undefined;
+  const p = state.modules.progression;
+  if (p.earnedBadges.includes(badge.id)) return undefined;
+  p.earnedBadges.push(badge.id);
+  return badge;
+}
+
+/** What the career has earned, in catalogue order rather than in award order. */
+export function earnedBadges(state: GameState): Badge[] {
+  const held = new Set(state.modules.progression.earnedBadges);
+  return badges.filter((b) => held.has(b.id));
 }

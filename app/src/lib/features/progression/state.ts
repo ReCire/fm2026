@@ -13,6 +13,20 @@ export const ProgressionSchema = z.object({
   narrativeId: z.string(),
   /** Module ids currently available to the player. */
   unlocked: z.array(z.string()),
+  /**
+   * Every badge this CAREER has earned, oldest first.
+   *
+   * Append-only and career-level, never squad-level, for the same reason as
+   * `squad.awardedTalents`: selling the player does not un-have the season. A
+   * badge is a record of something that happened, and a record you can lose by
+   * changing your squad is a scoreboard, not a history.
+   *
+   * Lives here rather than in `content/badges.ts`'s own module because badges
+   * are a READING of state the rest of the game owns — a module of their own
+   * would have to consume half the registry to ask its questions. Progression
+   * already runs late and already exists to notice that a career has moved.
+   */
+  earnedBadges: z.array(z.string()),
   /** Module ids the player has seen for the first time — drives the "new" badge. */
   seen: z.array(z.string()),
   /**
@@ -48,6 +62,7 @@ export function createProgression(_rng: Rng): ProgressionState {
   return {
     narrativeId: 'aufsteiger',
     unlocked: [],
+    earnedBadges: [],
     seen: [],
     delegated: {},
     tutorialStep: 0,
@@ -56,11 +71,12 @@ export function createProgression(_rng: Rng): ProgressionState {
 }
 
 /**
+ * v3: a career remembers what it has done.
  * v2: `delegated` went from `Record<string, string>` to a record of objects
  * carrying competence. Bumped rather than silently reshaped, so the migration
  * path gets exercised at least once before it matters.
  */
-export const PROGRESSION_VERSION = 2;
+export const PROGRESSION_VERSION = 3;
 
 export function migrateProgression(old: unknown, fromVersion: number): ProgressionState {
   const base = old as Partial<ProgressionState> & { delegated?: unknown };
@@ -82,6 +98,14 @@ export function migrateProgression(old: unknown, fromVersion: number): Progressi
   return {
     narrativeId: base.narrativeId ?? 'aufsteiger',
     unlocked: base.unlocked ?? [],
+    /*
+     * An old save cannot say which badges it would have earned, and awarding
+     * on no evidence would be worse than awarding none. The standing
+     * conditions re-check on the next tick and light up whatever is still
+     * true; only the event-granted ones are genuinely lost, and there is no
+     * honest way to recover a moment that was not recorded.
+     */
+    earnedBadges: base.earnedBadges ?? [],
     seen: base.seen ?? [],
     delegated,
     tutorialStep: base.tutorialStep ?? null,
