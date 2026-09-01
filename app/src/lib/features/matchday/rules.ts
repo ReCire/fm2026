@@ -2,7 +2,7 @@ import type { MatchdayState, Report, Formation, Style, Talk } from './state';
 import type { Player } from '../squad/state';
 import { strengthOf } from '../squad/rules';
 import { matchdayContent as C } from './content';
-import { sabotageById, canArrange } from './sabotage';
+import { sabotageById, canArrange, sabotagePrice } from './sabotage';
 import { postToLedger } from '../finance/module';
 import type { FinanceState } from '../finance/state';
 
@@ -164,14 +164,16 @@ export function arrangeSabotage(
   m: MatchdayState,
   finance: FinanceState,
   meta: { season: number; matchday: number },
-  id: string
+  id: string,
+  /** What `underworldCost` buys — already inverted, so −25% arrives as 0.75. */
+  costFactor = 1
 ): { ok: true } | { ok: false; reason: string } {
   const sabotage = sabotageById.get(id);
   if (!sabotage) return { ok: false, reason: 'Diese Operation gibt es nicht.' };
   if (m.plannedSabotage) {
     return { ok: false, reason: 'Für dieses Spiel ist bereits etwas arrangiert.' };
   }
-  if (!canArrange(sabotage, finance.money)) {
+  if (!canArrange(sabotage, finance.money, costFactor)) {
     return { ok: false, reason: 'Das Vereinskonto gibt das nicht her.' };
   }
 
@@ -180,7 +182,7 @@ export function arrangeSabotage(
     matchday: meta.matchday,
     source: 'matchday',
     reason: `Beratungshonorar — ${sabotage.label}`,
-    amount: -sabotage.moneyCost
+    amount: -sabotagePrice(sabotage, costFactor)
   });
   m.plannedSabotage = sabotage.id;
   return { ok: true };

@@ -94,12 +94,24 @@ export function cappedSwing(sabotage: Sabotage): number {
 }
 
 /**
+ * What arranging this actually costs, after doctrine.
+ *
+ * `costFactor` is what `underworldCost` buys — already inverted by the
+ * effects bus, so −25% in the tree arrives here as 0.75. A parameter rather
+ * than a bus read because arranging happens on a click, not a tick; see
+ * SCREEN_READ in knowledge/rules.ts.
+ */
+export function sabotagePrice(sabotage: Sabotage, costFactor = 1): number {
+  return Math.round(sabotage.moneyCost * costFactor);
+}
+
+/**
  * Whether this can be arranged right now.
  *
  * Money only. There is deliberately no pressure ceiling: a club at 90% that
  * wants to make it worse is entitled to, and a rule stopping them would be the
  * game protecting a player from the one decision the whole system is about.
  */
-export function canArrange(sabotage: Sabotage, money: number): boolean {
-  return money >= sabotage.moneyCost;
+export function canArrange(sabotage: Sabotage, money: number, costFactor = 1): boolean {
+  return money >= sabotagePrice(sabotage, costFactor);
 }

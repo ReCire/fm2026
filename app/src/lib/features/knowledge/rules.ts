@@ -189,6 +189,7 @@ export const REVEALS_READ: ReadonlySet<string> = new Set();
 export const SCREEN_READ: ReadonlySet<string> = new Set([
   'industry.materialPrice',
   'industry.orderValue',
+  'industry.warehouse',
   'youth.upgradeCost',
   'matchday.sabotageCost',
   'youth.scoutQuality',

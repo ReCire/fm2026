@@ -22,7 +22,9 @@
   const scoutQuality = $derived(fx.get('youth.scoutQuality') ?? 1);
   const extraPerMission = $derived(totals.get('youth.scoutCount') ?? 0);
 
-  const upgradeCost = $derived(levelUpgradeCost(youth.level));
+  // `youth.upgradeCost` was in SCREEN_READ before this line read it — the
+  // one lie the gate cannot catch. The academy discount now actually lands.
+  const upgradeCost = $derived(levelUpgradeCost(youth.level, fx.get('youth.upgradeCost') ?? 1));
   const cap = $derived(capacity(youth.level));
   // A network doctrine can make a mission free outright (factor 0).
   const nextScoutCost = $derived(Math.max(0, Math.round(scoutCost(youth.level) * scoutFactor)));

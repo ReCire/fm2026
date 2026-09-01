@@ -21,8 +21,8 @@ export function storedTotal(industry: IndustryState): number {
   return Object.values(industry.materials).reduce((sum, m) => sum + m.stock, 0);
 }
 
-export function spaceLeft(industry: IndustryState): number {
-  return Math.max(0, warehouseCapacity(industry) - storedTotal(industry));
+export function spaceLeft(industry: IndustryState, warehouseBonus = 1): number {
+  return Math.max(0, warehouseCapacity(industry, warehouseBonus) - storedTotal(industry));
 }
 
 export function levelOf(industry: IndustryState, factoryId: string): number {
@@ -87,11 +87,13 @@ export function buyQuote(
   materialId: string,
   wanted: number,
   /** Multiplier on the market price — a doctrine that buys better. */
-  priceFactor = 1
+  priceFactor = 1,
+  /** Multiplier on the shelves — `warehouseBonus`, a doctrine that stores more. */
+  warehouseBonus = 1
 ): BuyQuote {
   const entry = industry.materials[materialId];
   if (!entry) return { units: 0, cost: 0, limitedBySpace: false };
-  const units = Math.max(0, Math.min(wanted, spaceLeft(industry)));
+  const units = Math.max(0, Math.min(wanted, spaceLeft(industry, warehouseBonus)));
   return {
     units,
     cost: Math.round(units * entry.price * priceFactor),
@@ -101,9 +103,9 @@ export function buyQuote(
 
 /** Take delivery. The caller charges, so the money leaves through the ledger. */
 export function buyMaterial(
-  industry: IndustryState, materialId: string, units: number, priceFactor = 1
+  industry: IndustryState, materialId: string, units: number, priceFactor = 1, warehouseBonus = 1
 ): number {
-  const quote = buyQuote(industry, materialId, units, priceFactor);
+  const quote = buyQuote(industry, materialId, units, priceFactor, warehouseBonus);
   const entry = industry.materials[materialId];
   if (!entry || quote.units === 0) return 0;
   entry.stock += quote.units;

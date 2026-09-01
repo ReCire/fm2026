@@ -13,7 +13,8 @@
     formLetters, describeFormation, describeStyle, describeTalk,
     arrangeSabotage, cancelSabotage
   } from './rules';
-  import { sabotages, sabotageById, canArrange, cappedSwing } from './sabotage';
+  import { sabotages, sabotageById, canArrange, cappedSwing, sabotagePrice } from './sabotage';
+  import { ownedEffects } from '../knowledge/rules';
   import { teamStrength, isAvailable } from '../squad/rules';
   import { playerFixture } from '../league/rules';
   import { formatMoney } from '../finance/rules';
@@ -101,8 +102,16 @@
   const finance = $derived(game.modules.finance);
   const plannedSabotage = $derived(m.plannedSabotage ? sabotageById.get(m.plannedSabotage) : null);
 
+  /* What `underworldCost` bought in the tree. A click cannot read the bus, so
+     the screen asks knowledge directly — see SCREEN_READ in knowledge/rules.ts,
+     which listed this key before anything actually read it. That is the lie
+     the SCREEN_READ comment warns about, and this line is the retraction. */
+  const sabotageFactor = $derived(
+    ownedEffects(game.modules.knowledge).factors.get('matchday.sabotageCost') ?? 1
+  );
+
   function arrange(id: string) {
-    const result = arrangeSabotage(m, finance, game.meta, id);
+    const result = arrangeSabotage(m, finance, game.meta, id, sabotageFactor);
     if (!result.ok) {
       toast('Nicht möglich', result.reason, 'warn');
       return;
@@ -245,7 +254,7 @@
     </p>
     <ul class="sabotages">
       {#each sabotages as s (s.id)}
-        {@const affordable = canArrange(s, finance.money)}
+        {@const affordable = canArrange(s, finance.money, sabotageFactor)}
         <li>
           <!-- docs-check-ignore: documented as a group (matchday.sabotage) -->
           <button type="button" class="row" disabled={!affordable} onclick={() => arrange(s.id)}>
@@ -254,7 +263,7 @@
             <span class="stats">
               <span class="stat pos"><i class="glyph" aria-hidden="true">▲</i>Stärke +{cappedSwing(s)}</span>
               <span class="stat neg"><i class="glyph" aria-hidden="true">▲</i>Druck +{s.pressureCost}</span>
-              <span class="stat neg tabular"><i class="glyph" aria-hidden="true">▼</i>{formatMoney(s.moneyCost)}</span>
+              <span class="stat neg tabular"><i class="glyph" aria-hidden="true">▼</i>{formatMoney(sabotagePrice(s, sabotageFactor))}</span>
             </span>
             {#if !affordable}<span class="unaffordable">Vereinskonto reicht nicht</span>{/if}
           </button>

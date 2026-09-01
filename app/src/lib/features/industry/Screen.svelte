@@ -27,8 +27,14 @@
   const priceFactor = $derived(
     ownedEffects(game.modules.knowledge).factors.get('industry.materialPrice') ?? 1
   );
+  /* `warehouseBonus: 1` in the tree doubles the shelves. Read here for the
+     same reason as the price factor: capacity is checked when the player
+     clicks "buy", and a click cannot read the bus. */
+  const shelfBonus = $derived(
+    ownedEffects(game.modules.knowledge).factors.get('industry.warehouse') ?? 1
+  );
 
-  const capacity = $derived(warehouseCapacity(industry));
+  const capacity = $derived(warehouseCapacity(industry, shelfBonus));
   const stored = $derived(storedTotal(industry));
   const savedTotal = $derived(Math.round(industry.saved));
 
@@ -50,11 +56,11 @@
   const wanted = (id: string) => amounts[id] ?? 250;
 
   function buy(materialId: string) {
-    const quote = buyQuote(industry, materialId, wanted(materialId), priceFactor);
+    const quote = buyQuote(industry, materialId, wanted(materialId), priceFactor, shelfBonus);
     if (quote.units === 0) return toast('Lager voll', 'Kein Platz mehr im Lager.', 'warn');
     if (quote.cost > finance.money) return toast('Zu teuer', 'Das Vereinskonto gibt das nicht her.', 'warn');
 
-    buyMaterial(industry, materialId, quote.units, priceFactor);
+    buyMaterial(industry, materialId, quote.units, priceFactor, shelfBonus);
     postToLedger(finance, {
       season: game.meta.season, matchday: game.meta.matchday,
       source: 'industry', reason: `Rohstoff: ${materialById(materialId)?.name ?? materialId}`,
@@ -115,7 +121,7 @@
       season: game.meta.season, matchday: game.meta.matchday,
       source: 'industry', reason: 'Lagerausbau', amount: -cost
     });
-    toast('Lager ausgebaut', `${warehouseCapacity(industry).toLocaleString('de-DE')} Einheiten Platz.`, 'good');
+    toast('Lager ausgebaut', `${warehouseCapacity(industry, shelfBonus).toLocaleString('de-DE')} Einheiten Platz.`, 'good');
   }
 </script>
 
@@ -129,7 +135,7 @@
     <StatChip label="Gespart gegenüber Einkauf" value={formatMoney(savedTotal)} doc="industry.why"
               tone={savedTotal > 0 ? 'good' : savedTotal < 0 ? 'bad' : 'neutral'} />
     <StatChip label="Lager" value="{stored.toLocaleString('de-DE')} / {capacity.toLocaleString('de-DE')}"
-              doc="industry.warehouse" tone={spaceLeft(industry) === 0 ? 'bad' : 'neutral'} />
+              doc="industry.warehouse" tone={spaceLeft(industry, shelfBonus) === 0 ? 'bad' : 'neutral'} />
   </div>
   <Bar value={stored} max={capacity} label="Lagerauslastung" showValue />
   {#if canUpgradeWarehouse(industry)}

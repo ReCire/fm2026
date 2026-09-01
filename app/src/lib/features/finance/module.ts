@@ -53,7 +53,7 @@ export default defineModule({
     matchday: {
       phase: 'economy',
       order: 100,
-      consumes: ['finance.opsIncome', 'finance.opex', 'finance.transferBudget'],
+      consumes: ['finance.opsIncome', 'finance.opsIncomeMod', 'finance.opex', 'finance.transferBudget'],
       run({ state, emit, total, factor }) {
         const finance = state.modules.finance;
         const { season, matchday } = state.meta;
@@ -64,7 +64,13 @@ export default defineModule({
          * economy phase, so it lands on the same balance as everything else and
          * shows up in the ledger where the player looks for it.
          */
-        const ops = total('finance.opsIncome');
+        /*
+         * `opsIncomeMod` scales the whole line — it is what `investorMod`
+         * maps to, and the 50+1 node's −20% is a POLITICAL cost: member
+         * control cools outside capital. A factor on the total rather than a
+         * second total, so it also scales ops income from nodes bought later.
+         */
+        const ops = Math.round(total('finance.opsIncome') * factor('finance.opsIncomeMod', 1));
         if (ops !== 0) {
           post(finance, {
             season, matchday, source: 'finance',
