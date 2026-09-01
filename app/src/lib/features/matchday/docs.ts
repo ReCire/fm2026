@@ -38,6 +38,21 @@ export const matchdayDocs = defineDocs({
     since: '0.2.0',
     related: ['matchday.live']
   },
+  'matchday.sabotage': {
+    label: 'Beratung vor dem Spiel',
+    tooltip: 'Zahl vor dem Anpfiff für einen kleinen Vorteil im nächsten Spiel — und für etwas mehr Ermittlungsdruck.',
+    manual: '## Beratung vor dem Spiel\n\nVier Möglichkeiten, alle vor dem Anpfiff bezahlt, alle nur für das nächste Spiel wirksam. Der Effekt ist klein — er kann ein enges Spiel drehen, nie eine deutlich bessere Mannschaft schlagen.\n\nHöchstens eine Sache gleichzeitig. Das Honorar ist weg, sobald du wählst, auch wenn du danach absagst oder das Spiel gar nicht stattfindet.\n\nDer Ermittlungsdruck steigt erst, wenn das Spiel tatsächlich gespielt wird — arrangieren und dann nicht spielen macht niemanden misstrauisch.',
+    why: 'Ermittlungsdruck war ein Meter mit einer Ursache, aber keiner, die der Spieler wählen konnte — er stieg nur durch einen dauerhaften Wissensbaum-Knoten. Das hier ist das fehlende Verb: ein wiederholbarer Handel gegen einen Meter, der schon eine Konsequenz hat. Auf ein Vorhaben begrenzt, aus demselben Grund wie die Halbzeit-Entscheidung: vier gleichzeitig nutzbare Hebel sind keine Entscheidung mehr, sondern ein Wochenendritual.',
+    since: '0.8.0',
+    related: ['matchday.formation', 'matchday.halftime']
+  },
+  'matchday.cancelSabotage': {
+    label: 'Absagen',
+    tooltip: 'Nimmt das arrangierte Vorhaben zurück. Das Honorar ist trotzdem weg.',
+    why: 'Jemand ist bereits bezahlt worden. Eine Erstattung würde das Arrangieren zu einer kostenlosen Besichtigung machen — genau das, was den Kauf zu einer echten Entscheidung macht, wäre dahin.',
+    since: '0.8.0',
+    related: ['matchday.sabotage']
+  },
   'matchday.substitute': {
     label: 'Wechsel',
     tooltip: 'Bring jemanden von der Bank, während die Uhr steht. Drei pro Spiel, keine Rücknahme.',

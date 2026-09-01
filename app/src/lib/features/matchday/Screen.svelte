@@ -6,14 +6,18 @@
   import LiveMatch from './LiveMatch.svelte';
   import { dismiss, skipToEnd, atInterval } from '$lib/state/live.svelte';
   import { teamById } from '../league/rules';
-  import { Panel, Button, StatChip, Bar, fromEvent } from '$lib/ui';
+  import { Panel, Button, StatChip, Bar, fromEvent, toast } from '$lib/ui';
   import { FORMATIONS, STYLES, TALKS } from './state';
   import {
     modifiers, effectiveStrength, readiness, outcomeOf, scoreline,
-    formLetters, describeFormation, describeStyle, describeTalk
+    formLetters, describeFormation, describeStyle, describeTalk,
+    arrangeSabotage, cancelSabotage
   } from './rules';
+  import { sabotages, sabotageById, canArrange, cappedSwing } from './sabotage';
   import { teamStrength, isAvailable } from '../squad/rules';
   import { playerFixture } from '../league/rules';
+  import { formatMoney } from '../finance/rules';
+  import { save } from '$lib/state/persist.svelte';
 
   const m = $derived(game.modules.matchday);
   /* Fourteenth by-name club reference. The report printed a hardcoded
@@ -83,6 +87,35 @@
     // A finished match on screen is a report, not a match. Advancing clears it.
     if (m.live) dismiss();
     for (const e of takeStep().events) fromEvent(e);
+  }
+
+  /*
+   * The other half of Ermittlungsdruck — see sabotage.ts.
+   *
+   * One arranged thing at a time, same lifecycle as formation/style/talk:
+   * chosen here, spent by Saturday, gone whether it was played or not. The
+   * options only show while nothing is planned; once one is, the engine
+   * would refuse a second anyway, and showing four live buttons that are
+   * about to say no is worse than showing the one that is already chosen.
+   */
+  const finance = $derived(game.modules.finance);
+  const plannedSabotage = $derived(m.plannedSabotage ? sabotageById.get(m.plannedSabotage) : null);
+
+  function arrange(id: string) {
+    const result = arrangeSabotage(m, finance, game.meta, id);
+    if (!result.ok) {
+      toast('Nicht möglich', result.reason, 'warn');
+      return;
+    }
+    // The money already left through the ledger inside arrangeSabotage; save
+    // now for the same reason a half-time decision does — this happens
+    // between ticks, and the autosave only fires on a committed one.
+    void save();
+  }
+
+  function cancel() {
+    cancelSabotage(m);
+    void save();
   }
 </script>
 
@@ -193,6 +226,44 @@
   </fieldset>
 </Panel>
 
+<Panel title="Beratung vor dem Spiel" accent={plannedSabotage ? 'danger' : 'accent'}
+       meta={plannedSabotage ? 'Arrangiert' : 'Nichts geplant'}>
+  {#if plannedSabotage}
+    {@const swing = cappedSwing(plannedSabotage)}
+    <p class="planned-label"><b>{plannedSabotage.label}</b></p>
+    <p class="intro">{plannedSabotage.detail}</p>
+    <span class="stats">
+      <span class="stat pos"><i class="glyph" aria-hidden="true">▲</i>Stärke +{swing}</span>
+      <span class="stat neg"><i class="glyph" aria-hidden="true">▲</i>Ermittlungsdruck +{plannedSabotage.pressureCost}</span>
+    </span>
+    <p class="warn">Absagen erstattet nichts — das Honorar ist bereits gezahlt.</p>
+    <Button doc="matchday.cancelSabotage" variant="secondary" label="Absagen" onclick={cancel} />
+  {:else}
+    <p class="intro">
+      Kostet vor dem Anpfiff, wirkt nur im nächsten Spiel, und erhöht danach den
+      Ermittlungsdruck. Höchstens eine Sache gleichzeitig.
+    </p>
+    <ul class="sabotages">
+      {#each sabotages as s (s.id)}
+        {@const affordable = canArrange(s, finance.money)}
+        <li>
+          <!-- docs-check-ignore: documented as a group (matchday.sabotage) -->
+          <button type="button" class="row" disabled={!affordable} onclick={() => arrange(s.id)}>
+            <b>{s.label}</b>
+            <small>{s.detail}</small>
+            <span class="stats">
+              <span class="stat pos"><i class="glyph" aria-hidden="true">▲</i>Stärke +{cappedSwing(s)}</span>
+              <span class="stat neg"><i class="glyph" aria-hidden="true">▲</i>Druck +{s.pressureCost}</span>
+              <span class="stat neg tabular"><i class="glyph" aria-hidden="true">▼</i>{formatMoney(s.moneyCost)}</span>
+            </span>
+            {#if !affordable}<span class="unaffordable">Vereinskonto reicht nicht</span>{/if}
+          </button>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</Panel>
+
 <style>
   .fixture { margin-bottom: var(--s3); font-size: var(--fs-body); }
   .step { font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s2); }
@@ -238,4 +309,35 @@
   .opt input:focus-visible ~ span { outline: 2px solid var(--primary); outline-offset: 3px; }
   .opt b { display: block; font-size: var(--fs-body); text-transform: capitalize; }
   .opt small { color: var(--text-muted); font-size: var(--fs-caption); }
+
+  .intro { font-size: var(--fs-caption); color: var(--text-muted); margin-bottom: var(--s3); }
+  .planned-label { font-size: var(--fs-body); margin-bottom: var(--s1); }
+  .warn { font-size: var(--fs-caption); color: var(--neg-ink); margin: var(--s2) 0 var(--s3); }
+
+  .sabotages { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+  .sabotages .row {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    padding: var(--s2) var(--s3); min-height: var(--tap);
+    border: 1px solid var(--border); border-radius: var(--r-sm);
+    background: var(--bg-inset); font: inherit;
+  }
+  .sabotages .row:not(:disabled):hover { border-color: var(--primary-ink); }
+  .sabotages .row:disabled { opacity: 0.55; cursor: not-allowed; }
+  .sabotages b { display: block; font-size: var(--fs-body); color: var(--text-main); }
+  .sabotages small { display: block; color: var(--text-muted); font-size: var(--fs-caption); line-height: var(--lh-tight); margin-bottom: var(--s2); }
+  .unaffordable { display: block; margin-top: var(--s1); font-size: var(--fs-caption); color: var(--neg-ink); }
+
+  /* Same glyph-plus-word trade badges as the half-time panel — the trade
+     being visible is the point in both places, so the treatment matches. */
+  .stats { display: flex; flex-wrap: wrap; gap: var(--s1); }
+  .stat {
+    display: inline-flex; align-items: center;
+    padding: 1px 6px; border-radius: 999px;
+    background: var(--bg-sunken);
+    font-size: var(--fs-caption); font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .glyph { margin-right: 3px; }
+  .stat.pos { color: var(--pos-ink); }
+  .stat.neg { color: var(--neg-ink); }
 </style>
