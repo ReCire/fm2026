@@ -5,7 +5,9 @@ import {
   raidChance, recordResult, shouldOpenFile, statusOf, RAID_RESOLVES,
   type MatchResult
 } from './rules';
-import { INVESTIGATION_FROM, pressContent, bandFor } from './content';
+import {
+  INVESTIGATION_FROM, pressContent, bandFor, suspicionCandidates
+} from './content';
 
 /**
  * How much faster a club with the right friends is forgotten.
@@ -135,7 +137,23 @@ export default defineModule({
 
         const causes = suspicion > 0 ? (['suspicion'] as const) : causesFor(press, result);
         for (const cause of causes) {
-          const headline = pickHeadline(rng, cause);
+          /*
+           * Suspicion is drawn by MAGNITUDE, everything else at random.
+           *
+           * An eighteen-point sabotage should read as a Parkhaus and an
+           * envelope; a three-point node should read as consultancy fees with
+           * gaps in them. A flat draw made the loudest purchase in the game
+           * announce itself as a filing query two thirds of the time — which is
+           * not wrong in any way a test could state, and is the difference
+           * between a feed you read and a feed you scroll past.
+           *
+           * The candidates come from content and the draw stays here, because
+           * the seed lives here. Same split as `pickHeadline`.
+           */
+          const headline =
+            cause === 'suspicion'
+              ? rng.pick(suspicionCandidates(suspicion))
+              : pickHeadline(rng, cause);
           if (!headline) continue;
           publish(press, {
             season,
@@ -154,8 +172,12 @@ export default defineModule({
              * being reported — otherwise the tree's "+3 Ermittlungsdruck" and
              * the needle disagree, and the feed's whole promise goes with it.
              *
-             * Every other cause keeps its own weight, because nothing else is
-             * reporting a number the player was already quoted.
+             * `severity` in content now carries how LOUD a sentence is, which
+             * is what `weight` was being asked to mean here as well. One field,
+             * one question: weight is what happened to the meter, severity is
+             * how it was phrased. Every other cause keeps its own weight,
+             * because nothing else is reporting a number the player was
+             * already quoted.
              */
             weight: cause === 'suspicion' ? Math.round(suspicion) : headline.weight
           });
