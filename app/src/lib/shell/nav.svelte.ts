@@ -135,13 +135,23 @@ export function allAttention(): { moduleId: string; title: string; item: OpenIte
 /** Grouped and ordered, for the sidebar. */
 export function navGroups(): NavGroup[] {
   const fresh = game.modules.progression ? unseen(game.modules.progression) : [];
-  const groups = new Map<string, NavEntry[]>();
+  const groups = new Map<string, { entry: NavEntry; order: number }[]>();
   for (const m of visible()) {
     const list = groups.get(m.nav!.group) ?? [];
-    list.push(toEntry(m, fresh));
+    list.push({ entry: toEntry(m, fresh), order: m.nav!.order ?? 0 });
     groups.set(m.nav!.group, list);
   }
-  return [...groups.entries()].map(([group, items]) => ({ group, items }));
+  /*
+   * Sorted by `nav.order`, which this function claimed to do and never did —
+   * the sidebar showed module REGISTRATION order, so Gelände sat four rows
+   * from the Stadion it belongs beside, and every module's carefully chosen
+   * order number was decoration. The doc comment above was the spec; now it
+   * is also the behaviour.
+   */
+  return [...groups.entries()].map(([group, items]) => ({
+    group,
+    items: items.sort((a, b) => a.order - b.order).map((i) => i.entry)
+  }));
 }
 
 /**

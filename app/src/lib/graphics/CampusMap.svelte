@@ -61,14 +61,32 @@
    */
   const standDepth = $derived(Math.min(46, 14 + Math.log10(Math.max(seats, 1000) / 1000) * 26));
 
-  const HINT: Record<string, string> = { klein: 'KLEIN', mittel: 'MITTEL', gross: 'GROSS' };
+  /*
+   * The same pitch the stadium screen draws: upright, 68:105. The plan and
+   * the stadium page describe one building; the stands set the width and the
+   * ratio sets the height, so both views shrink the surface the same way as
+   * the ground grows.
+   */
+  const pitch = $derived.by(() => {
+    const w = bowl.w - standDepth * 2;
+    const h = Math.min(bowl.h - 48, w / (68 / 105));
+    return { x: bowl.x + (bowl.w - w) / 2, y: bowl.y + (bowl.h - h) / 2, w, h };
+  });
 
   /* Unique per instance, so two maps on one page cannot share clip rects. */
   const uid = `cm${Math.random().toString(36).slice(2, 8)}`;
 
+  /*
+   * The NAME leads, always.
+   *
+   * Every unbuilt plot used to open with "+ BAUEN" and bury what could stand
+   * there in a truncated subtitle — nineteen plots all titled the same way,
+   * which is why "which box is what" had no answer. Now the building names
+   * the card whether it exists yet or not, and "+ Bauen" is the status line.
+   */
   function label(p: Placed): { name: string; sub: string } {
-    if (!p.building) return { name: '+ BAUEN', sub: HINT[p.plot.size] ?? '' };
-    if (p.level < 0) return { name: '+ BAUEN', sub: `${HINT[p.plot.size]} — ${p.building.name}` };
+    if (!p.building) return { name: 'FREI', sub: 'Grundstück' };
+    if (p.level < 0) return { name: p.building.name.toUpperCase(), sub: '+ Bauen' };
     return { name: p.building.name.toUpperCase(), sub: `Stufe ${p.level + 1}` };
   }
 
@@ -112,15 +130,31 @@
         <rect class="road" x={r.x} y={r.y} width={r.w} height={r.h} />
       {/each}
 
+      <!-- The bowl, in the stadium screen's own language: concrete shell,
+           crowd ring, upright pitch with real markings. Two views, one
+           building. -->
+      <defs>
+        <pattern id="{uid}-crowd" width="5" height="5" patternUnits="userSpaceOnUse">
+          <circle class="head" cx="1.4" cy="1.4" r="1" />
+          <circle class="head alt" cx="3.9" cy="3.9" r="1" />
+        </pattern>
+      </defs>
       <g class="stadium">
-        <rect x={bowl.x} y={bowl.y} width={bowl.w} height={bowl.h} rx="14" />
-        <rect class="pitch"
-          x={bowl.x + standDepth} y={bowl.y + standDepth}
-          width={bowl.w - standDepth * 2} height={bowl.h - standDepth * 2} rx="3" />
+        <rect class="shell" x={bowl.x} y={bowl.y} width={bowl.w} height={bowl.h} rx="26" />
+        <rect class="crowd" x={bowl.x + 3} y={bowl.y + 3}
+          width={bowl.w - 6} height={bowl.h - 6} rx="23"
+          fill="url(#{uid}-crowd)" />
+        <rect class="apron"
+          x={pitch.x - 5} y={pitch.y - 5} width={pitch.w + 10} height={pitch.h + 10} rx="6" />
+        <rect class="pitch" x={pitch.x} y={pitch.y} width={pitch.w} height={pitch.h} rx="3" />
         <line class="mark"
-          x1={bowl.x + standDepth} y1={bowl.y + bowl.h / 2}
-          x2={bowl.x + bowl.w - standDepth} y2={bowl.y + bowl.h / 2} />
-        <circle class="mark" cx={bowl.x + bowl.w / 2} cy={bowl.y + bowl.h / 2} r="22" />
+          x1={pitch.x} y1={pitch.y + pitch.h / 2}
+          x2={pitch.x + pitch.w} y2={pitch.y + pitch.h / 2} />
+        <circle class="mark" cx={pitch.x + pitch.w / 2} cy={pitch.y + pitch.h / 2} r={pitch.w * 0.14} />
+        <rect class="mark" x={pitch.x + pitch.w * 0.21} y={pitch.y}
+          width={pitch.w * 0.58} height={pitch.h * 0.1} />
+        <rect class="mark" x={pitch.x + pitch.w * 0.21} y={pitch.y + pitch.h * 0.9}
+          width={pitch.w * 0.58} height={pitch.h * 0.1} />
         {#if stadium.flutlicht}
           <!-- Four masts, only when the club owns floodlights. -->
           {#each masts as [cx, cy], i (i)}
@@ -130,9 +164,12 @@
           {/each}
         {/if}
       </g>
+      <!-- The plate sits UNDER the bowl, on the grass. Across the bottom of
+           the bowl it covered the pitch's lower edge, which made the pitch
+           read as off-centre — the pitch was fine, the label was on it. -->
       <g class="plate" aria-hidden="true">
-        <rect x={bowl.x + 6} y={bowl.y + bowl.h - 30} width={bowl.w - 12} height="24" rx="4" />
-        <text x={bowl.x + bowl.w / 2} y={bowl.y + bowl.h - 13}>
+        <rect x={bowl.x + bowl.w / 2 - 78} y={bowl.y + bowl.h + 6} width="156" height="22" rx="4" />
+        <text x={bowl.x + bowl.w / 2} y={bowl.y + bowl.h + 21}>
           HAUPTSTADION · {seats.toLocaleString('de-DE')}
         </text>
       </g>
@@ -142,7 +179,7 @@
         {@const l = label(p)}
         {@const b = p.level >= 0 ? p.building : null}
         <g
-          class="plot {b ? accentOf(b.category) : 'empty'}"
+          class="plot {p.building ? accentOf(p.building.category) : ''} {p.level >= 0 ? 'built' : 'empty'}"
           class:klein={p.plot.size === 'klein'}
           class:sel={selected === p.plot.id}
           role="button" tabindex="0" aria-label={aria(p)}
@@ -219,7 +256,13 @@
   .grid line { stroke: var(--iso-line); stroke-width: 0.5; opacity: 0.07; }
   .road { fill: var(--iso-tarmac); opacity: 0.85; }
 
-  .stadium rect { fill: var(--iso-concrete); stroke: var(--border-strong); stroke-width: 1.5; }
+  .stadium .shell { fill: var(--iso-concrete); stroke: var(--border-strong); stroke-width: 1.5; }
+  /* No `fill` here: the element carries the crowd pattern as an attribute,
+     and a CSS fill — even an inherited one — would paint over it. */
+  .stadium .crowd { stroke: none; opacity: 0.5; }
+  .head { fill: var(--text-muted); }
+  .head.alt { fill: var(--text-dim); }
+  .stadium .apron { fill: var(--iso-grass); stroke: none; }
   .stadium .pitch { fill: var(--iso-turf); stroke: none; }
   .stadium .mark { stroke: var(--iso-line); stroke-width: 1.5; fill: none; opacity: 0.55; }
   .stadium .mast { fill: var(--iso-lit); stroke: none; opacity: 0.9; }
@@ -242,25 +285,43 @@
   .plot .sub { font-size: 11px; fill: var(--text-muted); letter-spacing: .03em; }
   /* The small cards cannot carry 14px without clipping half the word away. */
   .plot.klein .name { font-size: 11.5px; }
-  .plot:focus-visible { outline: none; }
+  /*
+   * :focus AND :focus-visible. With only the latter, a tap left the browser's
+   * own focus ring on the <g> — a blue box drawn OUTSIDE the plot's rect,
+   * which read as a selection bigger than the thing selected. The selection
+   * state below is the visible answer; the UA ring is never it.
+   */
+  .plot:focus, .plot:focus-visible { outline: none; }
   .plot:focus-visible > rect, .plot:hover > rect { stroke-width: 2.5; }
-  .plot.sel > rect { stroke: var(--text-main); stroke-width: 2.5; }
+  .plot.sel > rect { stroke: var(--text-main); stroke-width: 2.5; stroke-dasharray: none; }
 
-  /* An empty plot is an invitation, so it looks like one: dashed, quiet, and
-     labelled with what would fit there. */
-  .plot.empty > rect { fill: none; stroke: var(--primary-ink); stroke-dasharray: 5 5; opacity: .75; }
-  .plot.empty .name { fill: var(--primary-ink); font-size: 12px; }
-  .plot.empty .sub { fill: var(--text-dim); }
+  /*
+   * An unbuilt plot is an invitation, so it looks like one: dashed and quiet
+   * — but dashed IN ITS DISTRICT'S COLOUR, because "which box is what" has to
+   * be answerable before anything stands there. The category classes below
+   * set the stroke for built and unbuilt alike; `empty` only removes the fill
+   * and dashes the line.
+   */
+  .plot.empty > rect { fill: none; stroke-dasharray: 5 5; opacity: .8; }
+  .plot.empty .name { fill: var(--text-muted); font-size: 12px; }
+  .plot.empty.klein .name { font-size: 10.5px; }
+  .plot.empty .sub { fill: var(--primary-ink); font-weight: 700; }
 
   /* Category tint on the card. The fill stays a wash so the label keeps a
      legible ground — a saturated card carrying type is the fill-as-ink mistake
      with extra steps. */
-  .plot.primary  > rect { stroke: var(--primary);  fill: var(--primary-glow); }
-  .plot.accent   > rect { stroke: var(--accent);   fill: var(--accent-glow); }
-  .plot.industry > rect { stroke: var(--industry); fill: var(--accent-glow); }
-  .plot.europe   > rect { stroke: var(--europe);   fill: var(--primary-glow); }
-  .plot.danger   > rect { stroke: var(--danger);   fill: var(--accent-glow); }
-  .plot.gold     > rect { stroke: var(--gold);     fill: var(--accent-glow); }
+  .plot.primary  > rect { stroke: var(--primary); }
+  .plot.accent   > rect { stroke: var(--accent); }
+  .plot.industry > rect { stroke: var(--industry); }
+  .plot.europe   > rect { stroke: var(--europe); }
+  .plot.danger   > rect { stroke: var(--danger); }
+  .plot.gold     > rect { stroke: var(--gold); }
+  .plot.built.primary  > rect { fill: var(--primary-glow); }
+  .plot.built.accent   > rect { fill: var(--accent-glow); }
+  .plot.built.industry > rect { fill: var(--accent-glow); }
+  .plot.built.europe   > rect { fill: var(--primary-glow); }
+  .plot.built.danger   > rect { fill: var(--accent-glow); }
+  .plot.built.gold     > rect { fill: var(--accent-glow); }
 
   .pips rect { fill: var(--border-strong); }
   .pips rect.lit { fill: var(--text-main); }

@@ -4,9 +4,9 @@
    * one-of-N choices, cards for the player list, a sheet for the per-player
    * decision.
    *
-   * The old version was three hand-rolled radio groups and a native <select>
-   * per player — four different form controls for what is always the same
-   * gesture, "pick one of these". Now it is one gesture everywhere: a chip
+   * The old version was three hand-rolled radio groups and a native select
+   * element per player — four different form controls for what is always the
+   * same gesture, "pick one of these". Now it is one gesture everywhere: a chip
    * row for the team focus, a chip row for the intensity (with the active
    * one's consequence printed underneath, where the choice is made), and the
    * individual focus behind a tap on the player's card.

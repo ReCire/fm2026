@@ -3,8 +3,7 @@
   import { Panel, StatChip, Bar, Button, toast } from '$lib/ui';
   import { capacity, attendance, attendanceFactor, ticketIncome, expansionQuote } from './rules';
   import { formatMoney, post } from '../finance/rules';
-  import CampusMap from '$lib/graphics/CampusMap.svelte';
-  import { development } from '$lib/graphics/campus';
+  import StadiumBowl from '$lib/graphics/StadiumBowl.svelte';
   import { teamById } from '../league/rules';
   import { ownedEffects } from '../knowledge/rules';
 
@@ -14,11 +13,8 @@
   // Editor edits are applied to the league team itself now, so the team's own
   // name is already the edited one — no resolver in between.
   const clubName = $derived(
-    teamById(game.modules.league, game.modules.league.playerClubId)?.name ?? 'Vereinsgelände'
+    teamById(game.modules.league, game.modules.league.playerClubId)?.name ?? 'Stadion'
   );
-
-  // No campus module yet, so nothing is built beyond what the club starts with.
-  const built = $derived(development());
 
   /* Cheaper stands, from a doctrine. Read here rather than off the bus because
      building is a click, and the bus lives for exactly one tick. */
@@ -26,6 +22,14 @@
     ownedEffects(game.modules.knowledge).factors.get('stadium.buildCost') ?? 1
   );
   const priceOf = (base: number) => Math.round(base * buildFactor);
+
+  /* Which stands the account could expand today — the bowl marks them with a
+     crane, the buttons below do the actual building. */
+  const affordable = $derived(
+    Object.entries(stadium.blocks)
+      .filter(([, b]) => finance.money >= priceOf(b.cost))
+      .map(([id]) => id)
+  );
 
   function expand(blockId: string) {
     const quote = expansionQuote(stadium, blockId);
@@ -48,18 +52,20 @@
 </script>
 
 <!--
-  The ground, before the numbers.
+  The ground, before the numbers — and ONLY the ground.
 
-  Capacity is 3.420 and attendance is 2.309 and neither of those tells you that
-  you are running a fourth-division club out of four containers and a gravel
-  car park. This does, in the time it takes to look at it — which is the one
-  thing a figure cannot do however well it is formatted.
+  This panel used to show the whole site plan, which put the stadium in the
+  middle of nineteen plots that belong to the campus page. The bowl alone
+  says what the numbers below cannot: how big the club actually is. The
+  stands' depth per side IS that side's capacity, so an expansion visibly
+  thickens the wall it was bought for, and a crane marks any stand whose
+  next step the account already covers.
 -->
-<Panel title="Vereinsgelände" accent="primary" meta="{built.built} von {built.possible} Ausbaustufen">
-  <CampusMap {stadium} {clubName} />
+<Panel title={clubName} accent="primary" meta="{capacity(stadium).toLocaleString('de-DE')} Plätze">
+  <StadiumBowl {stadium} {affordable} />
   <p class="legend">
-    Die Höhe jeder Tribüne ist die Kapazität ihres Blocks. Gestrichelte Flächen sind
-    Grundstücke, auf denen noch nichts steht.
+    Die Dicke jeder Tribüne ist ihre Kapazität. 🏗️ heißt: Der nächste Ausbau dort ist
+    aus dem Vereinskonto bezahlbar.
   </p>
 </Panel>
 

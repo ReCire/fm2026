@@ -5,7 +5,9 @@ export default defineModule({
   id: 'campus',
   title: 'Gelände',
   summary: 'Das Vereinsgelände: was steht, was noch Wiese ist, und was das Nächste kostet.',
-  nav: { group: 'Verein', icon: '🏗️', order: 40 },
+  // Directly under the stadium (order 20): the ground and what stands around
+  // it are one mental place, and the sidebar should file them together.
+  nav: { group: 'Verein', icon: '🏗️', order: 21 },
   requires: ['finance'],
 
   state: {
