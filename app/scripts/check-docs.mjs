@@ -357,6 +357,24 @@ if (problems.length === 0) {
     `${GREEN}✓${RESET} docs gate: ${stats.controls} controls documented, ` +
     `${docIds.size} entries across ${stats.files} files, ${stats.inkPairs} fill/ink pairs.`
   );
+  /*
+   * Say what this tick does NOT mean.
+   *
+   * The gate reads source as TEXT and never parses it, so a `docs.ts` with a
+   * syntax error still yields its ids to the scanner — and it printed a green
+   * tick on a file that could not compile, while nothing in the project could
+   * run. Adding a parser here would be a second source of truth about whether
+   * the code is valid, which `npm run check` already owns; `verify` runs that
+   * first for exactly this reason.
+   *
+   * But a ✓ that gets read as "the file is fine" is a green-for-an-unrelated-
+   * reason at the tooling level, and the cheapest honest fix is for the tick
+   * to state its own scope.
+   */
+  console.log(
+    `${DIM}  (documentation only — this does not typecheck anything. ` +
+    `Run \`npm run check\`.)${RESET}`
+  );
   process.exit(0);
 }
 
