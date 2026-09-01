@@ -231,6 +231,7 @@ bug report about the code.
 | **written from the code** | it models the implementation, so it agrees with it by construction | the press unit test counted a raid as publishing ONE story; the code publishes two, and the real meter settled at a permanent 60% |
 | **under-powered** | it fails, and the failure describes the test rather than the system | "the final can be lost" at strength 70 — a 70 reaches one final in two hundred seasons |
 | **claims more than it asserts** | the comment is the coverage; the assertion is not | "no two narratives share an unlock order", asserting `> 1` distinct — which only rules out all five being identical, and two had been matching for weeks |
+| **green for an unrelated reason** | it passes, and would pass with the system removed | five harnesses double-stepped the clock; the europe suite survived only because every European matchday is an odd number, and an every-other-week clock lands on odd numbers |
 
 The second is the dangerous one to debug, because a red test is normally the
 system's problem. **Measure before you change the code it accuses.** Running
@@ -239,6 +240,15 @@ distribution worth keeping.
 
 The third is worse than no test, because it gets read as coverage. If the
 comment says "no two", the assertion says no two.
+
+The fourth is the one you will find last, because the other three either fail
+or read wrong and this one is green and silent. It surfaced from outside: a
+report that badges "never seem to land" on a real save. Nothing in the suite
+was ever going to say so — change `groupMatchdays` to `[2, 6, 10, …]` and a
+tournament suite goes red for a reason that has nothing to do with tournaments.
+
+**When a harness sets up state the engine also maintains, check which of you is
+doing it.** `runTick` advances the matchday, the tick and the season by itself.
 
 
 ## If a screen computes it, move it one file down
