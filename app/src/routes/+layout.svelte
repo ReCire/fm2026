@@ -3,7 +3,7 @@
   import { game } from '$lib/state/game.svelte';
   // Nav shape comes from $lib/shell, so this file stays presentation. Which
   // modules appear and what counts as new are game-state decisions.
-  import { navGroups, primaryNav, initTheme } from '$lib/shell';
+  import { navGroups, primaryNav, initTheme, resolved, setTheme } from '$lib/shell';
   import { load, save } from '$lib/state/persist.svelte';
   import { onCommit } from '$lib/state/game.svelte';
   import { page } from '$app/state';
@@ -45,6 +45,7 @@
     return { name: team.name, colours: team.colours ?? coloursFor(team.id) };
   });
 
+  let isDark = $derived(resolved() === 'dark');
   let drawerOpen = $state(false);
 </script>
 
@@ -59,6 +60,22 @@
       </div>
     </div>
     <div class="balance tabular">{formatMoney(game.modules.finance.money)}</div>
+    <button
+      class="theme"
+      aria-label="Dunkel-/Hellmodus umschalten"
+      onclick={() => setTheme(isDark ? 'light' : 'dark')}
+    >
+      {#if isDark}
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      {:else}
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m13.72 13.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m13.72-13.72 1.42-1.42"/>
+        </svg>
+      {/if}
+    </button>
   </header>
 
   <div class="body">
@@ -153,6 +170,21 @@
   .brand strong { display: block; font-size: var(--fs-headline); color: var(--text-main); }
   .brand small { font-size: var(--fs-caption); color: var(--accent-ink); }
   .balance { font-size: var(--fs-title); font-weight: 800; color: var(--primary-ink); }
+  .theme {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: var(--s2);
+    min-width: var(--tap);
+    min-height: var(--tap);
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-sm);
+  }
+  .theme svg { width: 20px; height: 20px; }
+  .theme:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 
   .body { display: flex; flex: 1; min-height: 0; }
 
@@ -241,6 +273,7 @@
   .tabbar { display: none; }
 
   @media (max-width: 760px) {
+    .theme { display: flex; }
     .sidebar {
       position: fixed; top: 0; bottom: 0; left: 0; z-index: 300;
       transform: translateX(-100%); transition: transform 0.22s ease;
