@@ -13,8 +13,7 @@ import { createIndustry } from './state';
 import {
   warehouseCapacity, storedTotal, spaceLeft, levelOf, owns, maxLevel, nextCost,
   outputOf, driftPrices, buyQuote, buyMaterial, produce, savingOf, weeksOfStock,
-  goodsOf, bankGoods, canFulfil, fulfil, expireContracts, refreshContracts, toShop
-} from './rules';
+  goodsOf, bankGoods, canFulfil, fulfil, expireContracts, refreshContracts, toShop, orderValue } from './rules';
 
 const registry = new Registry(modules);
 const fresh = () => createIndustry(createRng(1));
@@ -341,5 +340,49 @@ describe('content holds together', () => {
   it('one factory per shop item — no two plants make the same thing', () => {
     const made = industryContent.factories.map((f) => f.produces);
     expect(new Set(made).size).toBe(made.length);
+  });
+});
+
+describe('what a doctrine adds to a business order', () => {
+  /*
+   * `b2bBonus` is two nodes and it was unmapped. It is the only thing in the
+   * game that pays for being good at DEALING with other clubs rather than at
+   * making things, which is why it belongs on the order and not on production.
+   */
+  const stocked = () => {
+    const i = fresh();
+    const c = industryContent.contracts[0]!;
+    i.goods[c.item] = c.units;
+    i.contracts = [{ ...c }];
+    return { i, c };
+  };
+
+  it('pays the contract as written when nothing has been learned', () => {
+    const { i, c } = stocked();
+    expect(fulfil(i, c)).toBe(c.payout);
+  });
+
+  it('pays more once it has been, and by exactly what it advertises', () => {
+    const { i, c } = stocked();
+    expect(fulfil(i, c, 1.25)).toBe(Math.round(c.payout * 1.25));
+  });
+
+  it('quotes the same number before the click as it pays after it', () => {
+    /*
+     * The button shows `orderValue` and the fill returns `fulfil`. Two
+     * roundings of the same figure would let a screen advertise a payout the
+     * ledger disagrees with by a euro, which is the sabotage bug in miniature
+     * — shown one number, paid another.
+     */
+    const { i, c } = stocked();
+    expect(fulfil(i, c, 1.3)).toBe(orderValue(c, 1.3));
+  });
+
+  it('pays nothing at all when the goods are not there, bonus or not', () => {
+    const i = fresh();
+    const c = industryContent.contracts[0]!;
+    i.contracts = [{ ...c }];
+    expect(fulfil(i, c, 2)).toBeUndefined();
+    expect(i.fulfilled).toBe(0);
   });
 });

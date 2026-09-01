@@ -132,7 +132,8 @@ export const EFFECTS: Partial<Record<FxKey, Effect>> = {
   euroBonus:         { key: 'europe.prize',               arity: 'factor' },
   wonderkid:         { key: 'youth.wonderkids',           arity: 'total' },
   stockBonus:        { key: 'stocks.yield',                arity: 'factor' },
-  priceTolerance:    { key: 'stadium.priceTolerance',      arity: 'factor' }
+  priceTolerance:    { key: 'stadium.priceTolerance',      arity: 'factor' },
+  b2bBonus:          { key: 'industry.orderValue',         arity: 'factor' }
 };
 
 /** Every bus key this module can write. Declared statically on the hook. */
@@ -174,6 +175,7 @@ export const REVEALS_READ: ReadonlySet<string> = new Set();
  */
 export const SCREEN_READ: ReadonlySet<string> = new Set([
   'industry.materialPrice',
+  'industry.orderValue',
   'youth.scoutQuality',
   'youth.scoutCost',
   'youth.scoutCount',

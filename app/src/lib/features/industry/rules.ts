@@ -202,12 +202,32 @@ export function canFulfil(industry: IndustryState, contract: Contract): boolean 
  * cannot cover is a contract you watch expire, which is what makes accepting
  * one a bet on your own production rather than a free button.
  */
-export function fulfil(industry: IndustryState, contract: Contract): number | undefined {
+export function fulfil(
+  industry: IndustryState,
+  contract: Contract,
+  /**
+   * What a doctrine adds to the margin on business orders — `b2bBonus`, two
+   * nodes, and the only place in the game that pays for being good at dealing
+   * with other clubs rather than at making things.
+   *
+   * A parameter rather than a bus read, because filling an order happens on a
+   * button and not on a tick, so there is no modifier context to ask. The
+   * screen passes it; see `SCREEN_READ` in knowledge/rules.ts, which is the
+   * same arrangement `industry.materialPrice` already uses and the one place
+   * in the dormancy gate where a lie is possible.
+   */
+  bonus = 1
+): number | undefined {
   if (!canFulfil(industry, contract)) return undefined;
   industry.goods[contract.item] = goodsOf(industry, contract.item) - contract.units;
   industry.contracts = industry.contracts.filter((c) => c.id !== contract.id);
   industry.fulfilled += 1;
-  return contract.payout;
+  return Math.round(contract.payout * bonus);
+}
+
+/** What an order is worth before it is filled, so the button can say so. */
+export function orderValue(contract: Contract, bonus = 1): number {
+  return Math.round(contract.payout * bonus);
 }
 
 /** Age the desk by a week and drop what nobody took. */
