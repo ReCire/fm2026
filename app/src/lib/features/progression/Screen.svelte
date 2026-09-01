@@ -47,6 +47,14 @@
   const earnedIds = $derived(badgeView.earned);
   const earnedCount = $derived(badgeView.earnedCount);
   const lockedSecrets = $derived(badgeView.lockedSecrets);
+  /*
+   * A migrated save under-counts on purpose — migrateMatchday resets
+   * careerWins rather than inventing a history it cannot recover — and 0/22
+   * next to a form guide reading S-N-S reads as broken rather than as
+   * "counted from here". Shown only past the first matchday, so a genuinely
+   * fresh career (where 0/22 needs no explaining) does not see it.
+   */
+  const showsMigrationNote = $derived(earnedCount === 0 && game.meta.matchday > 1);
 
   function toggleDelegate(id: string) {
     if (isDelegated(game, id)) {
@@ -96,6 +104,9 @@
   {#if shown.length === 0 && lockedSecrets === 0}
     <p class="empty">Hier stehen die Auszeichnungen, sobald welche da sind.</p>
   {:else}
+    {#if showsMigrationNote}
+      <p class="note">Gezählt wird ab hier — frühere Erfolge werden nicht nachgetragen.</p>
+    {/if}
     <ul class="badges">
       {#each shown as b (b.id)}
         {@const earned = earnedIds.has(b.id)}
@@ -133,6 +144,7 @@
   .mods li :global(.wrap) { width: auto; flex: none; }
 
   .empty { font-size: var(--fs-caption); color: var(--text-muted); }
+  .note { font-size: var(--fs-caption); color: var(--text-dim); margin-bottom: var(--s2); }
   .badges { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s2); }
   .badge {
     display: flex; align-items: center; gap: var(--s3);
