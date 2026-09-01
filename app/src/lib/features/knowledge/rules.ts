@@ -133,7 +133,20 @@ export const EFFECTS: Partial<Record<FxKey, Effect>> = {
   wonderkid:         { key: 'youth.wonderkids',           arity: 'total' },
   stockBonus:        { key: 'stocks.yield',                arity: 'factor' },
   priceTolerance:    { key: 'stadium.priceTolerance',      arity: 'factor' },
-  b2bBonus:          { key: 'industry.orderValue',         arity: 'factor' }
+  b2bBonus:          { key: 'industry.orderValue',         arity: 'factor' },
+
+  /*
+   * The last of the fx keys. Each one attaches to a system that already
+   * exists — none of these needed a feature built underneath it, which is what
+   * `npm run census` was for: the eighteen decisions were never eighteen
+   * features.
+   */
+  academyDiscount:   { key: 'youth.upgradeCost',           arity: 'discount' },
+  ageSlow:           { key: 'training.ageing',             arity: 'discount' },
+  warehouseBonus:    { key: 'industry.warehouse',          arity: 'factor' },
+  ticketDemand:      { key: 'stadium.ticketDemand',        arity: 'factor' },
+  underworldCost:    { key: 'matchday.sabotageCost',       arity: 'discount' },
+  investorMod:       { key: 'finance.opsIncomeMod',        arity: 'factor' }
 };
 
 /** Every bus key this module can write. Declared statically on the hook. */
@@ -176,6 +189,8 @@ export const REVEALS_READ: ReadonlySet<string> = new Set();
 export const SCREEN_READ: ReadonlySet<string> = new Set([
   'industry.materialPrice',
   'industry.orderValue',
+  'youth.upgradeCost',
+  'matchday.sabotageCost',
   'youth.scoutQuality',
   'youth.scoutCost',
   'youth.scoutCount',

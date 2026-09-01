@@ -13,8 +13,15 @@ function clampStrength(v: number): number {
   return Math.max(1, Math.min(99, Math.round(v)));
 }
 
-export function levelUpgradeCost(level: number): number {
-  return Math.round(level * youthContent.levelUpgradeCost);
+/**
+ * What the next academy level costs.
+ *
+ * `discount` is what `academyDiscount` buys — a factor already inverted by the
+ * effects bus, so 0.3 in the tree arrives here as 0.7. Read by the screen
+ * rather than by a tick, because upgrading is a button; see `SCREEN_READ`.
+ */
+export function levelUpgradeCost(level: number, discount = 1): number {
+  return Math.round(level * youthContent.levelUpgradeCost * discount);
 }
 
 export function capacity(level: number): number {

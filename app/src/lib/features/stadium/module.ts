@@ -38,7 +38,7 @@ export default defineModule({
       order: 10,
       consumes: [
         'league.isHome', 'stadium.fanGain', 'stadium.fanFloor',
-        'stadium.ticketRevenue', 'stadium.priceTolerance'
+        'stadium.ticketRevenue', 'stadium.priceTolerance', 'stadium.ticketDemand'
       ],
       /*
        * Declared, not merely called.
@@ -88,9 +88,10 @@ export default defineModule({
          * `priceAppetite` existed, the slider's answer was always "higher".
          */
         const tolerance = factor('stadium.priceTolerance', 1) - 1;
-        const att = attendance(stadium, tolerance);
+        const demand = factor('stadium.ticketDemand', 1);
+        const att = attendance(stadium, tolerance, demand);
         const income = Math.round(
-          ticketIncome(stadium, tolerance) * factor('stadium.ticketRevenue')
+          ticketIncome(stadium, tolerance, demand) * factor('stadium.ticketRevenue')
         );
 
         postToLedger(state.modules.finance, {

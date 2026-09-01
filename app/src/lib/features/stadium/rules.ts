@@ -59,7 +59,7 @@ export function vipCapacity(stadium: StadiumState): number {
  * up by at most 10%; fan mood does the heavy lifting. Verbatim from the
  * prototype so the balance carries over unchanged.
  */
-export function attendanceFactor(stadium: StadiumState, tolerance = 0): number {
+export function attendanceFactor(stadium: StadiumState, tolerance = 0, demand = 1): number {
   let totalComfort = 0;
   for (const b of Object.values(stadium.blocks)) {
     totalComfort += (b.foodLvl + b.merchLvl + b.toiletLvl) / 9;
@@ -77,7 +77,13 @@ export function attendanceFactor(stadium: StadiumState, tolerance = 0): number {
    * which nobody comes" — and there is.
    */
   const mood = clamp((stadium.fans / 100) * avgComfortBonus, 0.3, 1.2);
-  return mood * priceAppetite(stadium, tolerance);
+  /*
+   * `demand` is what `ticketDemand` buys — standing room, and more of it. It
+   * multiplies OUTSIDE the mood clamp for the same reason the price does: the
+   * clamp is about how bad a mood can get, not about how many people a
+   * doctrine can bring through the gate.
+   */
+  return mood * priceAppetite(stadium, tolerance) * demand;
 }
 
 /**
@@ -120,16 +126,19 @@ export function priceAppetite(stadium: StadiumState, tolerance = 0): number {
   return Math.exp(-over * C.pricePainPull);
 }
 
-export function attendance(stadium: StadiumState, tolerance = 0): number {
-  return Math.round(capacity(stadium) * attendanceFactor(stadium, tolerance));
+export function attendance(stadium: StadiumState, tolerance = 0, demand = 1): number {
+  // Capped at the ground's own size. Demand that exceeds capacity is a queue,
+  // not a crowd, and a stadium selling more seats than it has is the kind of
+  // number nobody notices until it appears on a balance sheet.
+  return Math.min(capacity(stadium), Math.round(capacity(stadium) * attendanceFactor(stadium, tolerance, demand)));
 }
 
 /**
  * Gate receipts. The 0.5 / 0.45 split is the prototype's assumption that half
  * the crowd stands, 45% sits, and the VIP boxes are counted separately.
  */
-export function ticketIncome(stadium: StadiumState, tolerance = 0): number {
-  const att = attendance(stadium, tolerance);
+export function ticketIncome(stadium: StadiumState, tolerance = 0, demand = 1): number {
+  const att = attendance(stadium, tolerance, demand);
   const p = stadium.ticketPrices;
   return Math.round(att * 0.5 * p.steh + att * 0.45 * p.sitz + vipCapacity(stadium) * p.vip);
 }

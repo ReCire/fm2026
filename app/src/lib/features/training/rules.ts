@@ -71,11 +71,19 @@ export function gainChance(
   return Math.max(0, Math.min(1, chance));
 }
 
-/** The chance an ageing player LOSES a point somewhere this week. */
-export function declineChance(player: Player): number {
+/**
+ * The chance an ageing player LOSES a point somewhere this week.
+ *
+ * `ageSlow` arrives as an already-inverted factor — 0.4 in the tree means the
+ * player ages forty percent slower, so this receives 0.6. It scales the
+ * decline rather than moving the peak age, deliberately: a node that pushed
+ * `peakAgeTo` outward would make a thirty-four-year-old improve like a
+ * twenty-six-year-old, and the label says they age slowly, not that they stop.
+ */
+export function declineChance(player: Player, ageing = 1): number {
   const c = trainingContent;
   if (player.age <= c.peakAgeTo) return 0;
-  return Math.min(1, (player.age - c.peakAgeTo) * c.declinePerYearOver);
+  return Math.min(1, (player.age - c.peakAgeTo) * c.declinePerYearOver * ageing);
 }
 
 /** Fitness recovered by a week at this intensity. The only source of recovery. */
@@ -116,7 +124,16 @@ export function trainWeek(
    */
   devPerSeason = 0,
   /** `training.youthCeiling` — how much later a prospect stops improving. */
-  youthCeiling = 0
+  youthCeiling = 0,
+  /**
+   * `training.ageing` — already inverted, so 0.4 in the tree arrives as 0.6.
+   *
+   * Biomechanik does not stop a career ending; it slows the part of it that is
+   * losing points. Applied to the decline roll rather than to the peak age, or
+   * a thirty-four-year-old would start improving like a twenty-six-year-old
+   * and the label would be describing a different node.
+   */
+  ageing = 1
 ): WeekOutcome {
   const outcome: WeekOutcome = { changes: [], recovered: [] };
   const rest = restFor(training.intensity);
@@ -158,7 +175,7 @@ export function trainWeek(
       }
     }
 
-    if (rng.chance(declineChance(player))) {
+    if (rng.chance(declineChance(player, ageing))) {
       const attribute = rng.pick(ATTRIBUTES);
       if (player.attributes[attribute] > 1) {
         player.attributes[attribute] -= 1;

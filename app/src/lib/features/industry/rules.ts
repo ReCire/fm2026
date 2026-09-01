@@ -12,8 +12,9 @@ const C = industryContent;
  * measured against one the player already knows.
  */
 
-export function warehouseCapacity(industry: IndustryState): number {
-  return industry.warehouseLevel * C.warehousePerLevel;
+/** `bonus` is what `warehouseBonus` buys: 1 in the tree doubles the shelves. */
+export function warehouseCapacity(industry: IndustryState, bonus = 1): number {
+  return Math.round(industry.warehouseLevel * C.warehousePerLevel * bonus);
 }
 
 export function storedTotal(industry: IndustryState): number {
