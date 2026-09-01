@@ -83,19 +83,46 @@ describe('a career that keeps clicking', () => {
   });
 
   it('plays every fixture of every season it passes through', () => {
+    /*
+     * This test was written wrong the first time, and the way it was wrong is
+     * the reason it is worth reading. It asserted `played === 0` after a
+     * season change, under a comment claiming the full card had been played —
+     * and it passed, because `applyPromotionRelegation` resets every record
+     * and the number after a boundary is always zero.
+     *
+     * It therefore certified four seasons that were never played. Nothing
+     * flipped `core.phase` off `seasonEnd`, so every click ended another empty
+     * season: four seasons in four clicks, every review reporting nought
+     * points. Found by printing the reviews, not by the suite.
+     *
+     * So the assertion is now on the REVIEW, which records the season that
+     * happened rather than the state left behind by tidying up after it.
+     */
     const g = career();
-    const seasons = 3;
-    for (let i = 0; i < 400 && g.meta.season <= seasons; i++) {
+    const seen: number[] = [];
+    for (let i = 0; i < 400 && g.meta.season <= 3; i++) {
       const before = g.meta.season;
       click(g);
       if (g.meta.season !== before) {
-        // A season just ended: everyone in our division played the full card.
-        for (const team of g.modules.league.levels[g.modules.league.playerLevel] ?? []) {
-          expect(team.played, `${team.name} played ${team.played}`).toBe(0);
-        }
+        const review = g.modules.league.review!;
+        expect(review.won + review.drawn + review.lost, `season ${review.season} played nothing`)
+          .toBe(MATCHDAYS_PER_SEASON);
+        expect(review.points, `season ${review.season} scored nothing`).toBeGreaterThan(0);
+        seen.push(review.season);
       }
     }
-    expect(g.meta.season).toBeGreaterThan(seasons);
+    expect(seen, 'seasons did not run in order').toEqual([1, 2, 3]);
+  });
+
+  it('opens a new season on a training week, not on another season end', () => {
+    /*
+     * The bug the test above was written wrong to miss. Only `week` and
+     * `matchday` ticks flipped the phase, so after a boundary it stayed on
+     * `seasonEnd` and the career advanced one season per button press.
+     */
+    const g = career();
+    for (let i = 0; i < 80 && g.meta.season < 2; i++) click(g);
+    expect(g.modules.core.phase).toBe('week');
   });
 
   it('runs the season-end work that had never run outside a test', () => {

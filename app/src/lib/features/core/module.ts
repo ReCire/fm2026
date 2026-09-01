@@ -96,6 +96,27 @@ export default defineModule({
       run({ state }) {
         state.modules.core.phase = seasonIsOver(state) ? 'seasonEnd' : 'week';
       }
+    },
+
+    /*
+     * A new season opens on a training week.
+     *
+     * Without this the phase stays on `seasonEnd` forever: only `week` and
+     * `matchday` ticks flipped it, so the first click after a season boundary
+     * ended ANOTHER season, and the one after that a third. Four seasons went
+     * by in four clicks with nothing played — every table empty, every review
+     * reporting zero points, and the career advancing at a season per button
+     * press.
+     *
+     * It survived the test written to catch the original stuck loop, because
+     * that test asserted `played === 0` after a season change under a comment
+     * claiming the full card had been played. The assertion was true of a
+     * season nobody played.
+     */
+    seasonStart: {
+      phase: 'world',
+      order: 99,
+      run({ state }) { state.modules.core.phase = 'week'; }
     }
   },
 
