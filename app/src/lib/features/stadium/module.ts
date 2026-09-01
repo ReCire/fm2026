@@ -36,7 +36,10 @@ export default defineModule({
     matchday: {
       phase: 'economy',
       order: 10,
-      consumes: ['league.isHome', 'stadium.fanGain', 'stadium.fanFloor', 'stadium.ticketRevenue'],
+      consumes: [
+        'league.isHome', 'stadium.fanGain', 'stadium.fanFloor',
+        'stadium.ticketRevenue', 'stadium.priceTolerance'
+      ],
       /*
        * Declared, not merely called.
        *
@@ -79,8 +82,16 @@ export default defineModule({
         const floor = total('stadium.fanFloor');
         if (floor > 0) stadium.fans = Math.max(stadium.fans, floor);
 
-        const att = attendance(stadium);
-        const income = Math.round(ticketIncome(stadium) * factor('stadium.ticketRevenue'));
+        /*
+         * How much the crowd puts up with. Three doctrine nodes raise it, and
+         * it is the counterweight to a ticket price that had none: before
+         * `priceAppetite` existed, the slider's answer was always "higher".
+         */
+        const tolerance = factor('stadium.priceTolerance', 1) - 1;
+        const att = attendance(stadium, tolerance);
+        const income = Math.round(
+          ticketIncome(stadium, tolerance) * factor('stadium.ticketRevenue')
+        );
 
         postToLedger(state.modules.finance, {
           season, matchday, source: 'stadium', reason: 'Zuschauereinnahmen', amount: income

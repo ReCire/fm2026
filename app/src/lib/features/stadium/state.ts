@@ -1,4 +1,14 @@
 import { z } from 'zod';
+
+/**
+ * What a ticket costs on day one.
+ *
+ * Exported because `priceAppetite` measures the crowd's patience against it.
+ * A second copy of these three numbers in the rules would drift the moment
+ * anybody retuned the opening stadium, and the drift would present as fans
+ * mysteriously resenting the default price.
+ */
+export const OPENING_PRICES = { steh: 9, sitz: 15, vip: 45 } as const;
 import type { Rng } from '$lib/engine/rng';
 
 export const BlockSchema = z.object({
@@ -76,7 +86,7 @@ export function createStadium(_rng: Rng): StadiumState {
      * €24 is what a club two divisions higher charges, and the difference was
      * being collected seventeen times a season.
      */
-    ticketPrices: { steh: 9, sitz: 15, vip: 45 },
+    ticketPrices: { ...OPENING_PRICES },
     fans: 75,
     flutlicht: false,
     rasenheizung: false,

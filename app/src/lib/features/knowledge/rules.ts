@@ -131,7 +131,8 @@ export const EFFECTS: Partial<Record<FxKey, Effect>> = {
    */
   euroBonus:         { key: 'europe.prize',               arity: 'factor' },
   wonderkid:         { key: 'youth.wonderkids',           arity: 'total' },
-  stockBonus:        { key: 'stocks.yield',                arity: 'factor' }
+  stockBonus:        { key: 'stocks.yield',                arity: 'factor' },
+  priceTolerance:    { key: 'stadium.priceTolerance',      arity: 'factor' }
 };
 
 /** Every bus key this module can write. Declared statically on the hook. */
