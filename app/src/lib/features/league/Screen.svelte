@@ -5,6 +5,8 @@
   import { coloursFor } from '$lib/graphics/clubColours';
   import { leagueContent, MATCHDAYS_PER_SEASON } from './content';
   import { standings, playerFixture, levelName, matchdayFixtures } from './rules';
+  import SeasonReview from './SeasonReview.svelte';
+  import { bandFor as boardBandFor } from '../board/content';
 
   const league = $derived(game.modules.league);
 
@@ -85,10 +87,56 @@
    */
   let view = $state('tabelle');
 
+  /*
+   * The season just gone, when there is one.
+   *
+   * Above the table rather than in a tab, and only while `review` is non-null —
+   * which is the season-end tick and nothing else. A celebration filed behind a
+   * tab is a celebration the player finds a week later.
+   */
+  const review = $derived(league.review);
+
+  /**
+   * What the boardroom made of it, and usually nothing.
+   *
+   * Only when the verdict actually moved trust. Most seasons it did not move it
+   * far, and Vogt having a line about every eleventh place is how a recurring
+   * character becomes wallpaper — the same reason `attention` stays quiet.
+   */
+  const boardLine = $derived.by(() => {
+    const last = game.modules.board.verdicts[game.modules.board.verdicts.length - 1];
+    if (!last || !review || last.season !== review.season) return undefined;
+    if (Math.abs(last.delta) < 8) return undefined;
+    return boardBandFor(last.trustAfter).vogt;
+  });
+
   function stepMatchday(delta: number) {
     pickedMatchday = Math.max(1, Math.min(MATCHDAYS_PER_SEASON, matchday + delta));
   }
 </script>
+
+{#if review}
+  <SeasonReview
+    facts={review}
+    record={{
+      points: review.points,
+      won: review.won,
+      drawn: review.drawn,
+      lost: review.lost,
+      goalsFor: review.goalsFor,
+      goalsAgainst: review.goalsAgainst
+    }}
+    playoff={review.playoff
+      ? {
+          opponent: review.playoff.opponent,
+          legs: review.playoff.legs,
+          aggregate: review.playoff.aggregate,
+          onPenalties: review.playoff.onPenalties
+        }
+      : undefined}
+    {boardLine}
+  />
+{/if}
 
 <Panel
   title={levelName(league.playerLevel)}

@@ -37,6 +37,15 @@
       opponent: string;
       legs: { homeGoals: number; awayGoals: number }[];
       aggregate: [number, number];
+      /**
+       * Decided in a shoot-out rather than over the two legs.
+       *
+       * The only place in the game where that distinction exists, and it is the
+       * difference between two memories of the same result — so it is printed
+       * next to the aggregate rather than left for the player to infer from a
+       * level score.
+       */
+      onPenalties?: boolean;
     };
     /** What the boardroom made of it. Optional — most seasons it says nothing. */
     boardLine?: string;
@@ -89,8 +98,10 @@
           </li>
         {/each}
         <li class="agg">
-          <span>Gesamt</span>
-          <strong class="tabular">{playoff.aggregate[0]} : {playoff.aggregate[1]}</strong>
+          <span>Gesamt{playoff.onPenalties ? ' — im Elfmeterschiessen' : ''}</span>
+          <strong class="tabular">
+            {playoff.aggregate[0]} : {playoff.aggregate[1]}{playoff.onPenalties ? ' n. E.' : ''}
+          </strong>
         </li>
       </ol>
     </div>
