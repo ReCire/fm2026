@@ -69,7 +69,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 150_000,
     startingTransferBudget: 100_000,
     unlockedAtStart: [...CORE, 'stadium'],
-    unlockOrder: ['staff', 'sponsors', 'merch', 'europe', 'industry', 'fans'],
+    unlockOrder: ['staff', 'sponsors', 'merch', 'europe', 'stocks', 'industry', 'fans'],
     difficulty: 'normal'
   },
   {
@@ -89,7 +89,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
      * it is the only prize large enough to clear what the previous manager
      * spent. He was chasing it too. The difference is that you have to.
      */
-    unlockOrder: ['europe', 'merch', 'industry', 'fans'],
+    unlockOrder: ['europe', 'merch', 'stocks', 'industry', 'fans'],
     difficulty: 'hart'
   },
   {
@@ -103,7 +103,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
     startingMoney: 6_000_000,
     startingTransferBudget: 3_000_000,
     unlockedAtStart: [...CORE, 'stadium', 'transfer', 'holding'],
-    unlockOrder: ['industry', 'merch', 'staff', 'sponsors', 'europe', 'rawMaterials', 'stocks'],
+    unlockOrder: ['industry', 'stocks', 'merch', 'staff', 'sponsors', 'europe', 'rawMaterials'],
     difficulty: 'ruhig'
   },
   {
@@ -123,7 +123,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
      * buy the shirt because the boy on it went to their school. A sponsor wants
      * an audience, and this club will not have one for four years.
      */
-    unlockOrder: ['staff', 'merch', 'sponsors', 'europe', 'industry', 'fans'],
+    unlockOrder: ['staff', 'merch', 'sponsors', 'europe', 'stocks', 'industry', 'fans'],
     difficulty: 'hart'
   },
   {
@@ -151,7 +151,7 @@ export const narratives: Narrative[] = NarrativesSchema.parse([
      * scarves — everything here is ordered by how fast it becomes money, which
      * is the only ordering a licence deadline allows.
      */
-    unlockOrder: ['sponsors', 'merch', 'staff', 'europe', 'industry', 'fans'],
+    unlockOrder: ['sponsors', 'merch', 'staff', 'stocks', 'europe', 'industry', 'fans'],
     difficulty: 'brutal'
   }
 ]);

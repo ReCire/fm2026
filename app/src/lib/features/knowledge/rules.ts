@@ -130,7 +130,8 @@ export const EFFECTS: Partial<Record<FxKey, Effect>> = {
    * `factor`, so `euroBonus: 1` doubles a campaign rather than adding a euro.
    */
   euroBonus:         { key: 'europe.prize',               arity: 'factor' },
-  wonderkid:         { key: 'youth.wonderkids',           arity: 'total' }
+  wonderkid:         { key: 'youth.wonderkids',           arity: 'total' },
+  stockBonus:        { key: 'stocks.yield',                arity: 'factor' }
 };
 
 /** Every bus key this module can write. Declared statically on the hook. */

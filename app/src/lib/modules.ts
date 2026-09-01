@@ -34,6 +34,7 @@ import linkedout from './features/linkedout/module';
 import press from './features/press/module';
 import board from './features/board/module';
 import europe from './features/europe/module';
+import stocks from './features/stocks/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -59,6 +60,7 @@ const declared: readonly ModuleDef[] = [
   linkedout,
   sponsors,
   merch,
+  stocks,
   industry,
   history,
   editor
