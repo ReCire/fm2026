@@ -56,6 +56,6 @@ describe('the unlock ladders', () => {
       narratives.flatMap((n) => [...n.unlockedAtStart, ...n.unlockOrder])
         .filter((id) => !known.has(id))
     );
-    expect([...ghosts].sort()).toEqual(['fans', 'holding', 'rawMaterials']);
+    expect([...ghosts].sort()).toEqual(['holding', 'rawMaterials']);
   });
 });
