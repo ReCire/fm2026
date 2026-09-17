@@ -72,6 +72,15 @@ export const editorDocs = defineDocs({
     since: '0.1.0',
     related: ['editor.player', 'editor.export']
   },
+  'editor.debugUnlock': {
+    label: 'Freischalten',
+    tooltip:
+      'Debug: schaltet diesen Bereich sofort frei, unabhängig vom Fortschritt der Startgeschichte.',
+    why:
+      'Zum Testen eines neuen Moduls, ohne erst Spielstunden durch die Freischaltungsleiter zu investieren.',
+    since: '0.8.0',
+    related: ['progression.unlocks']
+  },
   'editor.overall': {
     label: 'Gesamtstärke',
     tooltip: 'Ergibt sich aus den fünf Werten, gewichtet nach Position.',

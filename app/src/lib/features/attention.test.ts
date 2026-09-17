@@ -171,6 +171,14 @@ const CASES: {
     }
   },
   {
+    module: 'fans',
+    item: 'fans.ultras',
+    urgency: 'now',
+    provoke: (g) => {
+      g.modules.fans.groups.find((gr) => gr.id === 'ultras')!.mood = 20;
+    }
+  },
+  {
     module: 'youth',
     item: 'youth.full',
     urgency: 'soon',

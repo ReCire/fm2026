@@ -35,6 +35,7 @@ import press from './features/press/module';
 import board from './features/board/module';
 import europe from './features/europe/module';
 import stocks from './features/stocks/module';
+import fans from './features/fans/module';
 
 const declared: readonly ModuleDef[] = [
   core,
@@ -55,6 +56,7 @@ const declared: readonly ModuleDef[] = [
   knowledge,
   campus,
   press,
+  fans,
   board,
   europe,
   linkedout,

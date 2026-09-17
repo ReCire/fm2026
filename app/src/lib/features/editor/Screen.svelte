@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { game } from '$lib/state/game.svelte';
+  import { game, registry } from '$lib/state/game.svelte';
   import { Panel, Button, StatChip, toast } from '$lib/ui';
   import Doc from '$lib/docs/Doc.svelte';
   import Crest from '$lib/graphics/Crest.svelte';
@@ -13,12 +13,32 @@
   } from '../squad/attributes';
   import { editClub, editPlayer, resetClub, resetPlayer, editCount } from './rules';
   import { editorContent, MAXED } from './content';
+  import { unlock } from '../progression/rules';
 
   const editor = $derived(game.modules.editor);
   const squad = $derived(game.modules.squad);
   const league = $derived(game.modules.league);
+  const progression = $derived(game.modules.progression);
   const counts = $derived(editCount(editor));
   const myClubId = $derived(league.playerClubId);
+
+  /*
+   * Gated departments the current narrative has not reached yet.
+   *
+   * A ladder that opens one department every few matchdays is correct for
+   * playing the game and wrong for testing a change to one — nobody should
+   * have to grind three careers to see a screen they just built. This is a
+   * debug escape hatch, not a mechanic: it skips the ladder rather than
+   * replacing it, so `unlock()` is the same call the ladder itself makes.
+   */
+  const lockedGated = $derived(
+    registry.all.filter((m) => m.gate && !progression.unlocked.includes(m.id))
+  );
+
+  function debugUnlock(id: string) {
+    if (!unlock(progression, id)) return;
+    toast('Freigeschaltet (Debug)', `${registry.byId.get(id)?.title ?? id} ist jetzt erreichbar.`, 'good');
+  }
 
   /*
    * A club is a place you go INTO, not a row beside a list of unrelated
@@ -107,6 +127,31 @@
       <p class="muted">{editorContent.emptyState}</p>
     {/if}
   </Panel>
+
+  {#if lockedGated.length > 0}
+    <Panel title="Entwicklung" accent="danger" meta="Debug">
+      <p class="intro">
+        Nur zum Testen: schaltet gesperrte Bereiche sofort frei, unabhängig von der Startgeschichte
+        und ihrer Freischaltungsleiter.
+      </p>
+      <ul class="debugList">
+        {#each lockedGated as m (m.id)}
+          <li>
+            <div class="meta">
+              <strong>{m.title}</strong>
+              <small>{m.summary}</small>
+            </div>
+            <Button
+              doc="editor.debugUnlock"
+              variant="secondary"
+              label="Freischalten"
+              onclick={() => debugUnlock(m.id)}
+            />
+          </li>
+        {/each}
+      </ul>
+    </Panel>
+  {/if}
 
   <Panel title="Vereine">
     <label class="field" for="club-search">Suchen</label>
@@ -292,6 +337,17 @@
 {/if}
 
 <style>
+  .debugList { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+  .debugList li {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
+    padding: var(--s2) 0; border-bottom: 1px solid var(--border);
+  }
+  .debugList li:last-child { border-bottom: 0; }
+  .debugList .meta { min-width: 0; }
+  .debugList strong { display: block; font-size: var(--fs-body); }
+  .debugList small { display: block; color: var(--text-muted); font-size: var(--fs-caption); }
+  .debugList :global(.wrap) { width: auto; flex: none; }
+
   .clubHead { display: flex; align-items: center; gap: var(--s3); margin: var(--s3) 0; }
   .ch-name { display: block; font-size: var(--fs-title); color: var(--text-main); }
   .ch-sub { display: block; font-size: var(--fs-caption); color: var(--text-muted); }
