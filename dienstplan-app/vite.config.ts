@@ -12,6 +12,12 @@ export default defineConfig({
   server: {
     port: 5173,
     open: false,
+    host: '0.0.0.0',
+    hmr: {
+      protocol: 'http',
+      host: '192.0.2.2',
+      port: 5174,
+    },
   },
   build: {
     outDir: 'dist',
