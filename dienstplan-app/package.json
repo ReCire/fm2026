@@ -1,7 +1,7 @@
 {
   "name": "dienstplan-app",
-  "version": "0.1.0",
-  "description": "Dienstplan-App mit Generator für den Einzelhandel",
+  "version": "2.0.0",
+  "description": "Intelligenter Dienstplan-Generator für Einzelhandel mit Chat-Interface",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,25 +11,23 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
     "zustand": "^4.4.0",
-    "date-fns": "^2.30.0",
-    "uuid": "^9.0.0"
+    "date-fns": "^3.0.0",
+    "uuid": "^9.0.0",
+    "jspdf": "^2.5.0",
+    "html2canvas": "^1.4.1"
   },
   "devDependencies": {
-    "@types/node": "^20.8.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@types/uuid": "^9.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@types/node": "^20.8.0",
     "@vitejs/plugin-react": "^4.0.0",
-    "autoprefixer": "^10.4.0",
-    "eslint": "^8.49.0",
-    "postcss": "^8.4.0",
-    "tailwindcss": "^3.3.0",
     "typescript": "^5.2.0",
-    "vite": "^4.4.0"
+    "vite": "^4.4.0",
+    "tailwindcss": "^3.3.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0"
   }
 }

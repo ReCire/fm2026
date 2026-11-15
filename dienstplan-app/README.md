@@ -1,168 +1,112 @@
-# 📅 Dienstplan Generator
+# 📅 Dienstplan Generator v2.0
 
-Eine moderne Dienstplan-App mit automatischem Generator für den Einzelhandel. Die App läuft als Progressive Web App (PWA) und funktioniert offline auf iOS und Android.
+Intelligente Schichtplanung für Einzelhandel mit **Chat-Interface** und **echten Mitarbeiterdaten**.
 
-## Features
+## ✨ Features
 
-✨ **Automatische Schichtplanung**
-- Intelligenter Algorithmus berücksichtigt Mitarbeiterverfügbarkeiten
-- Gleichmäßige Verteilung der Schichten
-- Respektiert maximale Stunden pro Woche
-- Vermeidung von Wochenend-Clustern
+- 💬 **Chat-basiertes Interface** - Natürliche Eingabe von Mitarbeitern und Verfügbarkeiten
+- 🔄 **Intelligenter Generator** - Berücksichtigt Stundenzahlen, Verfügbarkeiten, Ruhetage
+- 📋 **Schichtplan-Übersicht** - Wochenansicht mit farbcodeiertem Kalender
+- 💾 **Speicherung** - LocalStorage + Export/Import
+- 📱 **PWA-ready** - Funktioniert offline und auf Handy installierbar
+- 🎨 **Modernes Dark-Design** - Tailwind CSS mit Gradient-Elementen
 
-👥 **Mitarbeiterverwaltung**
-- Unbegrenzte Mitarbeiter
-- Tägliche Verfügbarkeiten pro Mitarbeiter (z.B. "nur Frühschicht", "ab 18:00 Uhr")
-- Nicht verfügbare Tage definieren
-- Farbkodierung für visuelle Übersicht
-
-📋 **Schichtplan-Editor**
-- Monatsansicht mit drag-and-drop
-- Schichten manuell zuweisen oder ändern
-- Export/Import als JSON
-- Statistiken & Mitarbeiter-Auslastung
-
-📱 **Progressive Web App**
-- Installierbar auf Handy (iOS & Android)
-- Funktioniert offline
-- Service Worker für Caching
-- Responsive Design
-
-## Installation & Start
+## 🚀 Installation & Start
 
 ```bash
-# Dependencies installieren
+# Installiere Dependencies
 npm install
 
-# Dev-Server starten (http://localhost:5173)
+# Dev-Server (http://localhost:5173)
 npm run dev
 
-# Production Build erstellen
+# Production Build
 npm run build
-
-# Für Production vorschauen
-npm run preview
 ```
 
-## Technologie
+## 📖 Verwendung
 
-- **Frontend:** React 18 + TypeScript
-- **State Management:** Zustand
-- **Styling:** Tailwind CSS
-- **Build:** Vite
-- **Datum:** date-fns
-- **PWA:** Service Worker, Web Manifest
+### Schritt 1: Plan erstellen
+- Gehe zu "Home" → "+ Neuer Plan"
+- Gib die Woche ein
 
-## Datenstruktur
+### Schritt 2: Mitarbeiter hinzufügen via Chat
+```
+"Füge Frau Krötzsch 25 Früh hinzu"
+"Frau Jansen 35 Spät"
+"Max 40 Früh und Mittel"
+```
 
-### Mitarbeiter (Employee)
-```typescript
+### Schritt 3: Plan anzeigen
+- Tab "📋 Plan anzeigen"
+- Sieht alle generierten Schichten
+
+### Schritt 4: Exportieren
+- JSON-Export für Backup und Übergabe
+
+## 🎯 Chat-Befehle
+
+| Befehl | Beispiel |
+|---|---|
+| Mitarbeiter hinzufügen | `Füge Max 40 Früh hinzu` |
+| Mit mehreren Schichten | `Frau J. 35 Früh und Spät` |
+| Mitarbeiter auflisten | `Zeige Mitarbeiter` |
+| Plan generieren | `Generiere den Plan` |
+| Hilfe | `Hilf mir` |
+
+## 📊 Datenstruktur
+
+```json
 {
-  id: string
-  name: string                    // z.B. "Frau Jansen"
-  maxHoursPerWeek: number         // z.B. 40
-  availableShifts: ShiftType[]    // Standard-Verfügbarkeiten
-  dayAvailability?: DayAvailability[]  // Tägliche Exceptions
-  unavailableDates: string[]      // Nicht verfügbare Tage
-  color: string                   // Farbe für Kalender
-  notes?: string                  // z.B. "nur Spätschicht"
+  "schedule": {
+    "id": "abc123",
+    "name": "Woche 45",
+    "weekStart": "2026-11-09",
+    "weekEnd": "2026-11-15",
+    "employees": [
+      {
+        "id": "emp-1",
+        "name": "Frau Krötzsch",
+        "hoursPerWeek": 25,
+        "availableShifts": ["früh"],
+        "unavailableDates": []
+      }
+    ],
+    "shifts": [
+      {
+        "id": "shift-1",
+        "date": "2026-11-09",
+        "shiftType": "früh",
+        "employee": "emp-1"
+      }
+    ]
+  }
 }
 ```
 
-### Tägliche Verfügbarkeit (DayAvailability)
-```typescript
-{
-  dayOfWeek: number           // 0=Mo, 1=Di, ..., 6=So
-  availableShifts: string[]   // ShiftType IDs
-  timeRangeStart?: string     // z.B. "18:00" für ab 18 Uhr
-  timeRangeEnd?: string       // z.B. "22:00"
-}
-```
+## 🛠️ Technologie
 
-## Beispiel-Mitarbeiter
+- **React 18** mit TypeScript
+- **Vite** für schnelle Entwicklung
+- **Zustand** für State Management
+- **Tailwind CSS** für Styling
+- **date-fns** für Datum-Logik
+- **PWA** mit Service Worker
 
-**Frau Jansen** (Spätschicht-Woche)
-- Max. 40 Stunden/Woche
-- Verfügbar für Spätschichten
-- Mi/Do: ab 18:00 Uhr
-- Mo/Di/Fr/Sa/So: Frühschicht nicht verfügbar
+## 📱 Auf Handy installieren
 
-**Frau Krötzsch** (Frühschicht-spezialistin)
-- Max. 40 Stunden/Woche
-- Nur Frühschichten (6:00-14:00)
+**iOS (Safari):**
+1. App öffnen
+2. Teilen → "Zum Homescreen"
 
-## Verwendung
-
-### 1. Neuen Dienstplan erstellen
-Klick auf "+ Neuer Dienstplan" und gib einen Namen ein (z.B. "Januar 2026")
-
-### 2. Mitarbeiter hinzufügen
-Tab "Mitarbeiter" → "+ Mitarbeiter hinzufügen"
-- Name eingeben
-- Max. Stunden/Woche setzen
-- Optional: tägliche Verfügbarkeiten konfigurieren
-
-### 3. Plan generieren
-Tab "Schichtplan" → "🔄 Neu generieren"
-Der Algorithmus verteilt die Schichten automatisch
-
-### 4. Manuell anpassen
-Klick auf eine Schicht im Kalender zum Bearbeiten
-
-### 5. Exportieren
-"💾 Exportieren" als JSON-Datei speichern
-
-## Offline-Betrieb
-
-Die App nutzt einen Service Worker, um offline zu funktionieren:
-- Alle Daten werden in `localStorage` gespeichert
-- Service Worker cached wichtige Dateien
-- Änderungen werden automatisch synchronisiert
-
-## Browser-Unterstützung
-
-- ✅ Chrome/Edge 90+
-- ✅ Firefox 88+
-- ✅ Safari 15+
-- ✅ Mobile Browser (iOS Safari, Chrome Mobile)
-
-## Auf Handy installieren
-
-**iOS:**
-1. In Safari öffnen
-2. Teilen-Menü → "Zum Home-Bildschirm"
-
-**Android:**
-1. In Chrome öffnen
+**Android (Chrome):**
+1. App öffnen
 2. Menü → "App installieren"
 
-## Deployment
-
-```bash
-# Build für Production
-npm run build
-
-# Mit Vercel deployen
-vercel deploy
-
-# Oder mit anderem Host
-# Folder: dist/
-```
-
-## Roadmap
-
-- [ ] Erweiterte Schichtkonflikt-Erkennung
-- [ ] Import aus Excel/CSV
-- [ ] Benachrichtigungen für Schichtwechsel
-- [ ] Mehrsprachige UI
-- [ ] Team-Zusammenarbeit
-- [ ] Vertragszeiten verwalten
-
-## Lizenz
+## 📝 Lizenz
 
 MIT
 
 ---
 
-**Entwickelt für:** Einzelhandels-Dienstplanung
-**Aktualisiert:** 2026-01
+**Version 2.0** - Rewrite mit Chat-Interface basierend auf echten Einsatzplänen

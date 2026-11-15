@@ -7,11 +7,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        indigo: {
-          50: '#f0f4ff',
-          100: '#e0e7ff',
-          600: '#4f46e5',
-          700: '#4338ca',
+        slate: {
+          900: '#0f172a',
+          800: '#1e293b',
         },
       },
     },

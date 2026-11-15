@@ -1,13 +1,5 @@
 import { Schedule } from '@/types'
-import { useScheduleStore } from '@/lib/store'
-import {
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  format,
-  parseISO,
-  parseISO as parse,
-} from 'date-fns'
+import { eachDayOfInterval, parseISO, format, isSaturday, isSunday } from 'date-fns'
 import { de } from 'date-fns/locale'
 
 interface Props {
@@ -15,94 +7,96 @@ interface Props {
 }
 
 export default function ScheduleView({ schedule }: Props) {
-  const { updateShift, deleteShift } = useScheduleStore()
-
-  const startDate = parseISO(schedule.startDate)
-  const endDate = parseISO(schedule.endDate)
-  const month = startDate
-
-  const daysInMonth = eachDayOfInterval({
-    start: startOfMonth(month),
-    end: endOfMonth(month),
+  const dates = eachDayOfInterval({
+    start: parseISO(schedule.weekStart),
+    end: parseISO(schedule.weekEnd),
   })
 
   const weekDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
   const getShiftsForDay = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd')
+    const dateStr = date.toISOString().split('T')[0]
     return schedule.shifts.filter((s) => s.date === dateStr)
   }
 
-  const getEmployeeName = (empId: string | null) => {
+  const getEmployeeName = (empId?: string | null) => {
     if (!empId) return 'Unbesetzt'
     return schedule.employees.find((e) => e.id === empId)?.name || 'Unbekannt'
   }
 
-  const getShiftTypeName = (shiftId: string) => {
-    return schedule.shiftTypes.find((st) => st.id === shiftId)?.name || '?'
+  const getShiftInfo = (shiftId: string) => {
+    return schedule.shiftTypes.find((st) => st.id === shiftId)
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold">
-          {format(month, 'MMMM yyyy', { locale: de })}
-        </h3>
+        <h2 className="text-2xl font-bold text-white">
+          Schichtplan: {schedule.name}
+        </h2>
+        <p className="text-slate-400">
+          {schedule.weekStart} - {schedule.weekEnd}
+        </p>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="grid gap-1" style={{ gridTemplateColumns: 'repeat(7, 1fr)' }}>
-          {weekDays.map((day) => (
-            <div
-              key={day}
-              className="font-bold text-center py-2 text-gray-700 bg-gray-100"
-            >
-              {day}
-            </div>
-          ))}
+      {/* Calendar Grid */}
+      <div className="overflow-x-auto bg-slate-800/50 rounded-lg border border-slate-700 p-4">
+        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(7, minmax(150px, 1fr))' }}>
+          {/* Header */}
+          {weekDays.map((day, idx) => {
+            const date = dates[idx]
+            return (
+              <div key={day} className="text-center">
+                <p className="font-bold text-white">{day}</p>
+                <p className="text-sm text-slate-400">
+                  {date ? format(date, 'd.M.', { locale: de }) : ''}
+                </p>
+              </div>
+            )
+          })}
 
-          {daysInMonth.map((date) => {
+          {/* Days */}
+          {dates.map((date) => {
             const dayShifts = getShiftsForDay(date)
-            const isOutOfRange =
-              date < startDate || date > endDate
+            const isWeekend = isSaturday(date) || isSunday(date)
 
             return (
               <div
                 key={date.toISOString()}
-                className={`min-h-24 p-2 border rounded ${
-                  isOutOfRange
-                    ? 'bg-gray-50 text-gray-400'
-                    : 'bg-white hover:bg-gray-50'
+                className={`min-h-32 p-2 rounded border ${
+                  isWeekend
+                    ? 'bg-slate-900/50 border-slate-600'
+                    : 'bg-slate-700/30 border-slate-600'
                 }`}
               >
-                <div className="font-bold text-sm mb-1">
-                  {format(date, 'd')}
-                </div>
                 <div className="space-y-1">
-                  {dayShifts.map((shift) => (
-                    <div
-                      key={shift.id}
-                      className="text-xs bg-indigo-100 text-indigo-900 p-1 rounded cursor-pointer hover:bg-indigo-200 transition"
-                      onClick={() => {
-                        const newEmp = prompt(
-                          `${getShiftTypeName(shift.shiftType)} - Mitarbeiter-ID:`,
-                          shift.employee || ''
-                        )
-                        if (newEmp !== null) {
-                          updateShift(schedule.id, shift.id, {
-                            employee: newEmp || null,
-                          })
-                        }
-                      }}
-                    >
-                      <div className="font-medium">
-                        {getShiftTypeName(shift.shiftType)}
-                      </div>
-                      <div className="text-xs opacity-80">
-                        {getEmployeeName(shift.employee)}
-                      </div>
-                    </div>
-                  ))}
+                  {dayShifts.length === 0 ? (
+                    <p className="text-xs text-slate-500 italic">Keine Schichten</p>
+                  ) : (
+                    dayShifts.map((shift) => {
+                      const shiftInfo = getShiftInfo(shift.shiftType)
+                      return (
+                        <div
+                          key={shift.id}
+                          className="text-xs p-1 rounded"
+                          style={{
+                            backgroundColor: shiftInfo?.color + '20',
+                            borderLeft: `3px solid ${shiftInfo?.color}`,
+                          }}
+                        >
+                          <p className="font-semibold text-white">
+                            {shiftInfo?.name}
+                          </p>
+                          <p className="text-slate-300">
+                            {getEmployeeName(shift.employee)}
+                          </p>
+                          <p className="text-slate-400 text-xs">
+                            {shiftInfo?.startTime} - {shiftInfo?.endTime}
+                          </p>
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
               </div>
             )
@@ -110,28 +104,25 @@ export default function ScheduleView({ schedule }: Props) {
         </div>
       </div>
 
+      {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h4 className="font-bold text-blue-900 mb-2">Statistiken</h4>
-          <div className="text-sm text-blue-800 space-y-1">
-            <p>Insgesamt geplante Schichten: {schedule.shifts.length}</p>
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+          <h3 className="font-bold text-white mb-3">📊 Übersicht</h3>
+          <div className="space-y-2 text-sm text-slate-300">
             <p>Mitarbeiter: {schedule.employees.length}</p>
+            <p>Schichten insgesamt: {schedule.shifts.length}</p>
             <p>Schichttypen: {schedule.shiftTypes.length}</p>
           </div>
         </div>
 
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <h4 className="font-bold text-purple-900 mb-2">
-            Mitarbeiter-Auslastung
-          </h4>
-          <div className="text-sm text-purple-800 space-y-1">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+          <h3 className="font-bold text-white mb-3">👥 Mitarbeiter</h3>
+          <div className="space-y-2 text-sm text-slate-300">
             {schedule.employees.map((emp) => {
-              const empShifts = schedule.shifts.filter(
-                (s) => s.employee === emp.id
-              ).length
+              const shiftsCount = schedule.shifts.filter((s) => s.employee === emp.id).length
               return (
                 <p key={emp.id}>
-                  {emp.name}: {empShifts} Schichten
+                  {emp.name}: {shiftsCount} Schichten ({emp.hoursPerWeek}h)
                 </p>
               )
             })}

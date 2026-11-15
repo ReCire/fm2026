@@ -1,46 +1,49 @@
-import { Schedule, Shift, Employee, ShiftType } from '@/types'
-import { eachDayOfInterval, parseISO, addDays, isSunday, isSaturday } from 'date-fns'
-
-interface GeneratorOptions {
-  preferEvenDistribution?: boolean
-  avoidWeekendClustering?: boolean
-  minRestDaysBetweenShifts?: number
-}
+import { Schedule, Shift, Employee, ScheduleGeneratorOptions } from '@/types'
+import { eachDayOfInterval, parseISO, addDays, isSaturday, isSunday, differenceInDays } from 'date-fns'
 
 export class ScheduleGenerator {
   private schedule: Schedule
-  private options: GeneratorOptions
+  private options: ScheduleGeneratorOptions
 
-  constructor(schedule: Schedule, options: GeneratorOptions = {}) {
+  constructor(schedule: Schedule, options: Partial<ScheduleGeneratorOptions> = {}) {
     this.schedule = schedule
     this.options = {
       preferEvenDistribution: true,
       avoidWeekendClustering: false,
       minRestDaysBetweenShifts: 0,
+      maxConsecutiveShifts: 6,
       ...options,
     }
   }
 
   generate(): Shift[] {
-    const dates = this.getDateRange()
     const shifts: Shift[] = []
+    const dates = this.getDateRange()
+    const shiftIndex = new Map<string, number>()
 
+    // Initialize shift index für jede Schicht
+    this.schedule.shiftTypes.forEach((st) => {
+      shiftIndex.set(st.id, 0)
+    })
+
+    // Für jeden Tag generieren wir Schichten
     for (const date of dates) {
       const dateStr = date.toISOString().split('T')[0]
+      const isWeekend = isSaturday(date) || isSunday(date)
 
-      for (const shiftType of this.schedule.shiftTypes) {
-        const assignedEmployee = this.assignEmployeeToShift(
-          dateStr,
-          shiftType,
-          shifts
-        )
+      // Definiere wie viele Schichten pro Tag nötig sind
+      const shiftsPerDay = isWeekend ? 2 : 3
 
-        if (assignedEmployee) {
+      for (let i = 0; i < shiftsPerDay; i++) {
+        const shiftType = this.schedule.shiftTypes[i % this.schedule.shiftTypes.length]
+
+        const employee = this.assignEmployeeToShift(dateStr, shiftType, shifts)
+        if (employee) {
           shifts.push({
-            id: this.generateId(),
+            id: `shift-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
             date: dateStr,
             shiftType: shiftType.id,
-            employee: assignedEmployee.id,
+            employee: employee.id,
           })
         }
       }
@@ -51,30 +54,22 @@ export class ScheduleGenerator {
 
   private getDateRange(): Date[] {
     return eachDayOfInterval({
-      start: parseISO(this.schedule.startDate),
-      end: parseISO(this.schedule.endDate),
+      start: parseISO(this.schedule.weekStart),
+      end: parseISO(this.schedule.weekEnd),
     })
   }
 
   private assignEmployeeToShift(
     date: string,
-    shiftType: ShiftType,
+    shiftType: any,
     existingShifts: Shift[]
   ): Employee | null {
-    const availableEmployees = this.getAvailableEmployees(
-      date,
-      shiftType,
-      existingShifts
-    )
+    const availableEmployees = this.getAvailableEmployees(date, shiftType, existingShifts)
 
     if (availableEmployees.length === 0) return null
 
     if (this.options.preferEvenDistribution) {
-      return this.selectByEvenDistribution(
-        availableEmployees,
-        date,
-        existingShifts
-      )
+      return this.selectByEvenDistribution(availableEmployees, date, existingShifts)
     }
 
     return availableEmployees[0]
@@ -82,22 +77,26 @@ export class ScheduleGenerator {
 
   private getAvailableEmployees(
     date: string,
-    shiftType: ShiftType,
+    shiftType: any,
     existingShifts: Shift[]
   ): Employee[] {
     return this.schedule.employees.filter((employee) => {
+      // 1. Kann dieser Mitarbeiter diese Schicht arbeiten?
       if (!employee.availableShifts.some((s) => s.id === shiftType.id)) {
         return false
       }
 
+      // 2. Ist dieser Tag nicht verfügbar?
       if (employee.unavailableDates.includes(date)) {
         return false
       }
 
-      if (!this.hasCapacityForShift(employee, shiftType, existingShifts)) {
+      // 3. Hat er noch Kapazität diese Woche?
+      if (!this.hasCapacity(employee, existingShifts)) {
         return false
       }
 
+      // 4. Genug Ruhetage?
       if (!this.hasEnoughRestDays(employee, date, existingShifts)) {
         return false
       }
@@ -106,29 +105,22 @@ export class ScheduleGenerator {
     })
   }
 
-  private hasCapacityForShift(
-    employee: Employee,
-    shiftType: ShiftType,
-    existingShifts: Shift[]
-  ): boolean {
-    const weekShifts = existingShifts.filter((shift) => {
-      const shiftDate = parseISO(shift.date)
-      const shiftEndDate = addDays(shiftDate, 7)
-      const today = parseISO(new Date().toISOString().split('T')[0])
+  private hasCapacity(employee: Employee, existingShifts: Shift[]): boolean {
+    const weekShifts = existingShifts.filter((s) => s.employee === employee.id)
 
-      return (
-        shift.employee === employee.id &&
-        shiftDate >= today &&
-        shiftDate <= shiftEndDate
-      )
+    // Berechne Gesamtstunden dieser Woche
+    let totalHours = 0
+    weekShifts.forEach((shift) => {
+      const shiftType = this.schedule.shiftTypes.find((st) => st.id === shift.shiftType)
+      if (shiftType) {
+        const [startHour, startMin] = shiftType.startTime.split(':').map(Number)
+        const [endHour, endMin] = shiftType.endTime.split(':').map(Number)
+        const duration = (endHour - startHour) + (endMin - startMin) / 60
+        totalHours += duration
+      }
     })
 
-    const totalHours = weekShifts.reduce((sum, shift) => {
-      const type = this.schedule.shiftTypes.find((st) => st.id === shift.shiftType)
-      return sum + (type?.hoursPerShift || 0)
-    }, 0)
-
-    return totalHours + shiftType.hoursPerShift <= employee.maxHoursPerWeek
+    return totalHours < employee.hoursPerWeek
   }
 
   private hasEnoughRestDays(
@@ -136,21 +128,16 @@ export class ScheduleGenerator {
     date: string,
     existingShifts: Shift[]
   ): boolean {
-    const minRestDays = this.options.minRestDaysBetweenShifts || 0
+    const minRestDays = this.options.minRestDaysBetweenShifts
     if (minRestDays === 0) return true
 
-    const currentDate = parseISO(date)
     const lastShift = existingShifts
       .filter((s) => s.employee === employee.id)
       .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())[0]
 
     if (!lastShift) return true
 
-    const lastShiftDate = parseISO(lastShift.date)
-    const daysBetween = Math.floor(
-      (currentDate.getTime() - lastShiftDate.getTime()) / (1000 * 60 * 60 * 24)
-    )
-
+    const daysBetween = differenceInDays(parseISO(date), parseISO(lastShift.date))
     return daysBetween >= minRestDays
   }
 
@@ -162,45 +149,18 @@ export class ScheduleGenerator {
     const shiftsPerEmployee = new Map<string, number>()
 
     employees.forEach((emp) => {
-      const shifts = existingShifts.filter((s) => s.employee === emp.id).length
-      shiftsPerEmployee.set(emp.id, shifts)
+      const count = existingShifts.filter((s) => s.employee === emp.id).length
+      shiftsPerEmployee.set(emp.id, count)
     })
 
     const minShifts = Math.min(...shiftsPerEmployee.values())
-    const candidatesWithMinShifts = employees.filter(
-      (emp) => shiftsPerEmployee.get(emp.id) === minShifts
-    )
-
-    if (this.options.avoidWeekendClustering) {
-      const dateObj = parseISO(date)
-      const isWeekend = isSaturday(dateObj) || isSunday(dateObj)
-
-      if (isWeekend) {
-        const weekdayCandidate = candidatesWithMinShifts.find((emp) => {
-          const weekendShifts = existingShifts.filter(
-            (s) => {
-              const d = parseISO(s.date)
-              return (isSaturday(d) || isSunday(d)) && s.employee === emp.id
-            }
-          ).length
-          return weekendShifts === 0
-        })
-
-        if (weekdayCandidate) return weekdayCandidate
-      }
-    }
-
-    return candidatesWithMinShifts[0]
-  }
-
-  private generateId(): string {
-    return Math.random().toString(36).substring(2, 9)
+    return employees.find((emp) => shiftsPerEmployee.get(emp.id) === minShifts) || employees[0]
   }
 }
 
 export function generateSchedule(
   schedule: Schedule,
-  options?: GeneratorOptions
+  options?: Partial<ScheduleGeneratorOptions>
 ): Shift[] {
   const generator = new ScheduleGenerator(schedule, options)
   return generator.generate()
